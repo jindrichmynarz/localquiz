@@ -1,0 +1,18 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.1"}
+        hyperlith/hyperlith {:local/root "../hyperlith"}
+        io.nayuki/qrcodegen {:mvn/version "1.8.0"}}
+ :aliases {:dev {:jvm-opts ["--enable-native-access=ALL-UNNAMED"
+                            "-Duser.timezone=UTC"
+                            "-XX:+UseZGC"
+                            "-Djdk.attach.allowAttachSelf"
+                            "-XX:+EnableDynamicAgentLoading"]}
+           :build {:deps {io.github.clojure/tools.build
+                          {:git/tag "v0.10.5" :git/sha "2a21b7a"}}
+                   :ns-default build}
+           :repl {:extra-paths ["src/dev"]
+                  :extra-deps  {org.clojure/clojure         {:mvn/version "1.12.0"}
+                                nrepl/nrepl                 {:mvn/version "1.3.0"}
+                                cider/cider-nrepl           {:mvn/version "0.50.2"}
+                                io.github.tonsky/clj-reload {:mvn/version "0.7.1"}}}}}
+
