@@ -1,7 +1,7 @@
 (ns net.mynarz.localquiz.core
   (:gen-class)
   (:require [net.mynarz.localquiz.config :refer [config]]
-            [net.mynarz.localquiz.server :refer [server]] ; Must be imported to have Mount start the server.
+            [net.mynarz.localquiz.server :refer [server]] ; Must be imported for Mount to start the server.
             [clojure.java.browse :refer [browse-url]]
             [mount.core :as mount]
             [taoensso.timbre :as log]
