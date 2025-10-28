@@ -12,3 +12,7 @@ pom.xml.asc
 
 # Don't commit the private configuration
 .config.edn
+
+# Ignore temporary files
+.clj-kondo
+.lsp
