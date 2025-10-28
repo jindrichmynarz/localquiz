@@ -9,3 +9,6 @@ pom.xml.asc
 /checkouts/
 .nrepl-port
 .cpcache/
+
+# Don't commit the private configuration
+.config.edn
