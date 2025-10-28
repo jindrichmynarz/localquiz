@@ -1,0 +1,100 @@
+(ns net.mynarz.localquiz.routes
+  (:require [net.mynarz.localquiz.async :refer [refresh-pub]]
+            [net.mynarz.localquiz.cpu-pool :refer [on-cpu-pool]]
+            [net.mynarz.localquiz.error :as error]
+            [net.mynarz.localquiz.views.moderator :as moderator-views]
+            [net.mynarz.localquiz.views.player :as player-views]
+            [net.mynarz.localquiz.util :refer [thread]]
+            [clojure.core.async :as a]
+            [dev.onionpancakes.chassis.core :as h]
+            [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
+            [starfederation.datastar.clojure.api :as d*]
+            [starfederation.datastar.clojure.brotli :as brotli]
+            [taoensso.timbre :as log]
+            [clojure.core :as c]))
+
+(def !connections
+  "The map of open connections for each game ID."
+  (atom {}))
+
+(defn add-connection
+  "Add `connection` to `game-id` to `connections`."
+  [connections
+   ^String game-id
+   connection]
+  (if (connections game-id)
+    (update connections game-id conj connection)
+    (assoc connections game-id #{connection})))
+
+(defn remove-connection
+  "Remove `connection` to `game-id` from `connections`."
+  [connections
+   ^String game-id
+   connection]
+  (if (second (connections game-id))
+    (update connections game-id disj connection)
+    (dissoc connections game-id)))
+
+(defn moderator-view
+  [{game-id :sid
+    :as request}])
+
+(defn player-view
+  [{{:keys [game-id]} :path-params
+    :as request}])
+
+(defn sse-handler
+  [{{last-event-id "last-event-id"} :headers
+    {player-game-id :game-id} :path-params
+    moderator-game-id :sid
+    :as request}
+   render-fn]
+  (let [game-id (or player-game-id moderator-game-id)
+        <ch (a/sub refresh-pub game-id (a/chan (a/dropping-buffer 1)))
+        ;; poison pill for work cancelling
+        <cancel (a/chan)]
+    (hk-gen/->sse-response request
+                           {hk-gen/write-profile (brotli/->brotli-profile)
+
+                            hk-gen/on-open
+                            (fn [sse-gen]
+                              (swap! !connections add-connection game-id sse-gen)
+                              (d*/with-open-sse sse-gen
+                                (thread
+                                  (loop [last-view-hash last-event-id]
+                                    (a/alt!!
+                                      [<cancel]
+                                      (do (a/close! <ch)
+                                          (a/close! <cancel))
+
+                                      [<ch]
+                                      ([_]
+                                       (some-> ; Stop in case of error
+                                        (on-cpu-pool ; CPU work on real threads
+                                         ; Stop in case of error
+                                         (when-some [new-view (error/try-on-error (render-fn request))]
+                                           (let [new-view-str (h/html new-view)
+                                                 ; This is a very fast hash
+                                                 new-view-hash (Integer/toHexString (hash new-view-str))]
+                                             ; Only send an event if the view has changed
+                                             (when (not= last-view-hash new-view-hash)
+                                               (d*/patch-elements! sse-gen new-view-str))
+                                             new-view-hash)))
+                                        recur))
+
+                                      ; we want work cancelling to have higher priority
+                                      :priority true)))))
+
+                            hk-gen/on-close
+                            (fn [sse-gen _]
+                              (a/>!! <cancel :cancel)
+                              (swap! !connections remove-connection game-id sse-gen)
+                              (d*/close-sse! sse-gen))})))
+
+(def routes
+  [; Moderator's routes
+   ["/" {:get moderator-views/pick-questions
+         :post (partial sse-handler moderator-view)}]
+   ; Players' routes
+   ["/:game-id" {:get player-views/join-game
+                 :post (partial sse-handler player-view)}]])
