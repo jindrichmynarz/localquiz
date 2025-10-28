@@ -81,5 +81,5 @@
 
 (defn moderator-view
   [{game-id :sid
-    :as request}])
-
+    :as request}]
+  [:main#morph [:h1 "Localquiz"]])

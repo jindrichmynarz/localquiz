@@ -16,8 +16,7 @@
   ;; mean that this will at most take 30s (default max backoff).
   "@post(window.location.pathname + (window.location.search + '&u=').replace(/^&/,'?'), {retryMaxCount: Infinity})")
 
-(defn page
-  [hiccup]
+(def shim-page
   [h/doctype-html5
    [:html {:lang "en"}
     [:head
@@ -36,12 +35,10 @@
             ;; from this div.
             :data-on-online__window on-load-js}
      [:noscript "Your browser does not support JavaScript!"]
-     [:main#morph hiccup]]]])
+     [:main#morph]]]])
 
-(defn view
-  [hiccup]
-  (let [body (-> hiccup
-                 page
+(def shim-response
+  (let [body (-> shim-page
                  cc/compile
                  h/html)]
     {:status 200
@@ -49,3 +46,8 @@
                      {"Content-Encoding" "br"
                       "ETag" (crypto/digest body)})
      :body (brotli/compress body :quality 11)}))
+
+(defn shim-view
+  "Return a basic HTML page with Datastar setup."
+  [_]
+  shim-response)
