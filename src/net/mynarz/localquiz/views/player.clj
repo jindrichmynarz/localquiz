@@ -20,4 +20,3 @@
 (defn player-view
   [{{:keys [game-id]} :path-params
     :as request}])
-
