@@ -41,7 +41,7 @@
   (when-let [question (d/q '[:find ?question .
                              :in $ ?game-id
                              :where [?game :game/id ?game-id]
-                             [?game :game/questions ?question]]
+                                    [?game :game/questions ?question]]
                            @db-conn
                            game-id)]
     (d/transact db-conn [[:db/retract [:game/id game-id] :game/questions question]])

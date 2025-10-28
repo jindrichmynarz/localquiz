@@ -2,7 +2,7 @@
 
 (defn join-game
   [{{:keys [game-id]} :path-params}]
-  [:form
+  [:div
    {:action (str "/" game-id)
     :method "post"
     :name "join-game"}
@@ -13,10 +13,12 @@
     {:id "player-name"
      :type "text"}]
    [:button
-    {:type "submit"}
+    {:data-on-click (format "@post('/join/%s')" game-id)
+     :type "submit"}
     "Join game"]])
 
 (defn player-view
-  [{{:keys [game-id]} :path-params
-    :as request}]
-  [:main#morph [:h1 "Localquiz"]])
+  [request]
+  [:main#morph
+   [:h1 "Localquiz"]
+   (join-game request)])

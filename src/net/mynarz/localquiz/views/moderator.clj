@@ -19,12 +19,6 @@
      :type "file"}]
    [:button {:data-on-click "@post('/')"} "Upload"]])
 
-(defn ->join-game-url
-  "Format the URL to join the game identified by `game-id`."
-  [^String game-id]
-  (let [{:keys [host-name port]} config]
-    (format "https://%s:%d/join/%s" host-name port game-id)))
-
 (defn lobby
   "Get the players waiting in the lobby for the game identified by `game-id`.
   The players are sorted in the chronological order according to when they joined the game."
@@ -34,9 +28,9 @@
               :keys player-name time-joined
               :in $ ?game-id
               :where [?game :game/id ?game-id]
-              [?game :game/players ?player]
-              [?player :player/name ?player-name]
-              [?player :player/time-joined ?time-joined]]
+                     [?game :game/players ?player]
+                     [?player :player/name ?player-name]
+                     [?player :player/time-joined ?time-joined]]
             @db-conn)
        (sort-by :time-joined)
        (map :player-name)))
@@ -44,7 +38,7 @@
 (defn start-game
   [{game-id :sid
     :as request}]
-  (let [join-game-url (->join-game-url game-id)
+  (let [join-game-url (str (:url config) "/" game-id)
         lobby (lobby game-id)]
     [:div
      [:section
@@ -61,11 +55,12 @@
        {:data-on-click "@post('/start-game')"
         :type "submit"}
        "Start the game"]]
-     [:section
-      [:h2 "Players"]
-      [:ul
+     (when (seq lobby)
+      [:section
+       [:h2 "Players"]
+       [:ul]
        (for [{player-name :player/name} lobby]
-         [:li player-name])]]]))
+         [:li player-name])])]))
 
 (defn leaderboard
   [{game-id :sid
@@ -79,6 +74,7 @@
    [:a {:href "/"} "Play again"]]) ; TODO: Reset the session ID and end-game!
 
 (defn moderator-view
-  [{game-id :sid
-    :as request}]
-  [:main#morph [:h1 "Localquiz"]])
+  [request]
+  [:main#morph
+   [:h1 "Localquiz"]
+   (start-game request)])
