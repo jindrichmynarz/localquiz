@@ -17,6 +17,7 @@
   "@post(window.location.pathname + (window.location.search + '&u=').replace(/^&/,'?'), {retryMaxCount: Infinity})")
 
 (def shim-page
+  "A basic HTML page with Datastar setup."
   [h/doctype-html5
    [:html {:lang "en"}
     [:head
@@ -37,7 +38,7 @@
      [:noscript "Your browser does not support JavaScript!"]
      [:main#morph]]]])
 
-(def shim-response
+(def shim-view
   (let [body (-> shim-page
                  cc/compile
                  h/html)]
@@ -46,8 +47,3 @@
                      {"Content-Encoding" "br"
                       "ETag" (crypto/digest body)})
      :body (brotli/compress body :quality 11)}))
-
-(defn shim-view
-  "Return a basic HTML page with Datastar setup."
-  [_]
-  shim-response)

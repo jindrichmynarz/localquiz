@@ -1,6 +1,5 @@
 (ns net.mynarz.localquiz.views.moderator
-  (:require [net.mynarz.localquiz.views.common :refer [view]]
-            [net.mynarz.localquiz.config :refer [config]]
+  (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.qrcode :refer [url->qrcode-svg]]
@@ -9,16 +8,16 @@
 
 (defn pick-questions
   [{game-id :sid}]
-  (view [:div
-         [:h1 "Localquiz"]
-         [:label
-          {:for "questions-upload"}
-          "Upload questions"]
-         [:input
-          {:accept ".edn"
-           :id "questions-upload"
-           :type "file"}]
-         [:button {:data-on-click "@post('/')"} "Upload"]]))
+  [:div
+   [:h1 "Localquiz"]
+   [:label
+    {:for "questions-upload"}
+    "Upload questions"]
+   [:input
+    {:accept ".edn"
+     :id "questions-upload"
+     :type "file"}]
+   [:button {:data-on-click "@post('/')"} "Upload"]])
 
 (defn ->join-game-url
   "Format the URL to join the game identified by `game-id`."
@@ -47,37 +46,37 @@
     :as request}]
   (let [join-game-url (->join-game-url game-id)
         lobby (lobby game-id)]
-    (view [:div
-           [:section
-            [:h2
-             [:a
-              {:href join-game-url}
-              "Join the game"]
-             [:pre join-game-url]
-             [:button#copy-join-url
-              {:data-on-mousedown (format "navigator.clipboard.writeText('%s')" join-game-url)}
-              "Copy"]]
-            (url->qrcode-svg join-game-url)
-            [:button
-             {:data-on-click "@post('/start-game')"
-              :type "submit"}
-             "Start the game"]]
-           [:section
-            [:h2 "Players"]
-            [:ul
-             (for [{player-name :player/name} lobby]
-               [:li player-name])]]])))
+    [:div
+     [:section
+      [:h2
+       [:a
+        {:href join-game-url}
+        "Join the game"]
+       [:pre join-game-url]
+       [:button#copy-join-url
+        {:data-on-mousedown (format "navigator.clipboard.writeText('%s')" join-game-url)}
+        "Copy"]]
+      (url->qrcode-svg join-game-url)
+      [:button
+       {:data-on-click "@post('/start-game')"
+        :type "submit"}
+       "Start the game"]]
+     [:section
+      [:h2 "Players"]
+      [:ul
+       (for [{player-name :player/name} lobby]
+         [:li player-name])]]]))
 
 (defn leaderboard
   [{game-id :sid
     :as request}]
-  (view [:section
-         [:h1 "Leaderboard"]
-         [:table
-          [:tr [:th "Player"] [:th "Score"]]
-          (for [{:keys [player-name score]} (game/leaderboard game-id)]
-            [:tr [:td player-name] [:td score]])]
-         [:a {:href "/"} "Play again"]])) ; TODO: Reset the session ID and end-game!
+  [:section
+   [:h1 "Leaderboard"]
+   [:table
+    [:tr [:th "Player"] [:th "Score"]]
+    (for [{:keys [player-name score]} (game/leaderboard game-id)]
+      [:tr [:td player-name] [:td score]])]
+   [:a {:href "/"} "Play again"]]) ; TODO: Reset the session ID and end-game!
 
 (defn moderator-view
   [{game-id :sid

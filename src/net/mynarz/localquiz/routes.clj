@@ -6,8 +6,8 @@
 
 (def routes
   [; Moderator's routes
-   ["/" {:get views/shim-view
+   ["/" {:get (fn [_] views/shim-view)
          :post (partial sse/handler moderator-views/moderator-view)}]
    ; Players' routes
-   ["/:game-id" {:get views/shim-view
+   ["/:game-id" {:get (fn [_] views/shim-view)
                  :post (partial sse/handler player-views/player-view)}]])
