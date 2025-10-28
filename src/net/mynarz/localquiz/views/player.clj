@@ -16,3 +16,8 @@
          [:button
           {:type "submit"}
           "Join game"]]))
+
+(defn player-view
+  [{{:keys [game-id]} :path-params
+    :as request}])
+

@@ -78,3 +78,8 @@
           (for [{:keys [player-name score]} (game/leaderboard game-id)]
             [:tr [:td player-name] [:td score]])]
          [:a {:href "/"} "Play again"]])) ; TODO: Reset the session ID and end-game!
+
+(defn moderator-view
+  [{game-id :sid
+    :as request}])
+
