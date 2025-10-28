@@ -10,30 +10,7 @@
             [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
             [starfederation.datastar.clojure.api :as d*]
             [starfederation.datastar.clojure.brotli :as brotli]
-            [taoensso.timbre :as log]
-            [clojure.core :as c]))
-
-(def !connections
-  "The map of open connections for each game ID."
-  (atom {}))
-
-(defn add-connection
-  "Add `connection` to `game-id` to `connections`."
-  [connections
-   ^String game-id
-   connection]
-  (if (connections game-id)
-    (update connections game-id conj connection)
-    (assoc connections game-id #{connection})))
-
-(defn remove-connection
-  "Remove `connection` to `game-id` from `connections`."
-  [connections
-   ^String game-id
-   connection]
-  (if (second (connections game-id))
-    (update connections game-id disj connection)
-    (dissoc connections game-id)))
+            [taoensso.timbre :as log]))
 
 (defn moderator-view
   [{game-id :sid
@@ -58,7 +35,6 @@
 
                             hk-gen/on-open
                             (fn [sse-gen]
-                              (swap! !connections add-connection game-id sse-gen)
                               (d*/with-open-sse sse-gen
                                 (thread
                                   (loop [last-view-hash last-event-id]
@@ -88,7 +64,6 @@
                             hk-gen/on-close
                             (fn [sse-gen _]
                               (a/>!! <cancel :cancel)
-                              (swap! !connections remove-connection game-id sse-gen)
                               (d*/close-sse! sse-gen))})))
 
 (def routes
