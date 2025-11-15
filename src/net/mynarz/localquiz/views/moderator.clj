@@ -58,9 +58,9 @@
      (when (seq lobby)
       [:section
        [:h2 "Players"]
-       [:ul]
-       (for [{player-name :player/name} lobby]
-         [:li player-name])])]))
+       [:ul
+        (for [{player-name :player/name} lobby]
+          [:li player-name])]])]))
 
 (defn leaderboard
   [{game-id :sid
