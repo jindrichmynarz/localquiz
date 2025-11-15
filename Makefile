@@ -2,8 +2,7 @@
 
 repl:
 	clj \
-		-M:repl:dev \
-		--main nrepl.cmdline
+		-M:repl:dev
 
 test:
 	clj \
