@@ -3,6 +3,16 @@
             [datahike.api :as d]
             [mount.core :refer [defstate]]))
 
+(def game-states
+  #{:new :started})
+
+(defn valid-game-state?
+  [db eid]
+  (->> eid
+       (d/entity db)
+       :game/state
+       game-states))
+
 (defn is-edn?
   [db eid]
   (let [questions (->> eid
@@ -18,6 +28,10 @@
     :db/valueType :db.type/string
     :db/unique :db.unique/identity
     :db/index true
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :game/state
+    :db/doc "State of a game"
+    :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
    {:db/ident :game/questions
     :db/doc "Questions in a game stored as EDN strings"
@@ -47,8 +61,9 @@
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}
    {:db/ident :game
-    :db.entity/attrs [:game/id :game/questions]
-    :db.entity/preds ['net.mynarz.localquiz.db/is-edn?]}
+    :db.entity/attrs [:game/id :game/state :game/questions]
+    :db.entity/preds ['net.mynarz.localquiz.db/is-edn?
+                      'net.mynarz.localquiz.db/valid-game-state?]}
    {:db/ident :player
     :db.entity/attrs [:player/id
                       :player/name

@@ -1,6 +1,6 @@
 (ns net.mynarz.localquiz.util
   (:require [charred.api :as charred]
-            [clojure.edn :as edn]
+            [fast-edn.core :as edn]
             [clojure.java.io :as io])
   (:import (java.io PushbackReader)))
 
@@ -24,7 +24,7 @@
       io/resource
       io/reader
       PushbackReader.
-      edn/read))
+      edn/read-once))
 
 (defmacro thread
   "Starts a virtual thread. Conveys bindings."

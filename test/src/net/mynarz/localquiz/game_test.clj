@@ -2,10 +2,30 @@
   (:require [net.mynarz.localquiz.db :as db]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
+            [net.mynarz.localquiz.actions.player :as player]
             [clojure.test :refer [deftest is testing use-fixtures]]
-            [datahike.api :as d]))
+            [datahike.api :as d]
+            [net.mynarz.localquiz.crypto :as crypto]))
+
+(defn db-empty?
+  "Test if the database is empty."
+  []
+  (->> @db/db-conn
+       (d/q '[:find ?e ?a ?v
+              :where [?e ?a ?v]
+              (not (or [?e :db/ident _]))]) ; Exclude schema entities which all have :db/ident.
+       empty?))
 
 (use-fixtures :each fixtures/test-db)
+
+(deftest lobby
+  (is (= (set (game/lobby fixtures/game-id))
+         #{"Jane" "Bob"}))
+  (let [player-name "Latecomer"]
+    (player/join-game! {:body {:player-name player-name}
+                        :path-params {:game-id fixtures/game-id}
+                        :sid (crypto/random-unguessable-uid)})
+    (is (= (last (game/lobby fixtures/game-id)) player-name))))
 
 (deftest add-score!
   (let [get-score (fn [player-id]
@@ -50,3 +70,7 @@
               first
               :player-name)
          "Jane")))
+
+(deftest end-game!
+  (game/end-game! fixtures/game-id)
+  (is (db-empty?)))

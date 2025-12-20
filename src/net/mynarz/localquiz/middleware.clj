@@ -1,6 +1,7 @@
 (ns net.mynarz.localquiz.middleware
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.crypto :as crypto]
+            [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [read-json]]
             [ring.middleware.reload :as reload]
@@ -35,6 +36,16 @@
       {:status 406}
 
       :else (handler request))))
+
+(defn wrap-game-session
+  "Ring middleware adding game session metadata."
+  [handler]
+  (fn [{session-id :sid
+        :as request}]
+    (->> session-id
+         game/get-session
+         (assoc request :game)
+         handler)))
 
 (defn wrap-parse-json-body
   "Ring middleware parsing request bodies in JSON."

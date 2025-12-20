@@ -14,6 +14,7 @@
 
 (def initial-tx
   [{:game/id game-id
+    :game/state :new
     :game/questions [(pr-str question)]
     :game/players [{:player/id (crypto/random-unguessable-uid)
                     :player/name "Jane"

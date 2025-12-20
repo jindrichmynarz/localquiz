@@ -2,6 +2,7 @@
   (:require [net.mynarz.localquiz.async :refer [refresh-pub]]
             [net.mynarz.localquiz.cpu-pool :refer [on-cpu-pool]]
             [net.mynarz.localquiz.error :as error]
+            [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [thread]]
             [clojure.core.async :as a]
             [dev.onionpancakes.chassis.core :as h]
@@ -56,7 +57,11 @@
                                     :priority true))))
 
                             hk-gen/on-close
-                            (fn [sse-gen _]
-                              (log/infof "Closing the connection to game %s." game-id)
+                            (fn [sse-gen status]
+                              (log/infof "Closing the connection to game %s with status %s." game-id status)
                               (a/>!! <cancel :cancel)
+                              ;; FIXME: We should not end game when the connection is closed.
+                              ;;        For example, browsers disconnect and reconnect when switching tabs.
+                              ;; (when (= session-role :moderator)
+                              ;;   (game/end-game! game-id))
                               (d*/close-sse! sse-gen))})))

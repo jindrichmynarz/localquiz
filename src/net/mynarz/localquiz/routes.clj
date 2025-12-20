@@ -2,15 +2,17 @@
   (:require [net.mynarz.localquiz.sse :as sse]
             [net.mynarz.localquiz.views.common :as views]
             [net.mynarz.localquiz.actions.moderator :as moderator-actions]
-            [net.mynarz.localquiz.views.moderator :as moderator-views]
-            [net.mynarz.localquiz.actions.player :as player-actions]
-            [net.mynarz.localquiz.views.player :as player-views]))
+            [net.mynarz.localquiz.actions.player :as player-actions]))
 
 (def routes
   [; Moderator's routes
-   ["/" {:get (fn [_] views/shim-view)
-         :post (partial sse/handler moderator-views/moderator-view)}]
+   ["/" {:get views/shim-view
+         :post (partial sse/handler views/patch-view)}]
+   ["/create" {:post (partial views/view moderator-actions/create-game!)}]
+   ["/start" {:post (partial views/view moderator-actions/start-game!)}]
    ; Players' routes
-   ["/:game-id" {:get (fn [_] views/shim-view)
-                 :post (partial sse/handler player-views/player-view)}]
-   ["/join/:game-id" {:post player-actions/join-game!}]])
+   ["/play/:game-id" {:get views/shim-view
+                      :post (partial sse/handler views/patch-view)}]
+   ["/join/:game-id"
+    ["" {:post (partial views/view player-actions/join-game!)}]
+    ["/validate" {:post (partial views/view player-actions/validate-player-name)}]]])

@@ -1,6 +1,62 @@
 (ns net.mynarz.localquiz.game
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
-            [datahike.api :as d]))
+            [datahike.api :as d]
+            [taoensso.timbre :as log]))
+
+(defn get-session
+  "Get game state and session role for the given `session-id`."
+  [^String session-id]
+  ; TODO: Account for the player's request prior to joining a game.
+  ;       Everyone who's not the moderator is treated as a player?
+  (first
+    (d/q '[:find ?state ?session-role
+           :in $ ?session-id
+           :keys state session-role
+           :where [?game :game/state ?state]
+                  (or-join [?game ?session-role]
+                           (and [?game :game/id ?session-id]
+                                [(ground :moderator) ?session-role]) ; TODO: How to make this the preferred branch? Coalesce?
+                           (and [?player :player/id ?session-id]
+                                [?game :game/players ?player]
+                                [(ground :player) ?session-role]))]
+         @db-conn
+         session-id)))
+
+(defn player-in-game?
+  "Test if the player with `player-id` is in the game with `game-id`."
+  [^String game-id
+   ^String player-id]
+  (d/q '[:find ?player-id .
+         :in $ ?game-id ?player-id
+         :where [?game :game/id ?game-id]
+                [?game :game/players ?player]
+                [?player :player/id ?player-id]]
+       @db-conn
+       game-id
+       player-id))
+
+(defn lobby
+  "Get the players waiting in the lobby for the game identified by `game-id`.
+  The players are sorted in the chronological order according to when they joined the game."
+  [^String game-id]
+  (->> game-id
+       (d/q '[:find ?player-name ?time-joined
+              :keys player-name time-joined
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]
+                     [?game :game/players ?player]
+                     [?player :player/name ?player-name]
+                     [?player :player/time-joined ?time-joined]]
+            @db-conn)
+       (sort-by :time-joined)
+       (map :player-name)))
+
+(comment
+  (def game-id
+    (d/q '[:find ?game-id .
+           :where [?game :game/id ?game-id]]
+         @db-conn))
+  (lobby game-id))
 
 (defn add-score
   "Add `score` to the current score of the player identified by `player-id`."
@@ -23,6 +79,11 @@
    ^long score]
   (d/transact db-conn [[:db.fn/call add-score player-id score]]))
 
+(defn descending-order
+  "Sort `a` and `b` in the descending order."
+  [a b]
+  (compare b a))
+
 (defn leaderboard
   "Get the player leaderboard for `game-id` using the database `conn`."
   [^String game-id]
@@ -31,14 +92,14 @@
               :in $ ?game-id
               :keys player-id player-name score
               :where [?game :game/id ?game-id]
-              [?game :game/players ?player]
-              [?player :player/id ?player-id]
-              [?player :player/name ?player-name]
-              (or-join [?player ?score]
-                       [?player :player/score ?score]
-                       [(ground 0) ?score])]
+                     [?game :game/players ?player]
+                     [?player :player/id ?player-id]
+                     [?player :player/name ?player-name]
+                     (or-join [?player ?score]
+                              [?player :player/score ?score]
+                              [(ground 0) ?score])]
             @db-conn)
-       (sort-by :score #(compare %2 %1))))
+       (sort-by :score descending-order)))
 
 (defn winner
   "Get the ID of the winning player."
@@ -47,3 +108,21 @@
       leaderboard
       first
       :player-id))
+
+(defn has-enough-players?
+  "Test if the game with `game-id` has at least 2 players."
+  [^String game-id]
+  (->> game-id
+       (d/q '[:find ?player
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]
+                     [?game :game/players ?player]]
+            @db-conn)
+       count
+       (< 1)))
+
+(defn end-game!
+  "End the game identified by `game-id`."
+  [^String game-id]
+  (log/infof "Ending game %s." game-id)
+  (d/transact db-conn [[:db/retractEntity [:game/id game-id]]]))

@@ -1,7 +1,8 @@
 (ns net.mynarz.localquiz.core
   (:gen-class)
   (:require [net.mynarz.localquiz.config :refer [config]]
-            [net.mynarz.localquiz.server :refer [server]] ; Must be imported for Mount to start the server.
+            [net.mynarz.localquiz.db-listener]
+            [net.mynarz.localquiz.server] ; Must be imported for Mount to start the server.
             [clojure.java.browse :refer [browse-url]]
             [mount.core :as mount]
             [taoensso.timbre :as log]
@@ -21,11 +22,13 @@
   (log/merge-config! {:appenders {:println (appenders/println-appender {:stream :std-err})}
                       ; Filter Datahike's verbose logging
                       :min-level [[#{"datahike.*" "konserve.*"} :warn]]})
-  (mount/start)
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. (fn []
+                               ; TODO: Shall we also delete any active games from the database?
+                               ;       The database is in-memory, so no need.
                                (mount/stop)
-                               (shutdown-agents)))))
+                               (shutdown-agents))))
+  (mount/start))
 
 (comment
   ; Start the application

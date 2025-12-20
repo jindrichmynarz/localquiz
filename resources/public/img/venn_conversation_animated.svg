@@ -1,0 +1,56 @@
+<svg viewBox="0 0 400 200"
+     xmlns="http://www.w3.org/2000/svg"
+     id="vennimated">
+  <defs>
+    <clipPath id="mask-left">
+      <circle r="85" cy="90" cx="250"> 
+        <animate attributeName="cx"
+                 attributeType="XML"
+                 values="250;300;250"
+                 dur="8s"
+                 repeatCount="indefinite"
+                 keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+                 calcMode="spline"/>
+      </circle>
+    </clipPath>
+  </defs>
+  <g fill="#fff"
+     stroke="#000"
+     stroke-width="10"
+     stroke-linejoin="round"
+     stroke-miterlimit="4.5">
+    <path d="M235 90.161c0 46.944-38.056 85-85 85-11.736 0-22.917-2.378-33.086-6.68-5.084-2.15-49.96 26.52-49.96 26.52s26.787-40.89 22.942-44.736C74.514 134.883 65 113.633 65 90.161c0-46.944 38.056-85 85-85s85 38.056 85 85z">
+      <animateTransform attributeName="transform"
+                        attributeType="XML"
+                        type="translate"
+                        values="0;-60;0"
+                        dur="8s"
+                        repeatCount="indefinite"
+                        keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+                        calcMode="spline"/>
+    </path>
+    <path d="M165 90.161c0 46.944 38.056 85 85 85 11.736 0 22.917-2.378 33.086-6.68 5.084-2.15 49.96 26.52 49.96 26.52s-26.787-40.89-22.942-44.736C325.486 134.883 335 113.633 335 90.161c0-46.944-38.056-85-85-85s-85 38.056-85 85z">
+      <animateTransform attributeName="transform"
+                        attributeType="XML"
+                        type="translate"
+                        values="0;60;0"
+                        dur="8s"
+                        repeatCount="indefinite"
+                        keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+                        calcMode="spline"/>
+    </path>
+  </g>
+  <circle r="85"
+          cy="90"
+          cx="150"
+          fill="#000"
+          clip-path="url(#mask-left)">
+    <animate attributeName="cx"
+             attributeType="XML"
+             values="150;100;150"
+             dur="8s"
+             repeatCount="indefinite"
+             keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+             calcMode="spline"/>
+  </circle>
+</svg>

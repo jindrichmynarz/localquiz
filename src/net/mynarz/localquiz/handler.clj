@@ -16,7 +16,8 @@
                          multipart/multipart-middleware
                          exception/exception-middleware
                          middleware/wrap-parse-json-body
-                         middleware/wrap-session]}})
+                         middleware/wrap-session
+                         middleware/wrap-game-session]}})
    (ring/routes
     (ring/create-resource-handler {:path "/"})
     (ring/create-default-handler))))

@@ -8,4 +8,4 @@
                {:keys [host-name port] :as config} (read-edn-resource ".config.edn")]
            (assoc config :url (if is-dev?
                                 (format "http://localhost:%d" port)
-                                (format "https://%s:%d" host-name port)))))
+                                (str "https://" host-name)))))
