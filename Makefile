@@ -6,7 +6,7 @@ repl:
 
 test:
 	clj \
-		-X:test
+		-X:dev:test
 
 retest:
 	clj \
