@@ -48,7 +48,7 @@
                   :type "text/css"
                   :href "/css/style.css"}]
       [:script#js {:defer true
-                   :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js"
+                   :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"
                    :type "module"}]
       ; Enables responsiveness on mobile devices
       [:meta {:name "viewport"
