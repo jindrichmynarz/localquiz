@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.game
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
+            [clojure.string :as string]
             [datahike.api :as d]
             [taoensso.timbre :as log]))
 
@@ -34,6 +35,39 @@
        @db-conn
        game-id
        player-id))
+
+(defn player-name-in-game?
+  "Test if a player with `player-name` is already in the game identified by `game-id`.
+  Uses case-insensitive matching."
+  [^String game-id
+   ^String player-name]
+  (let [query '[:find ?player
+                :in $ ?game-id ?player-name
+                :where [?game :game/id ?game-id]
+                       [?game :game/players ?player]
+                       [?player :player/name ?original-player-name]
+                       [(.toLowerCase ^String ?original-player-name) ?lowercase-player-name]
+                       [(= ?player-name ?lowercase-player-name)]]]
+    (->> player-name
+         string/lower-case
+         (d/q query @db-conn game-id)
+         seq
+         some?)))
+
+(defn player-name-valid-length?
+  "Test if `player-name` is between 1 and 20 characters."
+  [^String player-name]
+  (< 1 (count player-name) 20))
+
+(defn validate-player-name
+  [^String game-id
+   ^String player-name]
+  (cond
+    (player-name-in-game? game-id player-name)
+    (format "A player named '%s' is already in this game." player-name)
+
+    (not (player-name-valid-length? player-name))
+    (format "Player name must have between 1 to 20 characters.")))
 
 (defn lobby
   "Get the players waiting in the lobby for the game identified by `game-id`.

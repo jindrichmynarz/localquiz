@@ -7,19 +7,13 @@
 
 (use-fixtures :each fixtures/test-db)
 
-(deftest player-name-in-game?
-  (are [player-name] (player/player-name-in-game? fixtures/game-id player-name)
-       "Jane"
-       "JANE")
-  (is (not (player/player-name-in-game? fixtures/game-id "Angela"))))
-
 (deftest join-game!
   (are [player-name key-fn] (key-fn (player/join-game! {:body {:player-name player-name}
                                                         :path-params {:game-id fixtures/game-id}
                                                         :sid (crypto/random-unguessable-uid)}))
-       "Jane" :error
-       "Angela" :success)
-  (let [player-name (crypto/random-unguessable-uid)]
+       "Jane" vector? ; Returns error Hiccup
+       "Angela" :tx-data) ; Returns transaction data
+  (let [player-name "Felix"]
     (player/join-game! {:body {:player-name player-name}
                         :path-params {:game-id fixtures/game-id}
                         :sid (crypto/random-unguessable-uid)})

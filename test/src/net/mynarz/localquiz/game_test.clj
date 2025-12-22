@@ -3,7 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
             [net.mynarz.localquiz.actions.player :as player]
-            [clojure.test :refer [deftest is testing use-fixtures]]
+            [clojure.test :refer [are deftest is testing use-fixtures]]
             [datahike.api :as d]
             [net.mynarz.localquiz.crypto :as crypto]))
 
@@ -17,6 +17,12 @@
        empty?))
 
 (use-fixtures :each fixtures/test-db)
+
+(deftest player-name-in-game?
+  (are [player-name] (game/player-name-in-game? fixtures/game-id player-name)
+       "Jane"
+       "JANE")
+  (is (not (game/player-name-in-game? fixtures/game-id "Angela"))))
 
 (deftest lobby
   (is (= (set (game/lobby fixtures/game-id))

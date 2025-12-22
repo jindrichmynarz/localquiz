@@ -7,30 +7,31 @@
    (player-name-input request nil))
   ([{{:keys [game-id]} :path-params}
     validation-error]
-   [:div#player-name-input
-    [:label
-     {:for "player-name"}
-     "Player name"]
-    [:input
-     {:aria-live "polite"
-      :autofocus true
-      :data-bind "player-name"
-      :aria-errormessage "name-error"
-      :aria-invalid (some? validation-error)
-      :data-on:keydown "evt.key === 'Enter' && document.getElementById('submit').click()"
-      :data-on:keydown__debounce.500ms (format "@post('/join/%s/validate')" game-id)
-      :id "player-name"
-      :minlength 1
-      :maxlength 20
-      :required true
-      :type "text"}]
-    [:button#submit
-     {:aria-disabled (some? validation-error)
-      :disabled (some? validation-error)
-      :data-on:click (format "@post('/join/%s')" game-id)}
-     "Join game"]
-    (when validation-error
-      [:p#name-error.error validation-error])]))
+   (let [disabled? (some? validation-error)]
+     [:div#player-name-input
+      [:label
+       {:for "player-name"}
+       "Player name"]
+      [:input
+       {:aria-live "polite"
+        :autofocus true
+        :data-bind "player-name"
+        :aria-errormessage "name-error"
+        :aria-invalid disabled?
+        :data-on:keydown "evt.key === 'Enter' && document.getElementById('submit').click()"
+        :data-on:keydown__debounce.500ms (format "@post('/join/%s/validate')" game-id)
+        :id "player-name"
+        :minlength 1
+        :maxlength 20
+        :required true
+        :type "text"}]
+      [:button#submit
+       {:aria-disabled disabled?
+        :disabled disabled?
+        :data-on:click (format "@post('/join/%s')" game-id)}
+       "Join game"]
+      (when validation-error
+        [:p#name-error.error validation-error])])))
 
 (defmethod game-view [:player nil]
   [_]
