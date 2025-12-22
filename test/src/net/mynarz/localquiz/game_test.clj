@@ -42,6 +42,10 @@
                         :sid (crypto/random-unguessable-uid)})
     (is (= (last (game/lobby fixtures/game-id)) player-name))))
 
+(deftest next-question!
+  (is (= (game/next-question! fixtures/game-id) fixtures/question))
+  (is (nil? (game/next-question! fixtures/game-id))))
+
 (deftest add-score!
   (let [get-score (fn [player-id]
                     (d/q '[:find ?score .

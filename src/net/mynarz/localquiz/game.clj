@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.game
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
+            [clojure.edn :as edn]
             [clojure.string :as string]
             [datahike.api :as d]
             [taoensso.timbre :as log]))
@@ -85,12 +86,19 @@
        (sort-by :time-joined)
        (map :player-name)))
 
-(comment
-  (def game-id
-    (d/q '[:find ?game-id .
-           :where [?game :game/id ?game-id]]
-         @db-conn))
-  (lobby game-id))
+(defn next-question!
+  "Get the next question for `game-id`.
+  Removes the question from the game and returns the question in Hiccup
+  or nil if there are no more questions."
+  [^String game-id]
+  (when-let [question (d/q '[:find ?question .
+                             :in $ ?game-id
+                             :where [?game :game/id ?game-id]
+                                    [?game :game/questions ?question]]
+                           @db-conn
+                           game-id)]
+    (d/transact db-conn [[:db/retract [:game/id game-id] :game/questions question]])
+    (edn/read-string question)))
 
 (defn add-score
   "Add `score` to the current score of the player identified by `player-id`."

@@ -1,8 +1,6 @@
 (ns net.mynarz.localquiz.actions.moderator
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
-            [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [read-edn-resource]]
-            [clojure.edn :as edn]
             [datahike.api :as d]
             [taoensso.timbre :as log]))
 
@@ -45,17 +43,3 @@
     (log/infof "Starting the game %s." game-id)
     (d/transact db-conn [{:game-id game-id
                           :game/state :started}])))
-
-(defn next-question!
-  "Get the next question for `game-id`.
-  Removes the question from the game and returns the question in Hiccup
-  or nil if there are no more questions."
-  [^String game-id]
-  (when-let [question (d/q '[:find ?question .
-                             :in $ ?game-id
-                             :where [?game :game/id ?game-id]
-                                    [?game :game/questions ?question]]
-                           @db-conn
-                           game-id)]
-    (d/transact db-conn [[:db/retract [:game/id game-id] :game/questions question]])
-    (edn/read-string question)))
