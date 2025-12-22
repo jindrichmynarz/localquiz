@@ -1,6 +1,8 @@
 (ns net.mynarz.localquiz.routes
   (:require [net.mynarz.localquiz.sse :as sse]
             [net.mynarz.localquiz.views.common :as views]
+            [net.mynarz.localquiz.views.moderator] ; Require to load the moderator-specific methods of views/view.
+            [net.mynarz.localquiz.views.player] ; Require to load the player-specific methods of view/view.
             [net.mynarz.localquiz.actions.moderator :as moderator-actions]
             [net.mynarz.localquiz.actions.player :as player-actions]))
 
