@@ -24,8 +24,6 @@
                       :min-level [[#{"datahike.*" "konserve.*"} :warn]]})
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. (fn []
-                               ; TODO: Shall we also delete any active games from the database?
-                               ;       The database is in-memory, so no need.
                                (mount/stop)
                                (shutdown-agents))))
   (mount/start))
