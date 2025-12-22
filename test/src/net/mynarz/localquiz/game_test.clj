@@ -16,6 +16,15 @@
               (not (or [?e :db/ident _]))]) ; Exclude schema entities which all have :db/ident.
        empty?))
 
+(defn get-player-id
+  [player-name]
+  (d/q '[:find ?player-id .
+         :in $ ?player-name
+         :where [?player :player/name ?player-name]
+                [?player :player/id ?player-id]]
+        @db/db-conn
+        player-name))
+
 (use-fixtures :each fixtures/test-db)
 
 (deftest player-name-in-game?
@@ -40,14 +49,7 @@
                            :where [?player :player/id ?player-id]
                                   [?player :player/score ?score]]
                          @db/db-conn
-                         player-id))
-        get-player-id (fn [player-name]
-                        (d/q '[:find ?player-id .
-                               :in $ ?player-name
-                               :where [?player :player/name ?player-name]
-                                      [?player :player/id ?player-id]]
-                             @db/db-conn
-                             player-name))]
+                         player-id))]
     (testing "Player without score"
       (let [player-id (get-player-id "Bob")]
         (game/add-score! player-id 1)
