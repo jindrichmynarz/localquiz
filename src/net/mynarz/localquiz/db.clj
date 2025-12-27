@@ -1,10 +1,13 @@
 (ns net.mynarz.localquiz.db
-  (:require [clojure.edn :as edn]
-            [datahike.api :as d]
+  (:require [datahike.api :as d]
             [mount.core :refer [defstate]]))
 
 (def game-states
-  #{:new :started})
+  #{:new
+    :question
+    :show-answers
+    :leaderboard
+    :end})
 
 (defn valid-game-state?
   [db eid]
@@ -37,6 +40,23 @@
     :db/doc "Questions in a game stored as EDN strings"
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/many}
+   {:db/ident :game/current-question
+    :db/doc "Current question of a game stored as an EDN string"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :game/answers
+    :db/doc "Answers to the current question"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/isComponent true}
+   {:db/ident :answer/player
+    :db/doc "Player who gave the answer"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :answer/answer
+    :db/doc "Answer to the current question"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
    {:db/ident :game/players
     :db/doc "Players of a game"
     :db/valueType :db.type/ref
@@ -52,26 +72,34 @@
     :db/doc "Player's name"
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
-   {:db/ident :player/time-joined
-    :db/doc "Time when the player joined the game"
-    :db/valueType :db.type/instant
-    :db/cardinality :db.cardinality/one}
+   ;; {:db/ident :player/time-joined
+   ;;  :db/doc "Time when the player joined the game"
+   ;;  :db/valueType :db.type/instant
+   ;;  :db/cardinality :db.cardinality/one}
    {:db/ident :player/score
     :db/doc "Player's score"
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}
+   ;; {:db/ident :question/text
+   ;;  :db/doc "Question in Hiccup"
+   ;;  :db/valueType :db.type/string
+   ;;  :db/cardinality :db.cardinality/one}
+   ;; {:db/ident :question/note
+   ;;  :db/doc "Optional note in Hiccup for a question"
+   ;;  :db/valueType :db.type/string
+   ;;  :db/cardinality :db.cardinality/one}
    {:db/ident :game
     :db.entity/attrs [:game/id :game/state :game/questions]
     :db.entity/preds ['net.mynarz.localquiz.db/is-edn?
                       'net.mynarz.localquiz.db/valid-game-state?]}
    {:db/ident :player
     :db.entity/attrs [:player/id
-                      :player/name
-                      :player/time-joined]}])
+                      :player/name]}])
+                      ;:player/time-joined]}])
 
 (def config
   {:initial-tx schema
-   :keep-history? false
+   :keep-history? true
    :schema-flexibility :write
    :store {:backend :mem
            :id "localquiz"}})

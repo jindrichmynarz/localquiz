@@ -1,11 +1,14 @@
 (ns net.mynarz.localquiz.views.common
-  (:require [net.mynarz.localquiz.crypto :as crypto]
+  (:require [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
+            [net.mynarz.localquiz.util :refer [long-str]]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.brotli :as brotli]
+            [starfederation.datastar.clojure.api :refer [CDN-url]]
             [taoensso.timbre :as log]))
 
 ; Warn on ambiguous attributes
@@ -21,6 +24,9 @@
   ;; mean that this will at most take 30s (default max backoff).
   "@post(window.location.pathname + (window.location.search + '&u=').replace(/^&/,'?'), {retryMaxCount: Infinity})")
 
+(def submit-by-enter
+   "evt.key === 'Enter' && document.getElementById('submit').click()")
+
 (def cookie-warning
   [:div#cookie-warning
    {:aria-live "polite"
@@ -29,10 +35,10 @@
     :role "dialog"}
    [:p "Localquiz uses cookies for its functionality."]
    [:div.buttons
-    [:button.btn-primary
+    [:button.btn.btn-primary
      {:data-on:click "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
      "Accept"]
-    [:button
+    [:button.btn
      {:data-on:click "window.close()"}
      "Exit"]]])
 
@@ -44,11 +50,15 @@
      [:head
       [:title "Localquiz"]
       [:meta {:charset "UTF-8"}]
-      [:link#css {:rel "stylesheet"
-                  :type "text/css"
-                  :href "/css/style.css"}]
+      [:link#css
+       {:rel "stylesheet"
+        :type "text/css"
+        :href "/css/style.css"}]
+      [:link
+       {:href "https://fonts.googleapis.com/icon?family=Material+Icons"
+        :rel "stylesheet"}]
       [:script#js {:defer true
-                   :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"
+                   :src CDN-url
                    :type "module"}]
       ; Enables responsiveness on mobile devices
       [:meta {:name "viewport"
@@ -104,5 +114,145 @@
     :as request}]
   (let [game-session (game/get-session game-id)]
     [:div#morph
-     [:h1 "Localquiz"]
+     [:h1 [:a {:href "/"} "Localquiz"]]
      (game-view (assoc request :game game-session))]))
+
+(defn- answer-click-handler
+  [^Boolean disabled?
+   ^String game-id]
+  (when-not disabled?
+    {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
+                              "($answer = $answer || evt.target.dataset.answer) &&"
+                              (format "@post('/answer/%s')" game-id))}))
+
+(defn- mark-answer
+  [^Boolean answer-revealed?
+   ^Boolean correct?]
+  (when answer-revealed?
+    [:div.answer-mark
+     (if correct?
+       [:i.material-icons "check"]
+       [:i.material-icons "close_small"])]))
+
+(defn- note-view
+  [^Boolean answer-revealed?
+   note]
+  (when (and answer-revealed? note)
+    [:div.note
+     [:i.material-icons.md-light.md-24 "info"]
+     note]))
+
+(def timer
+  (let [duration (->> config
+                      :question-time-out
+                      (format "--duration: %d"))]
+    [:div.timer
+     {:style duration}
+     [:div]]))
+
+(defmulti answers-view
+  (fn [& args] (-> args last :type)))
+
+(defmethod answers-view :multiple
+  [^Boolean disabled?
+   ^Boolean answer-revealed?
+   ^String game-id
+   {:keys [choices note]}]
+  [:section#answers
+   timer
+   [:ul#choices
+    (answer-click-handler (or disabled? answer-revealed?) game-id)
+    (map-indexed
+      (fn [index {:keys [correct? text]}]
+        [:li
+         [:button.btn
+          {:class (when answer-revealed?
+                    (if correct? "correct" "incorrect"))
+           :data-answer index
+           :disabled (or disabled? answer-revealed?)}
+          [:div.answer
+           [:div text]
+           (mark-answer answer-revealed? correct?)]]])
+      choices)]
+   (note-view answer-revealed? note)])
+
+(defmethod answers-view :yesno
+  [^Boolean disabled?
+   ^Boolean answer-revealed?
+   ^String game-id
+   {:keys [correct? note]}]
+  [:section#answers
+   (when-not disabled?
+     [:p
+      (answer-click-handler answer-revealed? game-id)
+      [:button.btn
+       {:data-answer "true"
+        :disabled disabled?}
+       "Yes"
+       (mark-answer answer-revealed? (true? correct?))]
+      [:button.btn
+       {:data-answer "false"
+        :disabled disabled?}
+       "No"
+       (mark-answer answer-revealed? (false? correct?))]])
+   (note-view answer-revealed? note)])
+
+(defmethod answers-view :percent-range
+  [^Boolean disabled?
+   ^Boolean answer-revealed?
+   ^String game-id
+   {:keys [note]}]
+  [:section#answers
+   timer
+   (when-not disabled?
+     [:p
+      (answer-click-handler answer-revealed? game-id)
+      [:input
+       {:data-bind "answer"
+        :max 100
+        :min 0
+        :type "range"
+        :value 50}]
+      [:span
+       {:data-text "$answer + ' %'"}]
+      [:button.btn#submit "Submit"]])
+   (note-view answer-revealed? note)])
+
+(defmethod answers-view :open
+  [^Boolean disabled?
+   ^Boolean answer-revealed?
+   ^String game-id
+   {:keys [answer note]}]
+  [:section#answers
+   timer
+   (when-not disabled?
+     [:p
+      (answer-click-handler answer-revealed? game-id)
+      [:input
+       {:autofocus true
+        :data-bind "answer"
+        :data-on:keydown submit-by-enter
+        :type "text"}]
+      [:button.btn#submit "Submit"]])
+   (when answer-revealed?
+     [:p answer])
+   (note-view answer-revealed? note)])
+
+(defmethod answers-view :sort
+  [^Boolean disabled?
+   ^Boolean answer-revealed?
+   ^String game-id
+   {:keys [items note]}]
+  [:section#answers
+   timer
+   [:ul.sortable-list
+    (answer-click-handler answer-revealed? game-id)
+    (map-indexed
+      (fn [index {:keys [sort-value text]}]
+        [:li
+         {:data-answer index}
+         [:div text]
+         (when answer-revealed?
+           [:div.sort-value sort-value])])
+      items)]
+   (note-view answer-revealed? note)])

@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.actions.moderator
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
+            [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [read-edn-resource]]
             [datahike.api :as d]
             [taoensso.timbre :as log]))
@@ -38,8 +39,24 @@
 (defn start-game!
   [{game-id :sid
     {:keys [session-role]} :game}]
-  (log/infof "Session role: %s" session-role)
   (when (= session-role :moderator)
     (log/infof "Starting the game %s." game-id)
-    (d/transact db-conn [{:game-id game-id
-                          :game/state :started}])))
+    (d/transact db-conn [{:game/id game-id
+                          :game/state :question}])
+    (game/next-question! game-id)))
+
+(defn score-answers!
+  [{game-id :sid}]
+  (let [question (game/current-question game-id)
+        answers (game/get-answers game-id)]
+    (->> answers
+         (game/score-answers question)
+         game/scale-scores-by-answer-times
+         game/add-scores!)))
+
+(defn end-game!
+  [{game-id :sid
+    {:keys [session-role]} :game}]
+  (when (= session-role :moderator)
+    (log/infof "Ending the game %s." game-id)
+    (game/end-game! game-id)))

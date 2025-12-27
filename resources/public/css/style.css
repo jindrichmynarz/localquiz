@@ -24,32 +24,35 @@ main {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  height: calc(100vh - 4em);
-  padding: 2em;
+  min-height: 100vh;
 }
 
 div#morph {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+}
+
+h1, h2, h3, h4, h5 {
+  color: rgb(from var(--offwhite) r g b / 80%);
+  text-shadow: 1px 2px 0px var(--darker);
+  margin: 0 0 .2em 0;
 }
 
 h1 {
   display: flex;
-  font-size: 4em;
-  align-self: center;
+  align-self: flex-start;
   font-weight: 700;
-  text-shadow: 1px 2px 0px var(--red);
   margin: .5em;
+  transition: all .2s ease-out;
 }
 
 #sections {
   display: flex;
   flex: 1;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: space-evenly;
   align-self: center;
   width: 90vw;
   gap: 1em;
@@ -57,24 +60,23 @@ h1 {
 
 section {
   display: flex;
-  flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: 1em;
+  justify-content: center;
 }
 
-section > div {
-  display: flex;
-  flex-direction: column;
+#lobby {
+  align-items: flex-start;
+  justify-content: center;
 }
 
-section ul {
+#lobby ul {
+  margin: 0;
   padding-left: 0;
 }
 
-section ul li {
+#lobby ul li {
   list-style-type: none;
-  font-size: 1.5em;
   padding: .25em 0;
   animation: 1s ease-in fade-in;
 }
@@ -98,9 +100,9 @@ a:hover {
 
 footer {
   display: flex;
-  flex: 1 1 auto;
   justify-content: center;
   align-items: flex-end;
+  background: rgb(from var(--darker) r g b / 50%);
 }
 
 footer abbr {
@@ -111,14 +113,14 @@ footer a {
   text-decoration: underline;
 }
 
-button {
+button.btn {
+  font-size: 1.2em;
   color: var(--offwhite);
   background-color: var(--dark);
   border-color: var(--darker);
   border: 3px solid;
   border-radius: 5px;
   padding: .5em .75em;
-  font-size: 1.5em;
   position: relative;
   top: -5px;
   left: -5px;
@@ -126,11 +128,11 @@ button {
   cursor: pointer;
 }
 
-button, button:before, button:after {
+button.btn, button.btn:before, button.btn:after {
   transition: all .2s;
 }
 
-button:before, button:after {
+button.btn:before, button.btn:after {
   border: 3px solid;
   border-color: var(--darker);
   border-radius: 3px;
@@ -140,14 +142,14 @@ button:before, button:after {
   width: 100%;
 }
 
-button:before {
+button.btn:before {
   background-color: var(--dark);
   left: -5px;
   top: -5px;
   z-index: -1;
 }
 
-button:after {
+button.btn:after {
   background-color: var(--darker);
   left: -3px;
   right: 0;
@@ -155,11 +157,11 @@ button:after {
   z-index: -2;
 }
 
-button:hover {
+button.btn:hover {
   box-shadow: 0 .25em .75em var(--darker);
 }
 
-button:focus:not(:focus-visible) {
+button.btn:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -167,21 +169,21 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.btn-primary {
+button.btn-primary {
   color: var(--dark);
   background-color: var(--orange);
   border-color: var(--red);
 }
 
-.btn-primary:before, .btn-primary:after {
+button.btn-primary:before, button.btn-primary:after {
   border-color: var(--red);
 }
 
-.btn-primary:before {
+button.btn-primary:before {
   background-color: var(--orange);
 }
 
-.btn-primary:after {
+button.btn-primary:after {
   background-color: var(--red);
 }
 
@@ -190,10 +192,10 @@ input[type=text] {
   color: var(--dark);
   border: 3px solid;
   border-color: var(--darker);
-  font-size: 1.5em;
   padding: .5em;
   position: relative;
   top: -5px;
+  font-size: 1.2em;
 }
 
 input[type=text]:focus {
@@ -204,18 +206,14 @@ input:invalid:focus {
 }
 
 label {
-  font-size: 1.5em;
+  font-size: 1.2em;
   padding: .5em;
 }
 
 #qrcode {
   display: flex;
-  border: solid .5em var(--dark);
+  border: solid 3px var(--dark);
   margin: 0;
-}
-
-#qrcode svg {
-  max-height: 50vh;
 }
 
 #cookie-warning {
@@ -232,11 +230,21 @@ label {
 }
 
 #create-game {
+  display: flex;
+  flex: 1;
+  align-self: center;
+}
+
+#create-game button {
   box-shadow: 0 .25em .75em var(--darker);
 }
 
-#create-game:hover {
+#create-game button:hover {
   box-shadow: 0 .25em 1em #000;
+}
+
+#join-game {
+  text-align: center;
 }
 
 .copy-button-wrapper {
@@ -260,6 +268,100 @@ label {
   fill: var(--offwhite);
 }
 
-#player-name-input {
-  text-align: center;
+#content {
+  display: flex;
+  align-self: center;
+  justify-self: center;
+  max-width: 800px;
+  padding: 1em;
+  margin: 1em;
+  /* border-radius: 3px; */
+  /* background: rgb(from var(--dark) r g b / 20%); */
+  /* box-shadow: 0 .1em .1em var(--darker); */
+}
+
+#question img {
+  max-width: 500px;
+  max-height: 50%;
+}
+
+#answers {
+  margin-top: 1em;
+}
+
+#choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .5em;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  left: 5px;
+}
+
+#choices li button {
+  font-size: 1em;
+  text-align: left;
+  width: 100%;
+  height: 100%;
+}
+
+.note {
+  animation: 1s ease-in fade-in;
+  margin-top: 1em;
+  padding: .5em;
+}
+
+.note i.material-icons {
+  float: left;
+  padding-right: .2em;
+}
+
+#answers i.material-icons {
+  padding-left: .2em;
+}
+
+.answer div:first-child {
+  float: left;
+}
+
+.answer-mark {
+  float: right;
+}
+
+.incorrect {
+  opacity: 0.5;
+}
+
+#end-game {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 1em;
+  cursor: pointer;
+}
+
+#end-game:hover {
+  color: var(--orange);
+  text-shadow: 1px 3px 3px var(--darker);
+}
+
+/* Timer */
+
+.timer div {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 10px;
+  width: 100%;
+  background: linear-gradient(to bottom, var(--orange), var(--red));
+  animation: timer calc(var(--duration) * 1s) linear forwards;
+  transform-origin: right center;
+}
+
+@keyframes timer {
+  to {
+    transform: scaleX(0);
+  }
 }

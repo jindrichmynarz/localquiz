@@ -1,21 +1,15 @@
 (ns net.mynarz.localquiz.util
   (:require [charred.api :as charred]
             [fast-edn.core :as edn]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.string :as string])
   (:import (java.io PushbackReader)))
 
 (def ^:private buf-size 1024)
 
-(def read-json
-  "Read JSON, keywordizing its keys."
-  (charred/parse-json-fn {:async? false
-                          :bufsize buf-size
-                          :key-fn keyword}))
-
-(defn now
-  "Get the current time."
-  []
-  (java.util.Date.))
+(defn long-str
+  [& strings]
+  (string/join "\n" strings))
 
 (defn read-edn-resource
   "Read EDN `resource` from the classpath."
@@ -25,6 +19,12 @@
       io/reader
       PushbackReader.
       edn/read-once))
+
+(def read-json
+  "Read JSON, keywordizing its keys."
+  (charred/parse-json-fn {:async? false
+                          :bufsize buf-size
+                          :key-fn keyword}))
 
 (defmacro thread
   "Starts a virtual thread. Conveys bindings."

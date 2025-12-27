@@ -33,6 +33,6 @@
   (-main)
 
   ; Open the application in the browser
-  (browse-url (format "http://localhost:%d/" (:port config)))
+  (browse-url (:url config))
 
   (mount/stop))

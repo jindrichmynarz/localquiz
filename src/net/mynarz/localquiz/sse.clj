@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.sse
   (:require [net.mynarz.localquiz.async :refer [refresh-pub]]
+            [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.cpu-pool :refer [on-cpu-pool]]
             [net.mynarz.localquiz.error :as error]
             [net.mynarz.localquiz.game :as game]
@@ -16,9 +17,9 @@
   [render-fn
    {{last-event-id "last-event-id"} :headers
     {player-game-id :game-id} :path-params
-    moderator-game-id :sid
+    session-id :sid
     :as request}]
-  (let [game-id (or player-game-id moderator-game-id)
+  (let [game-id (or player-game-id session-id)
         <ch (a/sub refresh-pub game-id (a/chan (a/dropping-buffer 1)))
         ;; poison pill for work cancelling
         <cancel (a/chan)]
@@ -60,8 +61,10 @@
                             (fn [sse-gen status]
                               (log/infof "Closing the connection to game %s with status %s." game-id status)
                               (a/>!! <cancel :cancel)
+                              (when-not (:is-dev? config) ; Don't close connections in development to allow testing.
+                                (let [{:keys [session-role state]} (game/get-session session-id)]
+                                  (when (and (= session-role :player) (= state :new))
+                                    (game/disconnect-player! session-id))))
                               ;; FIXME: We should not end game when the connection is closed.
                               ;;        For example, browsers disconnect and reconnect when switching tabs.
-                              ;; (when (= session-role :moderator)
-                              ;;   (game/end-game! game-id))
                               (d*/close-sse! sse-gen))})))

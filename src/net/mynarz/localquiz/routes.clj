@@ -12,9 +12,11 @@
          :post (partial sse/handler views/patch-view)}]
    ["/create" {:post (partial views/view moderator-actions/create-game!)}]
    ["/start" {:post (partial views/view moderator-actions/start-game!)}]
+   ["/end" {:post (partial views/view moderator-actions/end-game!)}]
    ; Players' routes
    ["/play/:game-id" {:get views/shim-view
                       :post (partial sse/handler views/patch-view)}]
    ["/join/:game-id"
     ["" {:post (partial views/view player-actions/join-game!)}]
-    ["/validate" {:post (partial views/view player-actions/validate-player-name)}]]])
+    ["/validate" {:post (partial views/view player-actions/validate-player-name)}]]
+   ["/answer/:game-id" {:post (partial views/view player-actions/answer-question!)}]])

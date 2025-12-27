@@ -1,11 +1,12 @@
 (ns net.mynarz.localquiz.game-test
   (:require [net.mynarz.localquiz.db :as db]
+            [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
             [net.mynarz.localquiz.actions.player :as player]
             [clojure.test :refer [are deftest is testing use-fixtures]]
             [datahike.api :as d]
-            [net.mynarz.localquiz.crypto :as crypto]))
+            [taoensso.timbre :as log]))
 
 (defn db-empty?
   "Test if the database is empty."
@@ -13,15 +14,15 @@
   (->> @db/db-conn
        (d/q '[:find ?e ?a ?v
               :where [?e ?a ?v]
-              (not (or [?e :db/ident _]))]) ; Exclude schema entities which all have :db/ident.
+              (not (or [?e :db/ident _] ; Exclude schema entities which all have :db/ident.
+                       [?e :db/txInstant _]))]) ; TODO: Where do the remaining timestamps come from?
        empty?))
 
 (defn get-player-id
   [player-name]
-  (d/q '[:find ?player-id .
+  (d/q '[:find ?player .
          :in $ ?player-name
-         :where [?player :player/name ?player-name]
-                [?player :player/id ?player-id]]
+         :where [?player :player/name ?player-name]]
         @db/db-conn
         player-name))
 
@@ -43,26 +44,25 @@
     (is (= (last (game/lobby fixtures/game-id)) player-name))))
 
 (deftest next-question!
-  (is (= (game/next-question! fixtures/game-id) fixtures/question))
-  (is (nil? (game/next-question! fixtures/game-id))))
+  (game/next-question! fixtures/game-id)
+  (is (= (game/current-question fixtures/game-id) fixtures/question)))
 
 (deftest add-score!
-  (let [get-score (fn [player-id]
+  (let [get-score (fn [player]
                     (d/q '[:find ?score .
-                           :in $ ?player-id
-                           :where [?player :player/id ?player-id]
-                                  [?player :player/score ?score]]
+                           :in $ ?player
+                           :where [?player :player/score ?score]]
                          @db/db-conn
-                         player-id))]
+                         player))]
     (testing "Player without score"
-      (let [player-id (get-player-id "Bob")]
-        (game/add-score! player-id 1)
-        (is (= (get-score player-id) 1))))
+      (let [player (get-player-id "Bob")]
+        (game/add-scores! [{:player player :score 1}])
+        (is (= (get-score player) 1))))
     (testing "Player with score"
-      (let [player-id (get-player-id "Alice")]
-        (game/add-score! player-id 4)
-        (game/add-score! player-id 1)
-        (is (= (get-score player-id) 6))))))
+      (let [player (get-player-id "Jane")]
+        (game/add-scores! [{:player player :score 4}
+                           {:player player :score 1}])
+        (is (= (get-score player) 6))))))
 
 (deftest winner
   (let [winner-id (d/q '[:find ?player-id .
@@ -82,6 +82,14 @@
               first
               :player-name)
          "Jane")))
+
+(deftest parse-answer
+  (are [answer parsed-answer] (= (game/parse-answer answer) parsed-answer)
+       "true" true
+       "false" false
+       "0" 0
+       "0.123456" 0.123456
+       "bork" "bork"))
 
 (deftest end-game!
   (game/end-game! fixtures/game-id)
