@@ -20,4 +20,4 @@
       [{:game/id fixtures/game-id
         :game/players [{:player/id player-id}]}]
       [{:db/id [:player/id player-id]
-        :player/score 1}])))
+        :player/score 1.0}])))

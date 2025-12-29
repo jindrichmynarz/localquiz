@@ -92,35 +92,19 @@
        (sort-by :time-joined)
        (map :player-name)))
 
-(defn next-question!
-  "Get the next question for `game-id`.
-  Removes the question from the game and sets it as the current question.
-  Returns nil if there are no more questions."
-  [^String game-id]
-  (when-let [question (d/q '[:find ?question .
-                             :in $ ?game-id
-                             :where [?game :game/id ?game-id]
-                                    [?game :game/questions ?question]]
-                           @db-conn
-                           game-id)]
-    (d/transact db-conn [[:db/add [:game/id game-id] :game/current-question question]
-                         [:db/retract [:game/id game-id] :game/questions question]])))
-    ; TODO:
-    ; Use a go block instead with alts!! between a time-out and game/all-players-answered?
-    ; How to turn game/all-players-answered into a channel? We can do polling, but that will be inefficient.
-    ;; (future
-    ;;   (Thread/sleep ^int (* 1000 (:question-time-out config))))))
-
 (defn current-question
   "Get the current question for `game-id`."
   [^String game-id]
-  (when-let [question (d/q '[:find ?current-question .
-                             :in $ ?game-id
-                             :where [?game :game/id ?game-id]
-                                    [?game :game/current-question ?current-question]]
-                            @db-conn
-                            game-id)]
-    (edn/read-string question)))
+  (when-let [question (->> game-id
+                           (d/q '[:find ?current-question ?question-added
+                                  :in $ ?game-id
+                                  :keys current-question question-added
+                                  :where [?game :game/id ?game-id]
+                                         [?game :game/current-question ?current-question ?question-tx]
+                                         [?question-tx :db/txInstant ?question-added]]
+                                @db-conn)
+                           first)]
+    (update question :current-question edn/read-string)))
 
 (defn parse-answer
   [^String answer]
@@ -131,47 +115,19 @@
     (cond
       (re-matches #"^\d+$" answer) (Integer/parseInt answer)
       (re-matches #"^\d+\.\d+$" answer) (Double/parseDouble answer)
+      (re-matches #"^\[(\d+(,\s*)?)+\]$" answer) (edn/read-string answer)
       :else answer)))
-
-(defn answer-question!
-  "Answer the current question in game with `game-id`
-  by `answer` for the player with `player-id`."
-  [^String game-id
-   ^String player-id
-   ^String answer]
-  (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
-  (d/transact db-conn [{:game/id game-id
-                        :game/answers [{:answer/player [:player/id player-id]
-                                        :answer/answer answer}]}]))
 
 (defn player-answered?
   "Test if a player with `player-id` has already answered
   the current question in game with `game-id`."
-  [^String game-id
-   ^String player-id]
+  [^String player-id]
   (d/q '[:find ?player-id .
-         :in $ ?game-id ?player-id
-         :where [?game :game/id ?game-id]
-                [?game :game/answers ?answer]
-                [?answer :answer/player ?player]
-                [?player :player/id ?player-id]]
+         :in $ ?player-id
+         :where [?player :player/id ?player-id]
+                [?answer :answer/player ?player]]
        @db-conn
-       game-id
        player-id))
-
-(defn all-players-answered?
-  "Test if all players in `game-id` answered the current question."
-  [^String game-id]
-  (->> game-id
-       (d/q '[:find ?player
-              :in $ ?game-id
-              :where [?game :game/id ?game-id]
-                     [?game :game/players ?player]
-                     (not [?game :game/answers ?answer]
-                          [?answer :answer/player ?player])]
-            @db-conn)
-       seq
-       not))
 
 (defn get-answers
   [^String game-id]
@@ -194,10 +150,10 @@
        (map (fn [result] (update result :answer parse-answer)))))
 
 (def boolean->score
-  {true 1
-   false 0})
+  {true 1.0
+   false 0.0})
 
-(defmulti score-answers (comp (juxt :type :scoring) first))
+(defmulti score-answers (fn [{:keys [type scoring]} _] [type scoring]))
 
 (defmethod score-answers [:multiple nil]
   [{:keys [choices]} answers]
@@ -205,8 +161,9 @@
     (assoc answer :score (->> answer
                               :answer
                               (nth choices)
-                              (keep :correct?)
-                              count))))
+                              :correct?
+                              boolean
+                              boolean->score))))
 
 (defmethod score-answers [:yesno nil]
   [{:keys [correct?]} answers]
@@ -227,17 +184,48 @@
 (defmethod score-answers [:percent-range nil]
   [{:keys [percentage]} answers]
   (for [answer answers]
-    (assoc answer :score (- 1 (/ (Math/abs (- (:answer answer) percentage)) 100)))))
+    (assoc answer :score (- 1 (/ (Math/abs (- ^double (:answer answer) percentage)) 100)))))
+
+(defn consensus-scoring
+  [answers]
+  (let [answer->score (->> answers
+                           (map :answer)
+                           frequencies)]
+    (for [answer answers]
+      (assoc answer :score (- (answer->score (:answer answer)) 1.0)))))
+
+(defmethod score-answers [:sort nil]
+  [{:keys [items]} answers]
+  (let [expected (->> items
+                      (map :sort-value)
+                      (map vector (range))
+                      (sort-by second)
+                      (mapv first))]
+    (for [answer answers]
+      (assoc answer :score (->> answer
+                                :answer
+                                (= expected)
+                                boolean->score)))))
 
 (defmethod score-answers [:multiple :consensus]
-  [question answers])
+  [_ answers]
+  (consensus-scoring answers))
+
+(defmethod score-answers [:yesno :consensus]
+  [_ answers]
+  (consensus-scoring answers))
 
 (defn scale-scores-by-answer-times
   [scores]
-  (let [max-answer-time (apply max (map :answer-time scores))]
+  (if-let [max-answer-time (some->> scores
+                                    (keep :answer-time)
+                                    seq
+                                    (apply max))]
     (for [score scores
+          ; TODO: Think of less penalizing scaling.
           :let [time-modifier (- 1 (/ (:answer-time score) max-answer-time))]]
-      (update score :score * time-modifier))))
+      (update score :score * time-modifier))
+    scores))
 
 (defn add-score
   "Add `answer-score` to the current score of the `player`."
@@ -247,17 +235,16 @@
   (d/q '[:find ?player ?score
          :in $ ?player ?answer-score
          :keys db/id player/score
-         :where [(get-else $ ?player :player/score 0) ?current-score]
+         :where [(get-else $ ?player :player/score 0.0) ?current-score]
                 [(+ ?current-score ?answer-score) ?score]]
        db
        player
        answer-score))
 
-(defn add-scores!
+(defn add-scores
   [scores]
   (->> scores
-      (mapv (fn [{:keys [player score]}] [:db.fn/call add-score player score]))
-      (d/transact db-conn)))
+      (mapv (fn [{:keys [player score]}] [:db.fn/call add-score player score]))))
 
 (defn descending-order
   "Sort `a` and `b` in the descending order."
@@ -275,9 +262,7 @@
                      [?game :game/players ?player]
                      [?player :player/id ?player-id]
                      [?player :player/name ?player-name]
-                     (or-join [?player ?score]
-                              [?player :player/score ?score]
-                              [(ground 0) ?score])]
+                     [(get-else $ ?player :player/score 0.0) ?score]]
             @db-conn)
        (sort-by :score descending-order)))
 
@@ -300,6 +285,100 @@
             @db-conn)
        count
        (< 1)))
+
+(defn all-players-answered?
+  "Test if all players in `game-id` answered the current question."
+  [^String game-id]
+  (->> game-id
+       (d/q '[:find ?player
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]
+                     [?game :game/players ?player]
+                     (not [?game :game/answers ?answer]
+                          [?answer :answer/player ?player])]
+            @db-conn)
+       seq
+       not))
+
+(defonce timeouts
+  (atom {}))
+
+(defn cancel-timeout!
+  [^String game-id
+   timeouts]
+  (if-let [timeout (timeouts game-id)]
+    (do (when-not (future-done? timeout)
+          (future-cancel timeout))
+        (dissoc timeouts game-id))
+    timeouts))
+
+(defn evaluate-answers!
+  [^String game-id]
+  (swap! timeouts (partial cancel-timeout! game-id))
+  (let [{question :current-question} (current-question game-id)]
+    (->> game-id
+         get-answers
+         log/spy
+         (score-answers question)
+         ;scale-scores-by-answer-times
+         log/spy
+         add-scores
+         (into [[:db/add [:game/id game-id] :game/state :show-answers]])
+         log/spy
+         (d/transact db-conn))))
+
+(defn get-answer-ids
+  [^String game-id]
+  (d/q '[:find [?answer ...]
+         :in $ ?game-id
+         :where [?game :game/id ?game-id]
+                [?game :game/answers ?answer]]
+       @db-conn
+       game-id))
+
+(defn next-question!
+  "Get the next question for `game-id`.
+  Removes the question from the game and sets it as the current question.
+  Returns nil if there are no more questions."
+  [^String game-id]
+  (when-let [question (d/q '[:find ?question .
+                             :in $ ?game-id
+                             :where [?game :game/id ?game-id]
+                                    [?game :game/questions ?question]]
+                           @db-conn
+                           game-id)]
+    (->> game-id
+         get-answer-ids
+         (mapv (partial vector :db/retractEntity))
+         (into [[:db/add [:game/id game-id] :game/state :question]
+                [:db/add [:game/id game-id] :game/current-question question]
+                [:db/retract [:game/id game-id] :game/questions question]])
+         (d/transact db-conn))
+    (swap! timeouts
+           assoc
+           game-id
+           (future
+             (Thread/sleep ^int (* 1000 (:question-time-out config)))
+             (log/infof "Time-out in game %s!" game-id)
+             (evaluate-answers! game-id)))))
+
+(defn answer-question!
+  "Answer the current question in game with `game-id`
+  by `answer` for the player with `player-id`."
+  [^String game-id
+   ^String player-id
+   ^String answer]
+  (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
+  (d/transact db-conn [{:game/id game-id
+                        :game/answers [{:answer/player [:player/id player-id]
+                                        :answer/answer (str answer)}]}])
+  (when (all-players-answered? game-id)
+    (log/infof "All players in game %s have answered." game-id)
+    (evaluate-answers! game-id)))
+
+(defn leaderboard!
+  [^String game-id]
+  (d/transact db-conn [[:db/add [:game/id game-id] :game/state :leaderboard]]))
 
 (defn disconnect-player!
   [^String player-id]

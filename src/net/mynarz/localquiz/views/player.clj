@@ -53,7 +53,7 @@
   [{{:keys [game-id]} :path-params
     player-id :sid}]
   [:section#content
-   (if (game/player-answered? game-id player-id)
+   (if (game/player-answered? player-id)
      [:p "Waiting for other answers..."]
      (let [answer-revealed? (game/all-players-answered? game-id)
            current-question (game/current-question game-id)]
@@ -63,7 +63,9 @@
                            current-question)))])
 
 (defmethod views/game-view [:player :show-answers]
-  [])
+  [{player-id :sid}]
+  [:section#content])
+    ; TODO: Show if the player's answers was correct or not?
 
 (defmethod views/game-view [:player :leaderboard]
   [])

@@ -280,7 +280,12 @@ label {
   /* box-shadow: 0 .1em .1em var(--darker); */
 }
 
+#question {
+  text-align: center;
+}
+
 #question img {
+  border: solid 3px var(--dark);
   max-width: 500px;
   max-height: 50%;
 }
@@ -364,4 +369,14 @@ label {
   to {
     transform: scaleX(0);
   }
+}
+
+input[type="range"] {
+  color: var(--blue);
+}
+
+.percentage {
+  padding: 0 .25em;
+  display: inline-block;
+  width: 3em;
 }

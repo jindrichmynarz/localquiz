@@ -1,7 +1,7 @@
 (ns net.mynarz.localquiz.actions.moderator
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.game :as game]
-            [net.mynarz.localquiz.util :refer [read-edn-resource]]
+            [net.mynarz.localquiz.util :as util]
             [datahike.api :as d]
             [taoensso.timbre :as log]))
 
@@ -26,11 +26,11 @@
     game :game}]
   (when-not game ; TODO: What should happen if the game already exists? Shall we recreate it?
     (let [questions (->> "questions/femquiz.edn"
-                          read-edn-resource
+                          util/read-edn-resource
                           :questions
                           shuffle
                           (take 20)
-                          (map pr-str))]
+                          (map (comp pr-str util/replace-react-fragments)))]
       (log/infof "Creating a new game %s." game-id)
       (d/transact db-conn [{:game/id game-id
                             :game/state :new
@@ -41,18 +41,20 @@
     {:keys [session-role]} :game}]
   (when (= session-role :moderator)
     (log/infof "Starting the game %s." game-id)
-    (d/transact db-conn [{:game/id game-id
-                          :game/state :question}])
     (game/next-question! game-id)))
 
-(defn score-answers!
-  [{game-id :sid}]
-  (let [question (game/current-question game-id)
-        answers (game/get-answers game-id)]
-    (->> answers
-         (game/score-answers question)
-         game/scale-scores-by-answer-times
-         game/add-scores!)))
+(defn leaderboard!
+  [{game-id :sid
+    {:keys [session-role]} :game}]
+  (when (= session-role :moderator)
+    (log/infof "Going to leaderboard for the game %s." game-id)
+    (game/leaderboard! game-id)))
+
+(defn next-question!
+  [{game-id :sid
+    {:keys [session-role]} :game}]
+  (when (= session-role :moderator) ; FIXME: Is this repeated boilerplate required for security?
+    (game/next-question! game-id)))
 
 (defn end-game!
   [{game-id :sid

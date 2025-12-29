@@ -2,7 +2,8 @@
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.qrcode :refer [url->qrcode-svg]]
-            [net.mynarz.localquiz.views.common :refer [answers-view game-view timer]]
+            [net.mynarz.localquiz.util :refer [decimal-format]]
+            [net.mynarz.localquiz.views.common :refer [answers-view game-view]]
             [taoensso.timbre :as log]))
 
 (defn pick-questions
@@ -29,6 +30,14 @@
                                 join-game-url)
      :data-text "$_copyLabel[0]"}]])
 
+(defn next-button
+  [^String next-action]
+  [:button.btn.btn-primary
+   {:data-on:click next-action
+    :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
+   "Next"
+   [:i.material-icons "arrow_circle_right"]])
+
 (def end-game
   [:span#end-game
    {:data-on:click "confirm('Do you want to end the game?') && @post('/end')"
@@ -41,8 +50,13 @@
    [:h2 "Leaderboard"]
    [:table
     [:tr [:th "Player"] [:th "Score"]]
-    (for [{:keys [player-name score]} (game/leaderboard game-id)]
-      [:tr [:td player-name] [:td score]])]])
+    (for [{:keys [player-name score]} (game/leaderboard game-id)
+          :let [score-decimal (decimal-format score)
+                score-style (format "--score: %s;" score-decimal)]]
+      [:tr
+       [:td player-name]
+       [:td [:span {:style score-style}] score-decimal]])]
+   [:p (next-button "@post('/next-question')")]])
 
 (def play-again
   [:button.btn
@@ -89,10 +103,10 @@
          (for [player-name lobby]
            [:li player-name])]])]))
 
-(defmethod game-view [:moderator :question]
-  [{game-id :sid}]
-  (let [answer-revealed? (game/all-players-answered? game-id)
-        current-question (game/current-question game-id)]
+(defn question-view
+  [^String game-id
+   ^Boolean answer-revealed?]
+  (let [{:keys [current-question] :as question} (game/current-question game-id)]
      [:section#content
       end-game
       [:div#question
@@ -100,10 +114,17 @@
        (answers-view true
                      answer-revealed?
                      game-id
-                     current-question)]]))
+                     question)]
+      (when answer-revealed?
+        [:p (next-button "@post('/leaderboard')")])]))
+
+(defmethod game-view [:moderator :question]
+  [{game-id :sid}]
+  (question-view game-id false))
 
 (defmethod game-view [:moderator :show-answers]
-  [])
+  [{game-id :sid}]
+  (question-view game-id true))
 
 (defmethod game-view [:moderator :leaderboard]
   [{game-id :sid}]

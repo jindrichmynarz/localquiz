@@ -12,6 +12,8 @@
          :post (partial sse/handler views/patch-view)}]
    ["/create" {:post (partial views/view moderator-actions/create-game!)}]
    ["/start" {:post (partial views/view moderator-actions/start-game!)}]
+   ["/leaderboard" {:post (partial views/view moderator-actions/leaderboard!)}]
+   ["/next-question" {:post (partial views/view moderator-actions/next-question!)}]
    ["/end" {:post (partial views/view moderator-actions/end-game!)}]
    ; Players' routes
    ["/play/:game-id" {:get views/shim-view

@@ -78,7 +78,7 @@
    ;;  :db/cardinality :db.cardinality/one}
    {:db/ident :player/score
     :db/doc "Player's score"
-    :db/valueType :db.type/long
+    :db/valueType :db.type/double
     :db/cardinality :db.cardinality/one}
    ;; {:db/ident :question/text
    ;;  :db/doc "Question in Hiccup"

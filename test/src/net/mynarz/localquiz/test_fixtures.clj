@@ -16,11 +16,11 @@
     :game/questions [(pr-str question)]
     :game/players [{:player/id (crypto/random-unguessable-uid)
                     :player/name "Jane"
-                    :player/score 1
+                    :player/score 1.0
                     :db/ensure :player}
                    {:player/id (crypto/random-unguessable-uid)
                     :player/name "Bob"
-                    :player/score 0
+                    :player/score 0.0
                     :db/ensure :player}]
     :db/ensure :game}])
 

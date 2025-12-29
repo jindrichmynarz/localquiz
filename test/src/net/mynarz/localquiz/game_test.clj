@@ -15,8 +15,18 @@
        (d/q '[:find ?e ?a ?v
               :where [?e ?a ?v]
               (not (or [?e :db/ident _] ; Exclude schema entities which all have :db/ident.
-                       [?e :db/txInstant _]))]) ; TODO: Where do the remaining timestamps come from?
+                       [?e :db/txInstant _]))])
        empty?))
+
+(defn game-deleted?
+  [^String game-id]
+  (->> game-id
+       (d/q '[:find (pull ?game [*])
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]]
+            @db/db-conn)
+       seq
+       not))
 
 (defn get-player-id
   [player-name]
@@ -45,7 +55,7 @@
 
 (deftest next-question!
   (game/next-question! fixtures/game-id)
-  (is (= (game/current-question fixtures/game-id) fixtures/question)))
+  (is (= (:current-question (game/current-question fixtures/game-id)) fixtures/question)))
 
 (deftest add-score!
   (let [get-score (fn [player]
@@ -56,13 +66,17 @@
                          player))]
     (testing "Player without score"
       (let [player (get-player-id "Bob")]
-        (game/add-scores! [{:player player :score 1}])
-        (is (= (get-score player) 1))))
+        (->> [{:player player :score 1}]
+             game/add-scores
+             (d/transact db/db-conn))
+        (is (= (get-score player) 1.0))))
     (testing "Player with score"
       (let [player (get-player-id "Jane")]
-        (game/add-scores! [{:player player :score 4}
-                           {:player player :score 1}])
-        (is (= (get-score player) 6))))))
+        (->> [{:player player :score 4}
+              {:player player :score 1}]
+             game/add-scores
+             (d/transact db/db-conn))
+        (is (= (get-score player) 6.0))))))
 
 (deftest winner
   (let [winner-id (d/q '[:find ?player-id .
@@ -89,8 +103,30 @@
        "false" false
        "0" 0
        "0.123456" 0.123456
+       "[1,3,0,2]" [1 3 0 2]
        "bork" "bork"))
+
+(deftest score-answers
+  (are [question answers scores] (= (map :score (game/score-answers question answers)) scores)
+       {:type :multiple
+        :choices [{:correct? true} {} {} {}]}
+       [{:answer 0} {:answer 3} {:answer 0}]
+       [1.0 0.0 1.0]
+
+       {:type :yesno
+        :correct? false}
+       [{:answer false} {:answer true} {:answer false}]
+       [1.0 0.0 1.0]))
+
+(deftest consensus-scoring
+  (are [answers scores] (= (map :score (game/consensus-scoring answers)) scores)
+       [{:answer 1} {:answer 3} {:answer 1}]
+       [1.0 0.0 1.0]
+
+       [{:answer false} {:answer true} {:answer false}]
+       [1.0 0.0 1.0]))
 
 (deftest end-game!
   (game/end-game! fixtures/game-id)
+  (is (game-deleted? fixtures/game-id))
   (is (db-empty?)))

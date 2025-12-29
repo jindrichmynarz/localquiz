@@ -4,12 +4,13 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
-            [net.mynarz.localquiz.util :refer [long-str]]
+            [net.mynarz.localquiz.util :refer [decimal-format long-str]]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.brotli :as brotli]
             [starfederation.datastar.clojure.api :refer [CDN-url]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (java.util Date)))
 
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
@@ -119,20 +120,21 @@
 
 (defn- answer-click-handler
   [^Boolean disabled?
+   ^Boolean signal?
    ^String game-id]
   (when-not disabled?
     {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
-                              "($answer = $answer || evt.target.dataset.answer) &&"
+                              ; FIXME: Allow to use either the $answer signal of evt.target.dataset.answer.
+                              ;        The conditional assignment returns undefined, hence the @post is not executed.
+                              (when-not signal? "($answer = evt.target.dataset.answer) &&")
                               (format "@post('/answer/%s')" game-id))}))
 
 (defn- mark-answer
   [^Boolean answer-revealed?
    ^Boolean correct?]
-  (when answer-revealed?
+  (when (and answer-revealed? correct?)
     [:div.answer-mark
-     (if correct?
-       [:i.material-icons "check"]
-       [:i.material-icons "close_small"])]))
+     [:i.material-icons "check"]]))
 
 (defn- note-view
   [^Boolean answer-revealed?
@@ -142,26 +144,37 @@
      [:i.material-icons.md-light.md-24 "info"]
      note]))
 
-(def timer
-  (let [duration (->> config
-                      :question-time-out
-                      (format "--duration: %d"))]
-    [:div.timer
-     {:style duration}
-     [:div]]))
+(defn timer
+  [^Boolean answer-revealed?
+   ^Date question-added]
+  (when-not answer-revealed?
+    (let [duration (:question-time-out config)
+          signals (format "{_timer: {start: new Date(%d), delay: 0}}" (.getTime question-added))
+          sync-animation (format "($_timer.delay = - ((Date.now() - $_timer.start) / 1000) %% %d)" duration)]
+      [:div.timer
+       {:data-signals signals
+        :data-on:visibilitychange__window (str "!document.hidden && " sync-animation)
+        :data-style:animationDelay "$_timer.delay"
+        :data-style:--duration duration}
+       [:div]])))
 
 (defmulti answers-view
-  (fn [& args] (-> args last :type)))
+  (fn [& args]
+    (-> args
+        last
+        :current-question
+        :type)))
 
 (defmethod answers-view :multiple
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [choices note]}]
+   {:keys [question-added]
+    {:keys [choices note]} :current-question}]
   [:section#answers
-   timer
+   (timer answer-revealed? question-added)
    [:ul#choices
-    (answer-click-handler (or disabled? answer-revealed?) game-id)
+    (answer-click-handler (or disabled? answer-revealed?) false game-id)
     (map-indexed
       (fn [index {:keys [correct? text]}]
         [:li
@@ -180,54 +193,70 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [correct? note]}]
+   {{:keys [correct? note]} :current-question}]
   [:section#answers
    (when-not disabled?
      [:p
-      (answer-click-handler answer-revealed? game-id)
+      (answer-click-handler answer-revealed? false game-id)
       [:button.btn
-       {:data-answer "true"
+       {:class (when answer-revealed?
+                 (if correct? "correct" "incorrect"))
+        :data-answer "true"
         :disabled disabled?}
        "Yes"
-       (mark-answer answer-revealed? (true? correct?))]
+       (mark-answer answer-revealed? correct?)]
       [:button.btn
-       {:data-answer "false"
+       {:class (when answer-revealed?
+                 (if-not correct? "correct" "incorrect"))
+        :data-answer "false"
         :disabled disabled?}
        "No"
-       (mark-answer answer-revealed? (false? correct?))]])
+       (mark-answer answer-revealed? (not correct?))]])
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :percent-range
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [note]}]
+   {:keys [question-added]
+    {:keys [note percentage]} :current-question}]
   [:section#answers
-   timer
+   (timer answer-revealed? question-added)
    (when-not disabled?
-     [:p
-      (answer-click-handler answer-revealed? game-id)
-      [:input
-       {:data-bind "answer"
-        :max 100
-        :min 0
-        :type "range"
-        :value 50}]
-      [:span
-       {:data-text "$answer + ' %'"}]
-      [:button.btn#submit "Submit"]])
+     [:div
+      [:p
+       (answer-click-handler answer-revealed? true game-id)
+       [:input
+        {:data-bind "answer"
+         :list "markers"
+         :max "100"
+         :min "0"
+         :type "range"
+         :value "50"}]
+       [:datalist#markers
+        (for [value (->> 0
+                         (iterate (partial + 25))
+                         (take 5)
+                         (map str))]
+          [:option {:value value}])]
+       [:span.percentage
+        {:data-text "$answer + ' %'"}]]
+      [:p [:button.btn#submit "Submit"]]])
+   (when answer-revealed?
+     [:p (format "%s %%" (decimal-format percentage))])
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :open
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [answer note]}]
+   {:keys [question-added]
+    {:keys [answer note]} :current-question}]
   [:section#answers
-   timer
+   (timer answer-revealed? question-added)
    (when-not disabled?
      [:p
-      (answer-click-handler answer-revealed? game-id)
+      (answer-click-handler answer-revealed? true game-id)
       [:input
        {:autofocus true
         :data-bind "answer"
@@ -242,17 +271,21 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [items note]}]
+   {:keys [question-added]
+    {:keys [items note]} :current-question}]
   [:section#answers
-   timer
+   (answer-click-handler answer-revealed? true game-id)
+   (timer answer-revealed? question-added)
    [:ul.sortable-list
-    (answer-click-handler answer-revealed? game-id)
+    ; TODO: Is `data-computed` recalculated when DOM changes?
+    ;       Hook it to a custom event from Sortable.js like in <https://data-star.dev/examples/sortable>.
+    {:data-computed:answer "[...el.querySelectorAll('li')].map(el => el.dataset.index)"}
     (map-indexed
       (fn [index {:keys [sort-value text]}]
         [:li
-         {:data-answer index}
+         {:data-index index}
          [:div text]
          (when answer-revealed?
            [:div.sort-value sort-value])])
-      items)]
-   (note-view answer-revealed? note)])
+      items)
+    (note-view answer-revealed? note)]])
