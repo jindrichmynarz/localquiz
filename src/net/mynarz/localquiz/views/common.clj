@@ -73,6 +73,7 @@
       [:noscript "Your browser does not support JavaScript!"]
       cookie-warning
       [:main
+       [:h1 [:a {:href "/"} "Localquiz"]]
        [:div#morph]
        [:footer
         [:p
@@ -115,7 +116,6 @@
     :as request}]
   (let [game-session (game/get-session game-id)]
     [:div#morph
-     [:h1 [:a {:href "/"} "Localquiz"]]
      (game-view (assoc request :game game-session))]))
 
 (defn- answer-click-handler
@@ -123,18 +123,15 @@
    ^Boolean signal?
    ^String game-id]
   (when-not disabled?
-    {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
-                              ; FIXME: Allow to use either the $answer signal of evt.target.dataset.answer.
-                              ;        The conditional assignment returns undefined, hence the @post is not executed.
-                              (when-not signal? "($answer = evt.target.dataset.answer) &&")
-                              (format "@post('/answer/%s')" game-id))}))
+    {:data-on:click (long-str "evt.target.tagName = 'BUTTON'"
+                              (when-not signal? "&& ($answer = evt.target.dataset.answer)")
+                              (format "&& @post('/answer/%s')" game-id))}))
 
 (defn- mark-answer
   [^Boolean answer-revealed?
    ^Boolean correct?]
   (when (and answer-revealed? correct?)
-    [:div.answer-mark
-     [:i.material-icons "check"]]))
+    [:i.material-icons "check"]))
 
 (defn- note-view
   [^Boolean answer-revealed?
@@ -155,7 +152,7 @@
        {:data-signals signals
         :data-on:visibilitychange__window (str "!document.hidden && " sync-animation)
         :data-style:animationDelay "$_timer.delay"
-        :data-style:--duration duration}
+        :data-style:--duration (format "'%ds'" duration)}
        [:div]])))
 
 (defmulti answers-view
@@ -183,8 +180,8 @@
                     (if correct? "correct" "incorrect"))
            :data-answer index
            :disabled (or disabled? answer-revealed?)}
-          [:div.answer
-           [:div text]
+          [:span.answer
+            text
            (mark-answer answer-revealed? correct?)]]])
       choices)]
    (note-view answer-revealed? note)])
@@ -193,25 +190,26 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {{:keys [correct? note]} :current-question}]
+   {:keys [question-added]
+    {:keys [correct? note]} :current-question}]
   [:section#answers
-   (when-not disabled?
-     [:p
-      (answer-click-handler answer-revealed? false game-id)
-      [:button.btn
-       {:class (when answer-revealed?
-                 (if correct? "correct" "incorrect"))
-        :data-answer "true"
-        :disabled disabled?}
-       "Yes"
-       (mark-answer answer-revealed? correct?)]
-      [:button.btn
-       {:class (when answer-revealed?
-                 (if-not correct? "correct" "incorrect"))
-        :data-answer "false"
-        :disabled disabled?}
-       "No"
-       (mark-answer answer-revealed? (not correct?))]])
+   (timer answer-revealed? question-added)
+   [:p
+     (answer-click-handler (or disabled? answer-revealed?) false game-id)
+     [:button.btn
+      {:class (when answer-revealed?
+                (if correct? "correct" "incorrect"))
+       :data-answer "true"
+       :disabled disabled?}
+      "Yes"
+      (mark-answer answer-revealed? correct?)]
+     [:button.btn
+      {:class (when answer-revealed?
+                (if-not correct? "correct" "incorrect"))
+       :data-answer "false"
+       :disabled disabled?}
+      "No"
+      (mark-answer answer-revealed? (not correct?))]]
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :percent-range

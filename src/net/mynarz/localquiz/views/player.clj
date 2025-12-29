@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.views.player
   (:require [net.mynarz.localquiz.game :as game]
+            [net.mynarz.localquiz.util :refer [long-str]]
             [net.mynarz.localquiz.views.common :as views]))
 
 (defn player-name-input
@@ -8,7 +9,9 @@
   ([{{:keys [game-id]} :path-params}
     validation-error]
    (let [disabled? (some? validation-error)
-         validate-js (format "$_submitted || @post('/join/%s/validate', {requestCancellation: $_controller})" game-id)]
+         validate-js (long-str "$_submitted ||"
+                               "$playerName.length != 0 ||"
+                               (format "@post('/join/%s/validate', {requestCancellation: $_controller})" game-id))]
      [:section#content
       [:p
        {:data-signals "{_controller: new AbortController(), _submitted: false}"}
@@ -64,11 +67,13 @@
 
 (defmethod views/game-view [:player :show-answers]
   [{player-id :sid}]
-  [:section#content])
-    ; TODO: Show if the player's answers was correct or not?
+  ; TODO: Show if the player's answer was correct or not?
+  ;       This requires either re-evaluating whether the answer is correct or persisting the evaluation.
+  [:section#content "SHOW ANSWERS"])
 
 (defmethod views/game-view [:player :leaderboard]
-  [])
-
-(defmethod views/game-view [:player :end]
-  [])
+  [{{:keys [game-id]} :path-params
+    player-id :sid}]
+  (when (and (game/all-questions-answered? game-id) (= player-id (game/winner game-id)))
+    [:section#content
+     [:h1.winner "You won!" [:i.material-icons.md-36 "emoji_events"]]]))

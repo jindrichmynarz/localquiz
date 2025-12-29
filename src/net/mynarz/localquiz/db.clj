@@ -6,8 +6,7 @@
   #{:new
     :question
     :show-answers
-    :leaderboard
-    :end})
+    :leaderboard})
 
 (defn valid-game-state?
   [db eid]

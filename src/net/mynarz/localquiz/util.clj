@@ -5,21 +5,22 @@
             [clojure.walk :refer [postwalk-replace]]
             [fast-edn.core :as edn])
   (:import (java.io PushbackReader)
-           (java.text DecimalFormat)
+           (java.text DecimalFormat DecimalFormatSymbols)
            (java.util Locale)))
 
 (def ^:private buf-size 1024)
 
 (def decimal-format
   "Format doubles as decimal numbers with up to 2 decimal places."
-  (let [formatter (DecimalFormat. "0.##")]
-    (Locale/setDefault Locale/US) ; Use US locale for numeric formatting. TODO: Make this configurable.
+  (let [formatter (DecimalFormat. "0.##" (DecimalFormatSymbols/getInstance Locale/US))]
     (fn [^double n]
       (.format formatter n))))
 
 (defn long-str
   [& strings]
-  (string/join "\n" strings))
+  (->> strings
+       (remove nil?)
+       (string/join "\n")))
 
 (defn read-edn-resource
   "Read EDN `resource` from the classpath."

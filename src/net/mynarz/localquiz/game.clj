@@ -107,6 +107,7 @@
     (update question :current-question edn/read-string)))
 
 (defn parse-answer
+  ; TODO: Shall we just use edn/read-string?
   [^String answer]
   (case answer
     nil nil
@@ -228,7 +229,7 @@
     scores))
 
 (defn add-score
-  "Add `answer-score` to the current score of the `player`."
+  "A transaction function that adds `answer-score` to the current score of the `player`."
   [db
    ^long player
    ^long answer-score]
@@ -242,9 +243,11 @@
        answer-score))
 
 (defn add-scores
+  "Create transaction data from `scores`."
   [scores]
-  (->> scores
-      (mapv (fn [{:keys [player score]}] [:db.fn/call add-score player score]))))
+  (mapv (fn [{:keys [player score]}]
+          [:db.fn/call add-score player score])
+        scores))
 
 (defn descending-order
   "Sort `a` and `b` in the descending order."
@@ -300,6 +303,16 @@
        seq
        not))
 
+(defn all-questions-answered?
+  [^String game-id]
+  (->> game-id
+       (d/q '[:find ?question .
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]
+                     [?game :game/questions ?question]]
+            @db-conn)
+       nil?))
+
 (defonce timeouts
   (atom {}))
 
@@ -318,13 +331,10 @@
   (let [{question :current-question} (current-question game-id)]
     (->> game-id
          get-answers
-         log/spy
          (score-answers question)
          ;scale-scores-by-answer-times
-         log/spy
          add-scores
          (into [[:db/add [:game/id game-id] :game/state :show-answers]])
-         log/spy
          (d/transact db-conn))))
 
 (defn get-answer-ids
@@ -379,6 +389,9 @@
 (defn leaderboard!
   [^String game-id]
   (d/transact db-conn [[:db/add [:game/id game-id] :game/state :leaderboard]]))
+
+(defn player-score
+  [^String player-id])
 
 (defn disconnect-player!
   [^String player-id]
