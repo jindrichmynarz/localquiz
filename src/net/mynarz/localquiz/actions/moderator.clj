@@ -5,14 +5,6 @@
             [datahike.api :as d]
             [taoensso.timbre :as log]))
 
-(def advance-game
-  "Map of transitions between game statuses"
-  ; TODO
-  {:lobby :question
-   :question {:has-questions :evaluation
-              :no-questions :leaderboard}
-   :evaluation :question})
-
 (defn pick-questions!
   [{game-id :sid
     :as request}])
@@ -22,43 +14,28 @@
 
 (defn create-game!
   "Create a game identified by `game-id`."
-  [{game-id :sid
-    game :game}]
-  (when-not game ; TODO: What should happen if the game already exists? Shall we recreate it?
-    (let [questions (->> "questions/femquiz.edn"
-                          util/read-edn-resource
-                          :questions
-                          shuffle
-                          (take 20)
-                          (map (comp pr-str util/replace-react-fragments)))]
-      (log/infof "Creating a new game %s." game-id)
-      (d/transact db-conn [{:game/id game-id
-                            :game/state :new
-                            :game/questions questions}]))))
-
-(defn start-game!
-  [{game-id :sid
-    {:keys [session-role]} :game}]
-  (when (= session-role :moderator)
-    (log/infof "Starting the game %s." game-id)
-    (game/next-question! game-id)))
+  [{game-id :sid}]
+  ; TODO: What should happen if the game already exists? Shall we recreate it?
+  (let [questions (->> "questions/femquiz.edn"
+                        util/read-edn-resource
+                        :questions
+                        shuffle
+                        (take 20)
+                        (map (comp pr-str util/replace-react-fragments)))]
+    (log/infof "Creating a new game %s." game-id)
+    (d/transact db-conn [{:game/id game-id
+                          :game/state :new
+                          :game/questions questions}])))
 
 (defn leaderboard!
-  [{game-id :sid
-    {:keys [session-role]} :game}]
-  (when (= session-role :moderator)
-    (log/infof "Going to leaderboard for the game %s." game-id)
-    (game/leaderboard! game-id)))
+  [{game-id :sid}]
+  (d/transact db-conn [[:db/add [:game/id game-id] :game/state :leaderboard]]))
 
-(defn next-question!
-  [{game-id :sid
-    {:keys [session-role]} :game}]
-  (when (= session-role :moderator) ; FIXME: Is this repeated boilerplate required for security?
-    (game/next-question! game-id)))
+(defn next-question! ; TODO: Think of a better separation between `actions` and the `game` namespaces.
+  [{game-id :sid}]
+  (game/next-question! game-id))
 
 (defn end-game!
-  [{game-id :sid
-    {:keys [session-role]} :game}]
-  (when (= session-role :moderator)
-    (log/infof "Ending the game %s." game-id)
-    (game/end-game! game-id)))
+  [{game-id :sid}]
+  (log/infof "Ending the game %s." game-id)
+  (d/transact db-conn [[:db/retractEntity [:game/id game-id]]]))

@@ -37,16 +37,6 @@
 
       :else (handler request))))
 
-(defn wrap-game-session
-  "Ring middleware adding game session metadata."
-  [handler]
-  (fn [{session-id :sid
-        :as request}]
-    (->> session-id
-         game/get-session
-         (assoc request :game)
-         handler)))
-
 (defn wrap-parse-json-body
   "Ring middleware parsing request bodies in JSON."
   [handler]

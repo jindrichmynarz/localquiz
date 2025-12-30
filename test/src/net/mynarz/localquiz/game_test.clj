@@ -8,26 +8,6 @@
             [datahike.api :as d]
             [taoensso.timbre :as log]))
 
-(defn db-empty?
-  "Test if the database is empty."
-  []
-  (->> @db/db-conn
-       (d/q '[:find ?e ?a ?v
-              :where [?e ?a ?v]
-              (not (or [?e :db/ident _] ; Exclude schema entities which all have :db/ident.
-                       [?e :db/txInstant _]))])
-       empty?))
-
-(defn game-deleted?
-  [^String game-id]
-  (->> game-id
-       (d/q '[:find (pull ?game [*])
-              :in $ ?game-id
-              :where [?game :game/id ?game-id]]
-            @db/db-conn)
-       seq
-       not))
-
 (defn get-player-id
   [player-name]
   (d/q '[:find ?player .
@@ -125,8 +105,3 @@
 
        [{:answer false} {:answer true} {:answer false}]
        [1.0 0.0 1.0]))
-
-(deftest end-game!
-  (game/end-game! fixtures/game-id)
-  (is (game-deleted? fixtures/game-id))
-  (is (db-empty?)))

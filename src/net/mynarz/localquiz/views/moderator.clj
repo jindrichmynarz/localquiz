@@ -64,7 +64,7 @@
          "End game"
          [:i.material-icons.md-light.md-36 "cancel"]]]
        [:p
-        (next-button "@post('/next-question')")])]))
+        (next-button "@post('/question')")])]))
 
 (def play-again
   [:button.btn
@@ -97,7 +97,7 @@
        (if has-enough-players?
          [:p
           [:button.btn.btn-primary
-           {:data-on:click "@post('/start')"
+           {:data-on:click "@post('/question')"
             :disabled (not has-enough-players?)
             :type "submit"}
            "Start the game"]]
@@ -106,10 +106,10 @@
           "Waiting for at least two players to join..."])]]
      (when (seq lobby)
        [:section#lobby
-        [:h2 "Players"]
-        [:ul
+        [:table
+         [:tr [:th "Players"]]
          (for [player-name lobby]
-           [:li player-name])]])]))
+           [:tr [:td player-name]])]])]))
 
 (defn question-view
   [^String game-id
@@ -141,9 +141,3 @@
      (when-not final-leaderboard? end-game)
      (leaderboard game-id)
      (when final-leaderboard? play-again)]))
-
-(defmethod game-view [:moderator :end]
-  [{game-id :sid}]
-  [:section#content
-   (leaderboard game-id)
-   play-again])

@@ -21,7 +21,7 @@
     :as request}]
   (let [game-id (or player-game-id session-id)
         <ch (a/sub refresh-pub game-id (a/chan (a/dropping-buffer 1)))
-        ;; poison pill for work cancelling
+        ; Poison pill for work cancelling
         <cancel (a/chan)]
     (hk-gen/->sse-response request
                            {hk-gen/write-profile (brotli/->brotli-profile)
@@ -40,7 +40,6 @@
 
                                     [<ch]
                                     ([_]
-                                     (log/infof "Rendering game %s." game-id)
                                      (some-> ; Stop in case of error
                                       (on-cpu-pool ; CPU work on real threads
                                        ; Stop in case of error
@@ -50,6 +49,7 @@
                                                new-view-hash (Integer/toHexString (hash new-view-str))]
                                            ; Only send an event if the view has changed
                                            (when-not (= last-view-hash new-view-hash)
+                                             (log/infof "Rendering game %s for session %s." game-id session-id)
                                              (d*/patch-elements! sse-gen new-view-str))
                                            new-view-hash)))
                                       recur))
@@ -61,10 +61,8 @@
                             (fn [sse-gen status]
                               (log/infof "Closing the connection to game %s with status %s." game-id status)
                               (a/>!! <cancel :cancel)
-                              (when-not (:is-dev? config) ; Don't close connections in development to allow testing.
-                                (let [{:keys [session-role state]} (game/get-session session-id)]
-                                  (when (and (= session-role :player) (= state :new))
-                                    (game/disconnect-player! session-id))))
-                              ;; FIXME: We should not end game when the connection is closed.
-                              ;;        For example, browsers disconnect and reconnect when switching tabs.
+                              (when (and (not (:is-dev? config)) ; Don't close connections in development to allow testing.
+                                         player-game-id
+                                         (= (game/get-game-state player-game-id) :new))
+                                (game/disconnect-player! session-id))
                               (d*/close-sse! sse-gen))})))

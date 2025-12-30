@@ -1,7 +1,6 @@
 (ns net.mynarz.localquiz.views.common
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.crypto :as crypto]
-            [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [decimal-format long-str]]
@@ -9,7 +8,8 @@
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.brotli :as brotli]
             [starfederation.datastar.clojure.api :refer [CDN-url]]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [net.mynarz.localquiz.game :as game])
   (:import (java.util Date)))
 
 ; Warn on ambiguous attributes
@@ -64,7 +64,7 @@
       ; Enables responsiveness on mobile devices
       [:meta {:name "viewport"
               :content "width=device-width, initial-scale=1.0"}]]
-     [:body {:data-signals:csrf  session/csrf-cookie-js
+     [:body {:data-signals:csrf session/csrf-cookie-js
              :data-init on-load-js
              ;; Reconnect when the user comes online after
              ;; being offline. Closes any existing connection
@@ -73,7 +73,7 @@
       [:noscript "Your browser does not support JavaScript!"]
       cookie-warning
       [:main
-       [:h1 [:a {:href "/"} "Localquiz"]]
+       [:h1 "Localquiz"]
        [:div#morph]
        [:footer
         [:p
@@ -111,12 +111,15 @@
 (defmulti game-view
   (juxt ->session-role (comp :state :game)))
 
-(defn patch-view
+(defn morph-view
   [{{:keys [game-id]} :path-params
+    session-id :sid
     :as request}]
-  (let [game-session (game/get-session game-id)]
-    [:div#morph
-     (game-view (assoc request :game game-session))]))
+  (->> {:session-role (if game-id :player :moderator)
+        :state (game/get-game-state (or game-id session-id))}
+       (assoc request :game)
+       game-view
+       (vector :div#morph)))
 
 (defn- answer-click-handler
   [^Boolean disabled?
@@ -224,7 +227,7 @@
      [:div
       [:p
        (answer-click-handler answer-revealed? true game-id)
-       [:input
+       [:input#answer
         {:data-bind "answer"
          :list "markers"
          :max "100"
@@ -236,9 +239,17 @@
                          (iterate (partial + 25))
                          (take 5)
                          (map str))]
-          [:option {:value value}])]
-       [:span.percentage
-        {:data-text "$answer + ' %'"}]]
+          [:option {:value value}])]]
+      [:p
+       [:button.btn
+        {:data-on:click "$answer--"}
+        "-"]
+       [:label.percentage
+        {:data-text "$answer + ' %'"
+         :for "answer"}]
+       [:button.btn
+        {:data-on:click "$answer++"}
+        "+"]]
       [:p [:button.btn#submit "Submit"]]])
    (when answer-revealed?
      [:p (format "%s %%" (decimal-format percentage))])

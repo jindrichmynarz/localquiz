@@ -8,27 +8,15 @@
             [fast-edn.core :as edn]
             [taoensso.timbre :as log]))
 
-(defn get-session
-  "Get game state and session role for the given `session-id`."
-  [^String session-id]
-  ; TODO: Account for the player's request prior to joining a game. -> This is already done by dispatching on :path-params.
-  ;       Everyone who's not the moderator is treated as a player? 
-  (->> session-id
-       (d/q '[:find ?state ?session-role ?priority
-              :in $ ?session-id
-              :keys state session-role priority
-              :where [?game :game/state ?state]
-                     (or-join [?game ?session-role ?priority]
-                              (and [?game :game/id ?session-id]
-                                   [(ground :moderator) ?session-role]
-                                   [(ground 0) ?priority])
-                              (and [?player :player/id ?session-id]
-                                   [?game :game/players ?player]
-                                   [(ground :player) ?session-role]
-                                   [(ground 1) ?priority]))]
-             @db-conn)
-       (sort-by :priority)
-       first))
+(defn get-game-state
+  "Get game state for the given `game-id`."
+  [^String game-id]
+  (d/q '[:find ?state .
+         :in $ ?game-id
+         :where [?game :game/id ?game-id]
+                [?game :game/state ?state]]
+       @db-conn
+       game-id))
 
 (defn player-in-game?
   "Test if the player with `player-id` is in the game with `game-id`."
@@ -386,10 +374,6 @@
     (log/infof "All players in game %s have answered." game-id)
     (evaluate-answers! game-id)))
 
-(defn leaderboard!
-  [^String game-id]
-  (d/transact db-conn [[:db/add [:game/id game-id] :game/state :leaderboard]]))
-
 (defn player-score
   [^String player-id])
 
@@ -397,9 +381,3 @@
   [^String player-id]
   (log/infof "Disconnecting player %s." player-id)
   (d/transact db-conn [[:db/retractEntity [:player/id player-id]]]))
-
-(defn end-game!
-  "End the game identified by `game-id`."
-  [^String game-id]
-  (log/infof "Ending game %s." game-id)
-  (d/transact db-conn [[:db/retractEntity [:game/id game-id]]]))
