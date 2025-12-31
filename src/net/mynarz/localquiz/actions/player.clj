@@ -31,5 +31,7 @@
   [{{:keys [game-id]} :path-params
     player-id :sid
     {:keys [answer]} :body}]
-  (game/answer-question! game-id player-id answer)
-  [:section#content])
+  (let [{:keys [error]} (game/answer-question! game-id player-id answer)]
+    [:section#content
+     (when error
+       [:h2.error error])]))

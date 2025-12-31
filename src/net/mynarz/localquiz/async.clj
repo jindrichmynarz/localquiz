@@ -24,7 +24,6 @@
 (defstate refresh-pub
   "Publication of refresh signals for each game ID."
   :start (let [{:keys [max-refresh-ms]} config]
-           (-> (if max-refresh-ms
-                 (throttle refresh-channel max-refresh-ms)
-                 refresh-channel)
-               (a/pub identity))))
+           (cond-> refresh-channel
+             max-refresh-ms (throttle max-refresh-ms)
+             true (a/pub identity))))

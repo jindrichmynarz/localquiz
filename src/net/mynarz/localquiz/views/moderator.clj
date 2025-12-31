@@ -48,15 +48,17 @@
   [^String game-id]
   (let [final-leaderboard? (game/all-questions-answered? game-id)]
     [:div#leaderboard
-     [:h2 (if final-leaderboard? "Final leaderboard" "Leaderboard")]
      [:table
-      [:tr [:th "Player"] [:th "Score"]]
-      (for [{:keys [player-name score]} (game/leaderboard game-id)
-            :let [score-decimal (decimal-format score)
-                  score-style (format "--score: %s;" score-decimal)]]
-        [:tr
-         [:td player-name]
-         [:td [:span {:style score-style}] score-decimal]])]
+      ; TODO: Is the caption required?
+      ;[:caption (if final-leaderboard? "Final leaderboard" "Leaderboard")]
+      [:thead [:tr [:th "Player"] [:th "Score"]]]
+      [:tbody
+       (for [{:keys [player-name score]} (game/leaderboard game-id)
+             :let [score-decimal (decimal-format score)
+                   score-style (format "--score: %s;" score-decimal)]]
+         [:tr
+          [:td player-name]
+          [:td [:span {:style score-style}] score-decimal]])]]
      (if final-leaderboard?
        [:p
         [:button.btn.btn-primary

@@ -4,6 +4,7 @@
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [decimal-format long-str]]
+            [charred.api :as charred]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.brotli :as brotli]
@@ -58,9 +59,9 @@
       [:link
        {:href "https://fonts.googleapis.com/icon?family=Material+Icons"
         :rel "stylesheet"}]
-      [:script#js {:defer true
-                   :src CDN-url
-                   :type "module"}]
+      [:script {:defer true
+                :src CDN-url
+                :type "module"}]
       ; Enables responsiveness on mobile devices
       [:meta {:name "viewport"
               :content "width=device-width, initial-scale=1.0"}]]
@@ -126,9 +127,10 @@
    ^Boolean signal?
    ^String game-id]
   (when-not disabled?
-    {:data-on:click (long-str "evt.target.tagName = 'BUTTON'"
-                              (when-not signal? "&& ($answer = evt.target.dataset.answer)")
-                              (format "&& @post('/answer/%s')" game-id))}))
+    {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
+                              "console.log(evt.target.dataset.answer) &&"
+                              (when-not signal? "($answer = evt.target.dataset.answer) &&") ; FIXME: Doesn't work in Firefox.
+                              (format "@post('/answer/%s')" game-id))}))
 
 (defn- mark-answer
   [^Boolean answer-revealed?
@@ -181,7 +183,7 @@
          [:button.btn
           {:class (when answer-revealed?
                     (if correct? "correct" "incorrect"))
-           :data-answer index
+           :data-answer index ; FIXME: It seems that the last index is SOMETIMES missing in Chrome.
            :disabled (or disabled? answer-revealed?)}
           [:span.answer
             text
@@ -225,10 +227,11 @@
    (timer answer-revealed? question-added)
    (when-not disabled?
      [:div
-      [:p
+      [:p.range-input
        (answer-click-handler answer-revealed? true game-id)
        [:input#answer
-        {:data-bind "answer"
+        ; FIXME: The $answer signal is not reset by the server.
+        {:data-bind "answer" ; FIXME: $answer is initialized as false.
          :list "markers"
          :max "100"
          :min "0"
@@ -285,16 +288,22 @@
   [:section#answers
    (answer-click-handler answer-revealed? true game-id)
    (timer answer-revealed? question-added)
-   [:ul.sortable-list
-    ; TODO: Is `data-computed` recalculated when DOM changes?
-    ;       Hook it to a custom event from Sortable.js like in <https://data-star.dev/examples/sortable>.
-    {:data-computed:answer "[...el.querySelectorAll('li')].map(el => el.dataset.index)"}
+   [:ul#sortableList
+    {:class (when disabled? "disabled")
+     :data-signals:answer (->> items
+                               count
+                               range
+                               charred/write-json-str)
+     :data-on:reordered "$answer = evt.detail"}
     (map-indexed
       (fn [index {:keys [sort-value text]}]
         [:li
          {:data-index index}
-         [:div text]
+         [:span text]
          (when answer-revealed?
-           [:div.sort-value sort-value])])
+           [:span.sort-value sort-value])])
       items)
+    (when-not disabled?
+      [:script {:src "/js/sortable.js"
+                :type "module"}])
     (note-view answer-revealed? note)]])

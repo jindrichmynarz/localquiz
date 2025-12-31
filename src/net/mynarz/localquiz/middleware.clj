@@ -30,7 +30,7 @@
   [handler]
   (fn [request]
     (cond
-      ;; If you don't support Brotli you get nothing (bots).
+      ;; If you don't support Brotli (bots), you get nothing.
       (not (some->> ((:headers request) "accept-encoding")
                     (re-find #"(?:^| )br(?:$|,)")))
       {:status 406}

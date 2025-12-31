@@ -6,7 +6,8 @@
             [clojure.string :as string]
             [datahike.api :as d]
             [fast-edn.core :as edn]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.java.io :as io]))
 
 (defn get-game-state
   "Get game state for the given `game-id`."
@@ -366,13 +367,16 @@
   [^String game-id
    ^String player-id
    ^String answer]
-  (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
-  (d/transact db-conn [{:game/id game-id
-                        :game/answers [{:answer/player [:player/id player-id]
-                                        :answer/answer (str answer)}]}])
-  (when (all-players-answered? game-id)
-    (log/infof "All players in game %s have answered." game-id)
-    (evaluate-answers! game-id)))
+  (if (@timeouts game-id)
+    (do
+      (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
+      (d/transact db-conn [{:game/id game-id
+                            :game/answers [{:answer/player [:player/id player-id]
+                                            :answer/answer (str answer)}]}])
+      (when (all-players-answered? game-id)
+        (log/infof "All players in game %s have answered." game-id)
+        (evaluate-answers! game-id)))
+    {:error "Time's out!"}))
 
 (defn player-score
   [^String player-id])
@@ -381,3 +385,30 @@
   [^String player-id]
   (log/infof "Disconnecting player %s." player-id)
   (d/transact db-conn [[:db/retractEntity [:player/id player-id]]]))
+
+(defn game-progress
+  [^String game-id]
+  ; TODO: This requires to store the total number of question upon game start.
+  (d/q '[:find (count ?question)
+         :in $ ?game-id
+         :keys remaining-questions
+         :where [?game :game/id ?game-id]
+                [?game :game/questions ?question]]
+       @db-conn
+       game-id))
+
+(defn answer-progress
+  [^String game-id]
+  ; FIXME: Datalog can't do left joins.
+  (d/q '[:find (count ?player) (count ?answer)
+         :in $ ?game-id
+         :keys total answered
+         :where [?game :game/id ?game-id]
+                [?game :game/players ?player]
+                (or-join [?game ?answer]
+                         [?game :game/answers ?answer])]
+       @db-conn
+       game-id))
+
+(comment
+  (answer-progress "Co81uOWd9BtYxTG7-eu8PvEkTh8"))

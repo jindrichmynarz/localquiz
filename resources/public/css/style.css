@@ -307,6 +307,11 @@ label {
   padding: .5em;
 }
 
+i.material-icons {
+  vertical-align: bottom;
+  padding-left: .2em;
+}
+
 .note i.material-icons {
   float: left;
   padding-right: .2em;
@@ -368,4 +373,75 @@ input[type="range"] {
   padding: 0 .25em;
   display: inline-block;
   width: 3em;
+}
+
+.range-input {
+  text-align: center;
+}
+
+#leaderboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  table {
+    table-layout: fixed;
+    margin: 10px auto;
+    border-collapse: collapse;
+
+    background-color: var(--dark);
+    border: solid 3px var(--darker);
+    font-size: 1.3em;
+
+    caption {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: rgb(from var(--offwhite) r g b / 80%);
+      text-shadow: 1px 2px 0px var(--darker);
+      margin: 0 0 .2em 0;
+      caption-side: top;
+    }
+    td, th {
+      padding: .5em 1em;
+    }
+    th {
+      text-align: left;
+    }
+    tr :nth-child(2) {
+      text-align: right; /* Align numbers to the right */
+    }
+    tbody tr:nth-child(odd) {
+      background-color: rgb(from var(--darker) r g b / 50%);
+    }
+  }
+}
+
+#sortableList {
+  padding-left: 0;
+
+  li {
+    font-size: 1.3em;
+    background-color: var(--dark);
+    border: solid 3px var(--darker);
+    list-style-type: none;
+    text-align: left;
+    padding: .5em 1em;
+    margin-block-end: .4em;
+    cursor: grab;
+    box-shadow: 0 .25em 0 var(--darker);
+
+    .sort-value {
+      padding-left: 1em;
+      float: right;
+    }
+  }
+
+  .sortable-ghost {
+    opacity: 0.25;
+  }
+
+  &.disabled {
+    pointer-events: none;
+    cursor: inherit;
+  }
 }
