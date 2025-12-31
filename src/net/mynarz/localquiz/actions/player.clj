@@ -7,7 +7,7 @@
 
 (defn validate-player-name
   [{{:keys [game-id]} :path-params
-    {:keys [player-name]} :body
+    {player-name :playerName} :body
     :as request}]
   (if-let [validation-error (game/validate-player-name game-id player-name)]
     (views/player-name-input request validation-error)
@@ -17,7 +17,7 @@
   "Add `player` to the game identified by `game-id`."
   [{{:keys [game-id]} :path-params
     player-id :sid
-    {:keys [player-name]} :body
+    {player-name :playerName} :body
     :as request}]
   (if-let [validation-error (game/validate-player-name game-id player-name)]
     (views/player-name-input request validation-error)

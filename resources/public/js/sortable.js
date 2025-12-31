@@ -9,7 +9,7 @@ if (sortableList) {
           new CustomEvent(
             "reordered",
             {
-              "detail": [...evt.from.querySelectorAll("li")].map(el => el.dataset.index)
+              "detail": [...evt.from.querySelectorAll("li")].map(el => parseInt(el.dataset.index))
             }
           )
         )

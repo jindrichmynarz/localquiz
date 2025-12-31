@@ -26,4 +26,4 @@
   :start (let [{:keys [max-refresh-ms]} config]
            (cond-> refresh-channel
              max-refresh-ms (throttle max-refresh-ms)
-             true (a/pub identity))))
+             true (a/pub :game-id))))

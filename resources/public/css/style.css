@@ -66,9 +66,20 @@ section {
   justify-content: center;
 }
 
-#lobby table {
-  tr {
-    animation: 1s ease-in fade-in;
+#lobby {
+  font-size: 1.3em;
+
+  table {
+    table-layout: fixed;
+    margin: 10px auto;
+    border-collapse: collapse;
+
+    tr {
+      animation: 1s ease-in fade-in;
+    }
+    td, th {
+      padding: .25em 0;
+    }
   }
 }
 
@@ -117,6 +128,15 @@ button.btn {
   left: -5px;
   z-index: 1;
   cursor: pointer;
+  transition: opacity 1s ease-in;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 .25em .75em var(--darker);
+  }
+
+  &:disabled {
+    cursor: inherit;
+  }
 }
 
 button.btn, button.btn:before, button.btn:after {
@@ -148,17 +168,10 @@ button.btn:after {
   z-index: -2;
 }
 
-button.btn:hover {
-  box-shadow: 0 .25em .75em var(--darker);
-}
-
 button.btn:focus:not(:focus-visible) {
   outline: none;
 }
 
-button:disabled {
-  cursor: not-allowed;
-}
 
 button.btn-primary {
   color: var(--dark);
@@ -269,17 +282,19 @@ label {
 }
 
 #question {
+  font-size: 1.3em;
   text-align: center;
-}
 
-#question img {
-  border: solid 3px var(--dark);
-  max-width: 500px;
-  max-height: 50vh;
+  img {
+    border: solid 3px var(--dark);
+    max-width: 500px;
+    max-height: 50vh;
+  }
 }
 
 #answers {
   margin-top: 1em;
+  text-align: center;
 }
 
 #choices {
@@ -292,19 +307,23 @@ label {
   padding: 0;
   margin: .5em 0;
   left: 5px;
-}
 
-#choices li button {
-  font-size: 1em;
-  text-align: left;
-  width: 100%;
-  height: 100%;
+  li button {
+    font-size: 1em;
+    text-align: left;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .note {
   animation: 1s ease-in fade-in;
-  margin-top: 1em;
   padding: .5em;
+
+  i.material-icons {
+    float: left;
+    padding-right: .2em;
+  }
 }
 
 i.material-icons {
@@ -312,17 +331,12 @@ i.material-icons {
   padding-left: .2em;
 }
 
-.note i.material-icons {
-  float: left;
-  padding-right: .2em;
-}
+.answer {
+  animation: 1s ease-in fade-in;
 
-#answers i.material-icons {
-  padding-left: .2em;
-}
-
-.answer div:first-child {
-  float: left;
+  div:first-child {
+    float: left;
+  }
 }
 
 .answer-mark {
@@ -420,7 +434,6 @@ input[type="range"] {
   padding-left: 0;
 
   li {
-    font-size: 1.3em;
     background-color: var(--dark);
     border: solid 3px var(--darker);
     list-style-type: none;

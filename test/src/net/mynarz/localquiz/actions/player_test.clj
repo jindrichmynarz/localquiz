@@ -8,13 +8,13 @@
 (use-fixtures :each fixtures/test-db)
 
 (deftest join-game!
-  (are [player-name key-fn] (key-fn (player/join-game! {:body {:player-name player-name}
+  (are [player-name key-fn] (key-fn (player/join-game! {:body {:playerName player-name}
                                                         :path-params {:game-id fixtures/game-id}
                                                         :sid (crypto/random-unguessable-uid)}))
        "Jane" vector? ; Returns error Hiccup
        "Angela" :tx-data) ; Returns transaction data
   (let [player-name "Felix"]
-    (player/join-game! {:body {:player-name player-name}
+    (player/join-game! {:body {:playerName player-name}
                         :path-params {:game-id fixtures/game-id}
                         :sid (crypto/random-unguessable-uid)})
     (is ((set (game/lobby fixtures/game-id)) player-name))))

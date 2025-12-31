@@ -45,28 +45,26 @@
    [:i.material-icons.md-light.md-36 "cancel"]])
 
 (defn leaderboard
-  [^String game-id]
-  (let [final-leaderboard? (game/all-questions-answered? game-id)]
-    [:div#leaderboard
-     [:table
-      ; TODO: Is the caption required?
-      ;[:caption (if final-leaderboard? "Final leaderboard" "Leaderboard")]
-      [:thead [:tr [:th "Player"] [:th "Score"]]]
-      [:tbody
-       (for [{:keys [player-name score]} (game/leaderboard game-id)
-             :let [score-decimal (decimal-format score)
-                   score-style (format "--score: %s;" score-decimal)]]
-         [:tr
-          [:td player-name]
-          [:td [:span {:style score-style}] score-decimal]])]]
-     (if final-leaderboard?
-       [:p
-        [:button.btn.btn-primary
-         {:data-on:click "@post('/end')"}
-         "End game"
-         [:i.material-icons.md-light.md-36 "cancel"]]]
-       [:p
-        (next-button "@post('/question')")])]))
+  [^String game-id
+   ^Boolean final-leaderboard?]
+  [:div#leaderboard
+   [:table
+    [:thead [:tr [:th "Player"] [:th "Score"]]]
+    [:tbody
+     (for [{:keys [player-name score]} (game/leaderboard game-id)
+           :let [score-decimal (decimal-format score)
+                 score-style (format "--score: %s;" score-decimal)]]
+       [:tr
+        [:td player-name]
+        [:td [:span {:style score-style}] score-decimal]])]]
+   (if final-leaderboard?
+     [:p
+      [:button.btn.btn-primary
+       {:data-on:click "@post('/end')"}
+       "End game"
+       [:i.material-icons.md-light.md-36 "cancel"]]]
+     [:p
+      (next-button "@post('/question')")])])
 
 (def play-again
   [:button.btn
@@ -109,9 +107,10 @@
      (when (seq lobby)
        [:section#lobby
         [:table
-         [:tr [:th "Players"]]
-         (for [player-name lobby]
-           [:tr [:td player-name]])]])]))
+         [:thead [:tr [:th "Players"]]]
+         [:tbody
+          (for [player-name lobby]
+            [:tr [:td player-name]])]]])]))
 
 (defn question-view
   [^String game-id
@@ -141,5 +140,5 @@
   (let [final-leaderboard? (game/all-questions-answered? game-id)]
     [:section#content
      (when-not final-leaderboard? end-game)
-     (leaderboard game-id)
+     (leaderboard game-id final-leaderboard?)
      (when final-leaderboard? play-again)]))

@@ -9,8 +9,8 @@
   ([{{:keys [game-id]} :path-params}
     validation-error]
    (let [disabled? (some? validation-error)
-         validate-js (long-str "$_submitted ||"
-                               "$playerName.length != 0 ||"
+         validate-js (long-str "!$_submitted &&"
+                               "$playerName.length != 0 &&"
                                (format "@post('/join/%s/validate', {requestCancellation: $_controller})" game-id))]
      [:section#content
       [:p
@@ -21,7 +21,7 @@
        [:input
         {:aria-live "polite"
          :autofocus true
-         :data-bind "player-name"
+         :data-bind "playerName"
          :aria-errormessage "name-error"
          :aria-invalid disabled?
          :data-on:keydown views/submit-by-enter
@@ -74,6 +74,7 @@
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params
     player-id :sid}]
+  ; TODO: What to show for the intermediate leaderboard?
   (when (and (game/all-questions-answered? game-id) (= player-id (game/winner game-id)))
     [:section#content
      [:h1.winner "You won!" [:i.material-icons.md-36 "emoji_events"]]]))

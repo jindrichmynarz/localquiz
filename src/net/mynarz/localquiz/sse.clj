@@ -5,6 +5,7 @@
             [net.mynarz.localquiz.error :as error]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [thread]]
+            [charred.api :as charred]
             [clojure.core.async :as a]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
@@ -39,7 +40,7 @@
                                         (a/close! <cancel))
 
                                     [<ch]
-                                    ([_]
+                                    ([{:keys [signals]}]
                                      (some-> ; Stop in case of error
                                       (on-cpu-pool ; CPU work on real threads
                                        ; Stop in case of error
@@ -50,6 +51,9 @@
                                            ; Only send an event if the view has changed
                                            (when-not (= last-view-hash new-view-hash)
                                              (log/infof "Rendering game %s for session %s." game-id session-id)
+                                             (some->> signals
+                                                      charred/write-json-str
+                                                      (d*/patch-signals! sse-gen))
                                              (d*/patch-elements! sse-gen new-view-str))
                                            new-view-hash)))
                                       recur))

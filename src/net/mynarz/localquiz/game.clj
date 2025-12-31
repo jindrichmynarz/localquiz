@@ -1,13 +1,14 @@
 (ns net.mynarz.localquiz.game
-  (:require [net.mynarz.localquiz.config :refer [config]]
+  (:require [net.mynarz.localquiz.async :refer [refresh-channel]]
+            [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.normalize :refer [normalize-answer]]
             [clj-fuzzy.jaro-winkler :refer [jaro-winkler]]
+            [clojure.core.async :as a]
             [clojure.string :as string]
             [datahike.api :as d]
             [fast-edn.core :as edn]
-            [taoensso.timbre :as log]
-            [clojure.java.io :as io]))
+            [taoensso.timbre :as log]))
 
 (defn get-game-state
   "Get game state for the given `game-id`."
@@ -293,6 +294,7 @@
        not))
 
 (defn all-questions-answered?
+  "Test if all questions in `game-id` were answered."
   [^String game-id]
   (->> game-id
        (d/q '[:find ?question .
@@ -353,6 +355,8 @@
                 [:db/add [:game/id game-id] :game/current-question question]
                 [:db/retract [:game/id game-id] :game/questions question]])
          (d/transact db-conn))
+    ; FIXME: This doesn't seem to be delivered. Is it discarded due to throttling?
+    (a/>!! refresh-channel {:game-id game-id :signals {:timer {:start (System/currentTimeMillis)}}})
     (swap! timeouts
            assoc
            game-id
@@ -373,6 +377,7 @@
       (d/transact db-conn [{:game/id game-id
                             :game/answers [{:answer/player [:player/id player-id]
                                             :answer/answer (str answer)}]}])
+      (a/>!! refresh-channel {:game-id game-id :signals {:answer nil}}) ; Reset the $answer signal.
       (when (all-players-answered? game-id)
         (log/infof "All players in game %s have answered." game-id)
         (evaluate-answers! game-id)))
@@ -409,6 +414,3 @@
                          [?game :game/answers ?answer])]
        @db-conn
        game-id))
-
-(comment
-  (answer-progress "Co81uOWd9BtYxTG7-eu8PvEkTh8"))

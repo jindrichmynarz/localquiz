@@ -10,8 +10,7 @@
             [starfederation.datastar.clojure.brotli :as brotli]
             [starfederation.datastar.clojure.api :refer [CDN-url]]
             [taoensso.timbre :as log]
-            [net.mynarz.localquiz.game :as game])
-  (:import (java.util Date)))
+            [net.mynarz.localquiz.game :as game]))
 
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
@@ -127,9 +126,9 @@
    ^Boolean signal?
    ^String game-id]
   (when-not disabled?
+    ; FIXME: Still doesn't work reliably for :multiple questions.
     {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
-                              "console.log(evt.target.dataset.answer) &&"
-                              (when-not signal? "($answer = evt.target.dataset.answer) &&") ; FIXME: Doesn't work in Firefox.
+                              (when-not signal? "($answer = evt.target.dataset.answer) &&")
                               (format "@post('/answer/%s')" game-id))}))
 
 (defn- mark-answer
@@ -147,18 +146,19 @@
      note]))
 
 (defn timer
-  [^Boolean answer-revealed?
-   ^Date question-added]
+  [^Boolean answer-revealed?]
   (when-not answer-revealed?
     (let [duration (:question-time-out config)
-          signals (format "{_timer: {start: new Date(%d), delay: 0}}" (.getTime question-added))
-          sync-animation (format "($_timer.delay = - ((Date.now() - $_timer.start) / 1000) %% %d)" duration)]
+          sync-animation (format "($timer.delay = - ((Date.now() - Date($timer.start)) / 1000) %% %d)" duration)]
       [:div.timer
-       {:data-signals signals
-        :data-on:visibilitychange__window (str "!document.hidden && " sync-animation)
-        :data-style:animationDelay "$_timer.delay"
+       {:data-on:visibilitychange__window (str "!document.hidden && " sync-animation)
+        :data-style:animationDelay "$timer.delay"
         :data-style:--duration (format "'%ds'" duration)}
        [:div]])))
+
+(defn add-index
+  [coll]
+  (map-indexed (fn [index item] (assoc item :index index)) coll))
 
 (defmulti answers-view
   (fn [& args]
@@ -171,34 +171,30 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [question-added]
-    {:keys [choices note]} :current-question}]
+   {{:keys [choices note]} :current-question}]
   [:section#answers
-   (timer answer-revealed? question-added)
+   (timer answer-revealed?)
    [:ul#choices
     (answer-click-handler (or disabled? answer-revealed?) false game-id)
-    (map-indexed
-      (fn [index {:keys [correct? text]}]
-        [:li
-         [:button.btn
-          {:class (when answer-revealed?
-                    (if correct? "correct" "incorrect"))
-           :data-answer index ; FIXME: It seems that the last index is SOMETIMES missing in Chrome.
-           :disabled (or disabled? answer-revealed?)}
-          [:span.answer
-            text
-           (mark-answer answer-revealed? correct?)]]])
-      choices)]
+    (for [{:keys [correct? index text]} (->> choices add-index crypto/deterministic-shuffle)]
+      [:li
+       [:button.btn
+        {:class (when answer-revealed?
+                  (if correct? "correct" "incorrect"))
+         :data-answer index
+         :disabled (or disabled? answer-revealed?)}
+        [:span.answer
+          text
+         (mark-answer answer-revealed? correct?)]]])]
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :yesno
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [question-added]
-    {:keys [correct? note]} :current-question}]
+   {{:keys [correct? note]} :current-question}]
   [:section#answers
-   (timer answer-revealed? question-added)
+   (timer answer-revealed?)
    [:p
      (answer-click-handler (or disabled? answer-revealed?) false game-id)
      [:button.btn
@@ -221,10 +217,9 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [question-added]
-    {:keys [note percentage]} :current-question}]
+   {{:keys [note percentage]} :current-question}]
   [:section#answers
-   (timer answer-revealed? question-added)
+   (timer answer-revealed?)
    (when-not disabled?
      [:div
       [:p.range-input
@@ -262,10 +257,9 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [question-added]
-    {:keys [answer note]} :current-question}]
+   {{:keys [answer note]} :current-question}]
   [:section#answers
-   (timer answer-revealed? question-added)
+   (timer answer-revealed?)
    (when-not disabled?
      [:p
       (answer-click-handler answer-revealed? true game-id)
@@ -276,18 +270,17 @@
         :type "text"}]
       [:button.btn#submit "Submit"]])
    (when answer-revealed?
-     [:p answer])
+     [:p.answer answer])
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :sort
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {:keys [question-added]
-    {:keys [items note]} :current-question}]
+   {{:keys [items note]} :current-question}]
   [:section#answers
    (answer-click-handler answer-revealed? true game-id)
-   (timer answer-revealed? question-added)
+   (timer answer-revealed?)
    [:ul#sortableList
     {:class (when disabled? "disabled")
      :data-signals:answer (->> items
@@ -295,14 +288,15 @@
                                range
                                charred/write-json-str)
      :data-on:reordered "$answer = evt.detail"}
-    (map-indexed
-      (fn [index {:keys [sort-value text]}]
+    (if answer-revealed?
+      (for [{:keys [sort-value text]} items]
+        [:li
+         [:span text]
+         [:span.sort-value sort-value]])
+      (for [{:keys [index text]} (->> items add-index crypto/deterministic-shuffle)]
         [:li
          {:data-index index}
-         [:span text]
-         (when answer-revealed?
-           [:span.sort-value sort-value])])
-      items)
+         [:span text]]))
     (when-not disabled?
       [:script {:src "/js/sortable.js"
                 :type "module"}])
