@@ -43,6 +43,10 @@
     :db/doc "Current question of a game stored as an EDN string"
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
+   {:db/ident :game/questions-total
+    :db/doc "Number of questions in the game"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
    {:db/ident :game/answers
     :db/doc "Answers to the current question"
     :db/valueType :db.type/ref

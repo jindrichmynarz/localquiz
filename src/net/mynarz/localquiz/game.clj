@@ -85,16 +85,13 @@
 (defn current-question
   "Get the current question for `game-id`."
   [^String game-id]
-  (when-let [question (->> game-id
-                           (d/q '[:find ?current-question ?question-added
-                                  :in $ ?game-id
-                                  :keys current-question question-added
-                                  :where [?game :game/id ?game-id]
-                                         [?game :game/current-question ?current-question ?question-tx]
-                                         [?question-tx :db/txInstant ?question-added]]
-                                @db-conn)
-                           first)]
-    (update question :current-question edn/read-string)))
+  (some->> game-id
+           (d/q '[:find ?current-question .
+                  :in $ ?game-id
+                  :where [?game :game/id ?game-id]
+                         [?game :game/current-question ?current-question]]
+                @db-conn)
+          edn/read-string))
 
 (defn parse-answer
   ; TODO: Shall we just use edn/read-string?
@@ -355,8 +352,6 @@
                 [:db/add [:game/id game-id] :game/current-question question]
                 [:db/retract [:game/id game-id] :game/questions question]])
          (d/transact db-conn))
-    ; FIXME: This doesn't seem to be delivered. Is it discarded due to throttling?
-    (a/>!! refresh-channel {:game-id game-id :signals {:timer {:start (System/currentTimeMillis)}}})
     (swap! timeouts
            assoc
            game-id
@@ -377,6 +372,7 @@
       (d/transact db-conn [{:game/id game-id
                             :game/answers [{:answer/player [:player/id player-id]
                                             :answer/answer (str answer)}]}])
+      ; FIXME: This might be dropped due to throttling.
       (a/>!! refresh-channel {:game-id game-id :signals {:answer nil}}) ; Reset the $answer signal.
       (when (all-players-answered? game-id)
         (log/infof "All players in game %s have answered." game-id)
@@ -393,14 +389,15 @@
 
 (defn game-progress
   [^String game-id]
-  ; TODO: This requires to store the total number of question upon game start.
-  (d/q '[:find (count ?question)
-         :in $ ?game-id
-         :keys remaining-questions
-         :where [?game :game/id ?game-id]
-                [?game :game/questions ?question]]
-       @db-conn
-       game-id))
+  (->> game-id
+       (d/q '[:find (count ?question) ?questions-total
+              :in $ ?game-id
+              :keys questions-remaining questions-total
+              :where [?game :game/id ?game-id]
+                     [?game :game/questions ?question]
+                     [?game :game/questions-total ?questions-total]]
+            @db-conn)
+       first))
 
 (defn answer-progress
   [^String game-id]

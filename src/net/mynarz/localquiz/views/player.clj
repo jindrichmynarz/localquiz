@@ -3,6 +3,14 @@
             [net.mynarz.localquiz.util :refer [long-str]]
             [net.mynarz.localquiz.views.common :as views]))
 
+(def waiting-icon
+  [:p.waiting-icon
+   [:i.material-icons
+    {:data-signals:_iconIndex "0"
+     :data-on-interval__duration.3s "$_iconIndex++"
+     :data-text "['hourglass_empty', 'hourglass_bottom', 'hourglass_top'][$_iconIndex % 3]"}]
+   [:span.shadow]])
+
 (defn player-name-input
   ([request]
    (player-name-input request nil))
@@ -49,7 +57,9 @@
     player-id :sid
     :as request}]
   (if (game/player-in-game? game-id player-id)
-    [:section#content [:p "Please wait for the game to start."]]
+    [:section#content
+     waiting-icon
+     [:p "Please wait for the game to start."]]
     (player-name-input request)))
 
 (defmethod views/game-view [:player :question]
@@ -57,7 +67,9 @@
     player-id :sid}]
   [:section#content
    (if (game/player-answered? player-id)
-     [:p "Waiting for other answers..."]
+     [:div
+      waiting-icon
+      [:p "Waiting for other answers&ldots;"]]
      (let [answer-revealed? (game/all-players-answered? game-id)
            current-question (game/current-question game-id)]
        (views/answers-view false

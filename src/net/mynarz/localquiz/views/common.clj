@@ -127,9 +127,12 @@
    ^String game-id]
   (when-not disabled?
     ; FIXME: Still doesn't work reliably for :multiple questions.
-    {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
-                              (when-not signal? "($answer = evt.target.dataset.answer) &&")
-                              (format "@post('/answer/%s')" game-id))}))
+    ;        If env.target.dataset.answer == 0, the assignment expression returns 0,
+    ;        which is a falsy values, and hence the @post() doesn't run.
+    (let [post (format "@post('/answer/%s')" game-id)
+          signal-and-post (format "($answer = evt.target.dataset.answer, %s)" post)]
+      {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
+                                (if signal? post signal-and-post))})))
 
 (defn- mark-answer
   [^Boolean answer-revealed?
@@ -145,35 +148,28 @@
      [:i.material-icons.md-light.md-24 "info"]
      note]))
 
-(defn timer
-  [^Boolean answer-revealed?]
-  (when-not answer-revealed?
-    (let [duration (:question-time-out config)
-          sync-animation (format "($timer.delay = - ((Date.now() - Date($timer.start)) / 1000) %% %d)" duration)]
-      [:div.timer
-       {:data-on:visibilitychange__window (str "!document.hidden && " sync-animation)
-        :data-style:animationDelay "$timer.delay"
-        :data-style:--duration (format "'%ds'" duration)}
-       [:div]])))
-
 (defn add-index
   [coll]
   (map-indexed (fn [index item] (assoc item :index index)) coll))
+
+(defn submit-button
+  [^String game-id]
+  [:button.btn.btn-primary#submit
+   {:data-on:click (format "@post('/answer/%s')" game-id)}
+   "Submit"])
 
 (defmulti answers-view
   (fn [& args]
     (-> args
         last
-        :current-question
         :type)))
 
 (defmethod answers-view :multiple
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {{:keys [choices note]} :current-question}]
+   {:keys [choices note]}]
   [:section#answers
-   (timer answer-revealed?)
    [:ul#choices
     (answer-click-handler (or disabled? answer-revealed?) false game-id)
     (for [{:keys [correct? index text]} (->> choices add-index crypto/deterministic-shuffle)]
@@ -192,9 +188,8 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {{:keys [correct? note]} :current-question}]
+   {:keys [correct? note]}]
   [:section#answers
-   (timer answer-revealed?)
    [:p
      (answer-click-handler (or disabled? answer-revealed?) false game-id)
      [:button.btn
@@ -217,16 +212,13 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {{:keys [note percentage]} :current-question}]
+   {:keys [note percentage]}]
   [:section#answers
-   (timer answer-revealed?)
    (when-not disabled?
      [:div
       [:p.range-input
-       (answer-click-handler answer-revealed? true game-id)
        [:input#answer
-        ; FIXME: The $answer signal is not reset by the server.
-        {:data-bind "answer" ; FIXME: $answer is initialized as false.
+        {:data-bind "answer"
          :list "markers"
          :max "100"
          :min "0"
@@ -248,7 +240,8 @@
        [:button.btn
         {:data-on:click "$answer++"}
         "+"]]
-      [:p [:button.btn#submit "Submit"]]])
+      [:p
+       (submit-button game-id)]])
    (when answer-revealed?
      [:p (format "%s %%" (decimal-format percentage))])
    (note-view answer-revealed? note)])
@@ -257,9 +250,8 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {{:keys [answer note]} :current-question}]
+   {:keys [answer note]}]
   [:section#answers
-   (timer answer-revealed?)
    (when-not disabled?
      [:p
       (answer-click-handler answer-revealed? true game-id)
@@ -277,10 +269,8 @@
   [^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
-   {{:keys [items note]} :current-question}]
+   {:keys [items note]}]
   [:section#answers
-   (answer-click-handler answer-revealed? true game-id)
-   (timer answer-revealed?)
    [:ul#sortableList
     {:class (when disabled? "disabled")
      :data-signals:answer (->> items
@@ -298,6 +288,8 @@
          {:data-index index}
          [:span text]]))
     (when-not disabled?
-      [:script {:src "/js/sortable.js"
-                :type "module"}])
+      [:p
+       [:script {:src "/js/sortable.js"
+                 :type "module"}]
+       (submit-button game-id)])
     (note-view answer-revealed? note)]])

@@ -104,6 +104,7 @@ footer {
   display: flex;
   justify-content: center;
   align-items: flex-end;
+  font-size: .8em;
   background: rgb(from var(--darker) r g b / 50%);
 
   abbr {
@@ -271,6 +272,7 @@ label {
 
 #content {
   display: flex;
+  flex: 1;
   align-self: center;
   justify-self: center;
   max-width: 800px;
@@ -408,12 +410,7 @@ input[type="range"] {
     font-size: 1.3em;
 
     caption {
-      font-size: 1.5em;
-      font-weight: bold;
-      color: rgb(from var(--offwhite) r g b / 80%);
-      text-shadow: 1px 2px 0px var(--darker);
-      margin: 0 0 .2em 0;
-      caption-side: top;
+      margin: .5em 0;
     }
     td, th {
       padding: .5em 1em;
@@ -456,5 +453,62 @@ input[type="range"] {
   &.disabled {
     pointer-events: none;
     cursor: inherit;
+  }
+}
+
+progress {
+  background: none;
+  text-align: left;
+}
+
+progress::-webkit-progress-bar {
+  background-color: var(--offwhite);
+}
+
+progress::-webkit-progress-value {
+  background: var(--orange);
+}
+
+p.waiting-icon {
+  text-align: center;
+  margin: 1.5em 0;
+
+  i {
+    animation: 3s ease-in-out infinite alternate pendulum;
+    font-size: 3em;
+    transform-origin: top center;
+  }
+
+  .shadow {
+    display: block;
+    width: 30px;
+    height: 15px;
+    background: rgba(from var(--darker) r g b / 50%);
+    border-radius: 50%;
+    margin: .5em auto 0;
+    animation: 3s ease-in-out infinite alternate moveShade;
+  }
+}
+
+@keyframes pendulum {
+  from {
+    transform: rotate(-45deg);
+  }
+  to {
+    transform: rotate(45deg);
+  }
+}
+
+@keyframes moveShade {
+  0% {
+    transform: translateX(30px) scale(1.4, .5);
+    filter: blur(8px);
+  }
+  50% {
+    filter: blur(5px);
+  }
+  100% {
+    transform: translateX(-30px) scale(1.4, .5);
+    filter: blur(8px);
   }
 }

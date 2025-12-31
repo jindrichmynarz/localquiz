@@ -21,11 +21,13 @@
                         :questions
                         shuffle
                         (take 20)
-                        (map (comp pr-str util/replace-react-fragments)))]
+                        (map (comp pr-str util/replace-react-fragments)))
+        questions-total (-> questions count long)]
     (log/infof "Creating a new game %s." game-id)
     (d/transact db-conn [{:game/id game-id
                           :game/state :new
-                          :game/questions questions}])))
+                          :game/questions questions
+                          :game/questions-total questions-total}])))
 
 (defn leaderboard!
   [{game-id :sid}]

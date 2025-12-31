@@ -45,32 +45,23 @@
    [:i.material-icons.md-light.md-36 "cancel"]])
 
 (defn leaderboard
-  [^String game-id
-   ^Boolean final-leaderboard?]
-  [:div#leaderboard
-   [:table
-    [:thead [:tr [:th "Player"] [:th "Score"]]]
-    [:tbody
-     (for [{:keys [player-name score]} (game/leaderboard game-id)
-           :let [score-decimal (decimal-format score)
-                 score-style (format "--score: %s;" score-decimal)]]
-       [:tr
-        [:td player-name]
-        [:td [:span {:style score-style}] score-decimal]])]]
-   (if final-leaderboard?
-     [:p
-      [:button.btn.btn-primary
-       {:data-on:click "@post('/end')"}
-       "End game"
-       [:i.material-icons.md-light.md-36 "cancel"]]]
-     [:p
-      (next-button "@post('/question')")])])
-
-(def play-again
-  [:button.btn
-   {:data-on:click "@post('/end)"}
-   [:i.material-icons.md-24 "replay"]
-   "Play again"])
+  [^String game-id]
+  (let [{:keys [questions-remaining questions-total]} (game/game-progress game-id)
+        questions-answered (- questions-total questions-remaining)]
+    [:div#leaderboard
+     [:table
+      [:caption
+       [:progress
+        {:max questions-total
+         :value questions-answered}]]
+      [:thead [:tr [:th "Player"] [:th "Score"]]]
+      [:tbody
+       (for [{:keys [player-name score]} (game/leaderboard game-id)
+             :let [score-decimal (decimal-format score)
+                   score-style (format "--score: %s;" score-decimal)]]
+         [:tr
+          [:td player-name]
+          [:td [:span {:style score-style}] score-decimal]])]]]))
 
 (defmethod game-view [:moderator nil]
   [_]
@@ -112,14 +103,23 @@
           (for [player-name lobby]
             [:tr [:td player-name]])]]])]))
 
+(defn timer
+  [^Boolean answer-revealed?]
+  (when-not answer-revealed?
+    (let [duration (:question-time-out config)]
+      [:div.timer
+       {:data-style:--duration (format "'%ds'" duration)}
+       [:div]])))
+
 (defn question-view
   [^String game-id
    ^Boolean answer-revealed?]
-  (let [{:keys [current-question] :as question} (game/current-question game-id)]
+  (let [question (game/current-question game-id)]
      [:section#content
       end-game
+      (timer answer-revealed?)
       [:div#question
-       (:text current-question)
+       (:text question)
        (answers-view true
                      answer-revealed?
                      game-id
@@ -137,8 +137,16 @@
 
 (defmethod game-view [:moderator :leaderboard]
   [{game-id :sid}]
-  (let [final-leaderboard? (game/all-questions-answered? game-id)]
+  (if (game/all-questions-answered? game-id)
     [:section#content
-     (when-not final-leaderboard? end-game)
-     (leaderboard game-id final-leaderboard?)
-     (when final-leaderboard? play-again)]))
+     (leaderboard game-id)
+     [:p
+      [:button.btn.btn-primary
+       {:data-on:click "@post('/end')"}
+       "End game"
+       [:i.material-icons.md-light.md-36 "cancel"]]]]
+    [:section#content
+     end-game
+     (leaderboard game-id)
+     [:p
+      (next-button "@post('/question')")]]))

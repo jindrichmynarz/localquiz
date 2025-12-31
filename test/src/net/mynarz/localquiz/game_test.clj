@@ -35,7 +35,7 @@
 
 (deftest next-question!
   (game/next-question! fixtures/game-id)
-  (is (= (:current-question (game/current-question fixtures/game-id)) fixtures/question)))
+  (is (= (game/current-question fixtures/game-id) fixtures/question)))
 
 (deftest add-score!
   (let [get-score (fn [player]
