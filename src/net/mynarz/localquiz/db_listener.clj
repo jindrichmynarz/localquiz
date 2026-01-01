@@ -35,7 +35,7 @@
   [tx-report]
   (when-let [updated-game (find-updated-game tx-report)]
     (log/infof "The game %s was updated." updated-game)
-    (a/>!! refresh-channel {:game-id updated-game})))
+    (a/>!! refresh-channel updated-game)))
 
 (defstate db-listener
   :start (d/listen db-conn :refresh-game refresh-game)

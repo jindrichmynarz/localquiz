@@ -1,11 +1,10 @@
 (ns net.mynarz.localquiz.sse
-  (:require [net.mynarz.localquiz.async :refer [refresh-pub throttle]]
+  (:require [net.mynarz.localquiz.async :refer [refresh-pub]]
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.cpu-pool :refer [on-cpu-pool]]
             [net.mynarz.localquiz.error :as error]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [thread]]
-            [charred.api :as charred]
             [clojure.core.async :as a]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
@@ -40,7 +39,7 @@
                                         (a/close! <cancel))
 
                                     [<ch]
-                                    ([{:keys [signals]}]
+                                    ([_]
                                      (some-> ; Stop in case of error
                                       (on-cpu-pool ; CPU work on real threads
                                        ; Stop in case of error
@@ -51,9 +50,6 @@
                                            ; Only send an event if the view has changed
                                            (when-not (= last-view-hash new-view-hash)
                                              (log/infof "Rendering game %s for session %s." game-id session-id)
-                                             (some->> signals
-                                                      charred/write-json-str
-                                                      (d*/patch-signals! sse-gen))
                                              (d*/patch-elements! sse-gen
                                                                  new-view-str
                                                                  {:use-view-transition true}))

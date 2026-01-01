@@ -22,4 +22,4 @@
 
 (defstate refresh-pub
   "Publication of refresh signals for each game ID."
-  :start (a/pub refresh-channel :game-id))
+  :start (a/pub refresh-channel identity))

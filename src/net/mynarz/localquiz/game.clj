@@ -384,14 +384,9 @@
           (d/transact db-conn [{:game/id game-id
                                 :game/answers [{:answer/player [:player/id player-id]
                                                 :answer/answer (str answer)}]}])
-          ; FIXME: This might be dropped due to throttling.
-          ;(a/>!! refresh-channel {:game-id game-id :signals {:answer nil}}) ; Reset the $answer signal.
           (when (all-players-answered? game-id)
             (log/infof "All players in game %s have answered." game-id)
             (evaluate-answers! game-id)))))
-
-(defn player-score
-  [^String player-id])
 
 (defn disconnect-player!
   [^String player-id]
@@ -405,8 +400,6 @@
         :where [?game :game/id ?game-id]]
       (d/q @db-conn game-id)
       (update :game/questions count)))
-
-(game-progress "Co81uOWd9BtYxTG7-eu8PvEkTh8")
 
 (defn answer-progress
   [^String game-id]

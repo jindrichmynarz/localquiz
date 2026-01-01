@@ -2,6 +2,7 @@
   (:require [net.mynarz.localquiz.async :as async]
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.db :as db]
+            [net.mynarz.localquiz.i18n :as i18n]
             [mount.core :as mount]
             [taoensso.timbre :as log]))
 
@@ -35,3 +36,6 @@
                    #'net.mynarz.localquiz.async/refresh-channel)))
   (f)
   (mount/stop))
+
+(def tr
+  (partial i18n/tr [:en]))
