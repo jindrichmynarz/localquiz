@@ -1,14 +1,13 @@
 (ns net.mynarz.localquiz.async
-  (:require [net.mynarz.localquiz.config :refer [config]]
-            [net.mynarz.localquiz.util :as util]
+  (:require [net.mynarz.localquiz.util :as util]
             [clojure.core.async :as a]
             [mount.core :refer [defstate]]
             [clojure.core :as c]))
 
 (defn throttle
   "Throttle `<in-ch` by a number of `msec` to avoid rapid consequent events."
-  [<in-ch
-   ^Integer msec]
+  [^Integer msec
+   <in-ch]
   (let [; No buffer on the out-ch as the in-ch should be buffered
         <out-ch (a/chan)]
     (util/thread
@@ -23,7 +22,4 @@
 
 (defstate refresh-pub
   "Publication of refresh signals for each game ID."
-  :start (let [{:keys [max-refresh-ms]} config]
-           (cond-> refresh-channel
-             max-refresh-ms (throttle max-refresh-ms)
-             true (a/pub :game-id))))
+  :start (a/pub refresh-channel :game-id))

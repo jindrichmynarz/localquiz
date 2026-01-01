@@ -16,6 +16,7 @@
                          multipart/multipart-middleware
                          exception/exception-middleware
                          middleware/wrap-parse-json-body
+                         middleware/wrap-i18n
                          middleware/wrap-session]}})
    (ring/routes
     (ring/create-resource-handler {:path "/"})

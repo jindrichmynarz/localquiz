@@ -1,6 +1,5 @@
 (ns net.mynarz.localquiz.views.common
-  (:require [net.mynarz.localquiz.config :refer [config]]
-            [net.mynarz.localquiz.crypto :as crypto]
+  (:require [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [decimal-format long-str]]
@@ -28,6 +27,37 @@
 (def submit-by-enter
    "evt.key === 'Enter' && document.getElementById('submit').click()")
 
+(defn lang-switch-input
+  []
+  [:input.offscreen#lang-toggle
+    {:data-attr:checked "$language == 'en'"
+     :data-on:change "localStorage.setItem('language', {'cs': 'en', 'en': 'cs'}[$language]); location.reload()"
+     :type "checkbox"}])
+
+(defn lang-switch
+  [tr]
+  [:p#lang-switch
+   [:span "CS"]
+   (lang-switch-input)
+   [:label.switch
+    {:for "lang-toggle"
+     :title (tr [:switch-lang])}]
+   [:span "EN"]])
+
+(defn footer
+  [tr]
+  [:footer
+   [:p
+    (interpose
+      " "
+      [(tr [:footer/made-with])
+       [:abbr {:title (tr [:footer/persistence])} "🧡"]
+       (tr [:footer/using])
+       [:a {:href "https://clojure.org"} "Clojure"]
+       (tr [:and])
+       [:a {:href "https://data-star.dev"} "Datastar"]
+       "🚀."])]])
+
 (def cookie-warning
   [:div#cookie-warning
    {:aria-live "polite"
@@ -43,47 +73,44 @@
      {:data-on:click "window.close()"}
      "Exit"]]])
 
-(def shim-page
+(defn shim-page
   "A basic HTML page with Datastar setup."
-  (cc/compile
-   [h/doctype-html5
-    [:html {:lang "en"}
-     [:head
-      [:title "Localquiz"]
-      [:meta {:charset "UTF-8"}]
-      [:link#css
-       {:rel "stylesheet"
-        :type "text/css"
-        :href "/css/style.css"}]
-      [:link
-       {:href "https://fonts.googleapis.com/icon?family=Material+Icons"
-        :rel "stylesheet"}]
-      [:script {:defer true
-                :src CDN-url
-                :type "module"}]
-      ; Enables responsiveness on mobile devices
-      [:meta {:name "viewport"
-              :content "width=device-width, initial-scale=1.0"}]]
-     [:body {:data-signals:csrf session/csrf-cookie-js
-             :data-init on-load-js
-             ;; Reconnect when the user comes online after
-             ;; being offline. Closes any existing connection
-             ;; from this div.
-             :data-on:online__window on-load-js}
-      [:noscript "Your browser does not support JavaScript!"]
-      cookie-warning
-      [:main
+  [{:keys [tr]}]
+  [h/doctype-html5
+   [:html
+    {:data-attr:lang "$language"}
+    [:head
+     [:title "Localquiz"]
+     [:meta
+      {:charset "UTF-8"}]
+     [:link#css
+      {:rel "stylesheet"
+       :type "text/css"
+       :href "/css/style.css"}]
+     [:link
+      {:href "https://fonts.googleapis.com/icon?family=Material+Icons"
+       :rel "stylesheet"}]
+     [:script {:defer true
+               :src CDN-url
+               :type "module"}]
+     ; Enables responsiveness on mobile devices
+     [:meta {:name "viewport"
+             :content "width=device-width, initial-scale=1.0"}]]
+    [:body {:data-signals:csrf session/csrf-cookie-js
+            :data-signals:language "localStorage.getItem('language') || navigator.language.slice(0, 2)"
+            :data-init on-load-js
+            ;; Reconnect when the user comes online after
+            ;; being offline. Closes any existing connection
+            ;; from this div.
+            :data-on:online__window on-load-js}
+     [:noscript (tr [:no-js])]
+     [:div#screen
+      [:header
        [:h1 "Localquiz"]
-       [:div#morph]
-       [:footer
-        [:p
-         "Made with "
-         [:abbr {:title "unreasonable persistence"} "🧡"]
-         " using "
-         [:a {:href "https://clojure.org"} "Clojure"]
-         " and "
-         [:a {:href "https://data-star.dev"} "Datastar"]
-         " 🚀."]]]]]]))
+       (lang-switch tr)]
+      [:main#morph]
+      (footer tr)
+      cookie-warning]]]])
 
 (defn view
   [handler request]
@@ -100,7 +127,7 @@
        :status 204})))
 
 (def shim-view
-  (partial view (constantly shim-page)))
+  (partial view shim-page))
 
 (defn ->session-role
   "Get the session role based on path parameters.
@@ -119,18 +146,16 @@
         :state (game/get-game-state (or game-id session-id))}
        (assoc request :game)
        game-view
-       (vector :div#morph)))
+       (vector :main#morph)))
 
-(defn- answer-click-handler
+(defn answer-click-handler
   [^Boolean disabled?
    ^Boolean signal?
    ^String game-id]
   (when-not disabled?
     ; FIXME: Still doesn't work reliably for :multiple questions.
-    ;        If env.target.dataset.answer == 0, the assignment expression returns 0,
-    ;        which is a falsy values, and hence the @post() doesn't run.
     (let [post (format "@post('/answer/%s')" game-id)
-          signal-and-post (format "($answer = evt.target.dataset.answer, %s)" post)]
+          signal-and-post (format "($answer = evt.target.dataset.answer) && %s" post)]
       {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
                                 (if signal? post signal-and-post))})))
 
@@ -145,18 +170,19 @@
    note]
   (when (and answer-revealed? note)
     [:div.note
-     [:i.material-icons.md-light.md-24 "info"]
-     note]))
+     [:div [:i.material-icons.md-light.md-24 "info"]]
+     [:div note]]))
 
 (defn add-index
   [coll]
   (map-indexed (fn [index item] (assoc item :index index)) coll))
 
 (defn submit-button
-  [^String game-id]
+  [tr
+   ^String game-id]
   [:button.btn.btn-primary#submit
    {:data-on:click (format "@post('/answer/%s')" game-id)}
-   "Submit"])
+   (tr [:submit])])
 
 (defmulti answers-view
   (fn [& args]
@@ -165,7 +191,8 @@
         :type)))
 
 (defmethod answers-view :multiple
-  [^Boolean disabled?
+  [_
+   ^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [choices note]}]
@@ -177,7 +204,7 @@
        [:button.btn
         {:class (when answer-revealed?
                   (if correct? "correct" "incorrect"))
-         :data-answer index
+         :data-answer (format "'%d'" index)
          :disabled (or disabled? answer-revealed?)}
         [:span.answer
           text
@@ -185,31 +212,33 @@
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :yesno
-  [^Boolean disabled?
+  [tr
+   ^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [correct? note]}]
   [:section#answers
    [:p
-     (answer-click-handler (or disabled? answer-revealed?) false game-id)
-     [:button.btn
-      {:class (when answer-revealed?
-                (if correct? "correct" "incorrect"))
-       :data-answer "true"
-       :disabled disabled?}
-      "Yes"
-      (mark-answer answer-revealed? correct?)]
-     [:button.btn
-      {:class (when answer-revealed?
-                (if-not correct? "correct" "incorrect"))
-       :data-answer "false"
-       :disabled disabled?}
-      "No"
-      (mark-answer answer-revealed? (not correct?))]]
+    (answer-click-handler (or disabled? answer-revealed?) false game-id)
+    [:button.btn
+     {:class (when answer-revealed?
+               (if correct? "correct" "incorrect"))
+      :data-answer "true"
+      :disabled disabled?}
+     (tr [:question.yesno/yes])
+     (mark-answer answer-revealed? correct?)]
+    [:button.btn
+     {:class (when answer-revealed?
+               (if-not correct? "correct" "incorrect"))
+      :data-answer "false"
+      :disabled disabled?}
+     (tr [:question.yesno/no])
+     (mark-answer answer-revealed? (not correct?))]]
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :percent-range
-  [^Boolean disabled?
+  [tr
+   ^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [note percentage]}]
@@ -241,32 +270,33 @@
         {:data-on:click "$answer++"}
         "+"]]
       [:p
-       (submit-button game-id)]])
+       (submit-button tr game-id)]])
    (when answer-revealed?
      [:p (format "%s %%" (decimal-format percentage))])
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :open
-  [^Boolean disabled?
+  [tr
+   ^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [answer note]}]
   [:section#answers
    (when-not disabled?
      [:p
-      (answer-click-handler answer-revealed? true game-id)
       [:input
        {:autofocus true
         :data-bind "answer"
         :data-on:keydown submit-by-enter
         :type "text"}]
-      [:button.btn#submit "Submit"]])
+      (submit-button tr game-id)])
    (when answer-revealed?
      [:p.answer answer])
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :sort
-  [^Boolean disabled?
+  [tr
+   ^Boolean disabled?
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [items note]}]
@@ -291,5 +321,5 @@
       [:p
        [:script {:src "/js/sortable.js"
                  :type "module"}]
-       (submit-button game-id)])
+       (submit-button tr game-id)])
     (note-view answer-revealed? note)]])

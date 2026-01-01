@@ -14,7 +14,8 @@
 (defn player-name-input
   ([request]
    (player-name-input request nil))
-  ([{{:keys [game-id]} :path-params}
+  ([{{:keys [game-id]} :path-params
+     :keys [tr]}
     validation-error]
    (let [disabled? (some? validation-error)
          validate-js (long-str "!$_submitted &&"
@@ -25,7 +26,7 @@
        {:data-signals "{_controller: new AbortController(), _submitted: false}"}
        [:label
         {:for "player-name"}
-        "Player name"]
+        (tr [:player-name])]
        [:input
         {:aria-live "polite"
          :autofocus true
@@ -43,50 +44,62 @@
         {:aria-disabled disabled?
          :disabled disabled?
          :data-on:click (format "$_controller.abort(); $_submitted = true; @post('/join/%s')" game-id)}
-        "Join game"]]
+        (tr [:join-game])]]
       (when validation-error
-        [:p#name-error.error validation-error])])))
+        [:p#name-error.error
+         (tr [validation-error])])])))
 
 (defmethod views/game-view [:player nil]
-  [_]
+  [{:keys [tr]}]
   [:section#content
-   [:h2.error "This game does not exist!"]])
+   [:h2.error
+    [:i.material-icons.md-36 "videogame_asset_off"]
+    (tr [:game-not-exists])]])
 
 (defmethod views/game-view [:player :new]
   [{{:keys [game-id]} :path-params
+    :keys [tr]
     player-id :sid
     :as request}]
   (if (game/player-in-game? game-id player-id)
     [:section#content
      waiting-icon
-     [:p "Please wait for the game to start."]]
+     [:p (tr [:wait-for-game-start])]]
     (player-name-input request)))
 
 (defmethod views/game-view [:player :question]
   [{{:keys [game-id]} :path-params
+    :keys [tr]
     player-id :sid}]
   [:section#content
    (if (game/player-answered? player-id)
      [:div
       waiting-icon
-      [:p "Waiting for other answers&ldots;"]]
+      [:p (tr [:wait-for-answers])]]
      (let [answer-revealed? (game/all-players-answered? game-id)
            current-question (game/current-question game-id)]
-       (views/answers-view false
+       (views/answers-view tr
+                           false
                            answer-revealed?
                            game-id
                            current-question)))])
 
 (defmethod views/game-view [:player :show-answers]
-  [{player-id :sid}]
+  [{:keys [tr]
+    {:keys [game-id]} :path-params
+    player-id :sid}]
   ; TODO: Show if the player's answer was correct or not?
   ;       This requires either re-evaluating whether the answer is correct or persisting the evaluation.
-  [:section#content "SHOW ANSWERS"])
+  [:section#content
+   [:h2 "Show answers"]])
 
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params
+    :keys [tr]
     player-id :sid}]
   ; TODO: What to show for the intermediate leaderboard?
   (when (and (game/all-questions-answered? game-id) (= player-id (game/winner game-id)))
     [:section#content
-     [:h1.winner "You won!" [:i.material-icons.md-36 "emoji_events"]]]))
+     [:h2.winner
+      (tr [:you-won])
+      [:i.material-icons.md-36 "emoji_events"]]]))

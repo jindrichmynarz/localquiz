@@ -1,10 +1,8 @@
 (ns net.mynarz.localquiz.game
-  (:require [net.mynarz.localquiz.async :refer [refresh-channel]]
-            [net.mynarz.localquiz.config :refer [config]]
+  (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.normalize :refer [normalize-answer]]
             [clj-fuzzy.jaro-winkler :refer [jaro-winkler]]
-            [clojure.core.async :as a]
             [clojure.string :as string]
             [datahike.api :as d]
             [fast-edn.core :as edn]
@@ -60,11 +58,8 @@
   [^String game-id
    ^String player-name]
   (cond
-    (player-name-in-game? game-id player-name)
-    (format "A player named '%s' is already in this game." player-name)
-
-    (not (player-name-valid-length? player-name))
-    (format "Player name must have between 1 to 20 characters.")))
+    (player-name-in-game? game-id player-name) :errors.player-name/taken
+    (not (player-name-valid-length? player-name)) :errors.player-name/length))
 
 (defn lobby
   "Get the players waiting in the lobby for the game identified by `game-id`.
@@ -91,7 +86,7 @@
                   :where [?game :game/id ?game-id]
                          [?game :game/current-question ?current-question]]
                 @db-conn)
-          edn/read-string))
+           edn/read-string))
 
 (defn parse-answer
   ; TODO: Shall we just use edn/read-string?
@@ -174,14 +169,6 @@
   (for [answer answers]
     (assoc answer :score (- 1 (/ (Math/abs (- ^double (:answer answer) percentage)) 100)))))
 
-(defn consensus-scoring
-  [answers]
-  (let [answer->score (->> answers
-                           (map :answer)
-                           frequencies)]
-    (for [answer answers]
-      (assoc answer :score (- (answer->score (:answer answer)) 1.0)))))
-
 (defmethod score-answers [:sort nil]
   [{:keys [items]} answers]
   (let [expected (->> items
@@ -194,6 +181,14 @@
                                 :answer
                                 (= expected)
                                 boolean->score)))))
+
+(defn consensus-scoring
+  [answers]
+  (let [answer->score (->> answers
+                           (map :answer)
+                           frequencies)]
+    (for [answer answers]
+      (assoc answer :score (- (answer->score (:answer answer)) 1.0)))))
 
 (defmethod score-answers [:multiple :consensus]
   [_ answers]
@@ -316,7 +311,7 @@
 (defn evaluate-answers!
   [^String game-id]
   (swap! timeouts (partial cancel-timeout! game-id))
-  (let [{question :current-question} (current-question game-id)]
+  (let [question (current-question game-id)]
     (->> game-id
          get-answers
          (score-answers question)
@@ -366,18 +361,20 @@
   [^String game-id
    ^String player-id
    ^String answer]
-  (if (@timeouts game-id)
-    (do
-      (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
-      (d/transact db-conn [{:game/id game-id
-                            :game/answers [{:answer/player [:player/id player-id]
-                                            :answer/answer (str answer)}]}])
-      ; FIXME: This might be dropped due to throttling.
-      (a/>!! refresh-channel {:game-id game-id :signals {:answer nil}}) ; Reset the $answer signal.
-      (when (all-players-answered? game-id)
-        (log/infof "All players in game %s have answered." game-id)
-        (evaluate-answers! game-id)))
-    {:error "Time's out!"}))
+  (cond (not (@timeouts game-id))
+        {:error :errors/time-out}
+
+        (some? answer)
+        (do
+          (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
+          (d/transact db-conn [{:game/id game-id
+                                :game/answers [{:answer/player [:player/id player-id]
+                                                :answer/answer (str answer)}]}])
+          ; FIXME: This might be dropped due to throttling.
+          ;(a/>!! refresh-channel {:game-id game-id :signals {:answer nil}}) ; Reset the $answer signal.
+          (when (all-players-answered? game-id)
+            (log/infof "All players in game %s have answered." game-id)
+            (evaluate-answers! game-id)))))
 
 (defn player-score
   [^String player-id])
@@ -390,14 +387,19 @@
 (defn game-progress
   [^String game-id]
   (->> game-id
-       (d/q '[:find (count ?question) ?questions-total
+       (d/q '[:find (sum ?question) ?questions-total
               :in $ ?game-id
               :keys questions-remaining questions-total
               :where [?game :game/id ?game-id]
-                     [?game :game/questions ?question]
-                     [?game :game/questions-total ?questions-total]]
+                     [?game :game/questions-total ?questions-total]
+                     (or-join [?game ?question]
+                              (and [?game :game/questions _]
+                                   [(ground 1) ?question])
+                              [(ground 0) ?question])]
             @db-conn)
        first))
+
+(game-progress "Co81uOWd9BtYxTG7-eu8PvEkTh8")
 
 (defn answer-progress
   [^String game-id]

@@ -12,6 +12,7 @@
 
 (def decimal-format
   "Format doubles as decimal numbers with up to 2 decimal places."
+  ; FIXME: Set locale based on `tr`?
   (let [formatter (DecimalFormat. "0.##" (DecimalFormatSymbols/getInstance Locale/US))]
     (fn [^double n]
       (.format formatter n))))

@@ -1,5 +1,5 @@
 (ns net.mynarz.localquiz.sse
-  (:require [net.mynarz.localquiz.async :refer [refresh-pub]]
+  (:require [net.mynarz.localquiz.async :refer [refresh-pub throttle]]
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.cpu-pool :refer [on-cpu-pool]]
             [net.mynarz.localquiz.error :as error]
@@ -54,7 +54,9 @@
                                              (some->> signals
                                                       charred/write-json-str
                                                       (d*/patch-signals! sse-gen))
-                                             (d*/patch-elements! sse-gen new-view-str))
+                                             (d*/patch-elements! sse-gen
+                                                                 new-view-str
+                                                                 {:use-view-transition true}))
                                            new-view-hash)))
                                       recur))
 

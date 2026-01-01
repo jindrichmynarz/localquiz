@@ -1,7 +1,7 @@
 (ns net.mynarz.localquiz.middleware
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.crypto :as crypto]
-            [net.mynarz.localquiz.game :as game]
+            [net.mynarz.localquiz.i18n :as i18n]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [read-json]]
             [ring.middleware.reload :as reload]
@@ -36,6 +36,17 @@
       {:status 406}
 
       :else (handler request))))
+
+(defn wrap-i18n
+  "Ring middleware adding an internalization function for the preferred language under the `:tr` key."
+  [handler]
+  (fn [{{:keys [language]} :body
+        {accept-language "accept-language"} :headers
+        :as request}]
+    (let [i18n-language (keyword (or language (some-> accept-language (subs 0 2)) "en"))]
+      (-> request
+          (assoc :tr (partial i18n/tr [i18n-language]))
+          handler))))
 
 (defn wrap-parse-json-body
   "Ring middleware parsing request bodies in JSON."
