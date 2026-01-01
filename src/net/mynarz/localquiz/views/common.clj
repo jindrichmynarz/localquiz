@@ -154,8 +154,10 @@
    ^String game-id]
   (when-not disabled?
     ; FIXME: Still doesn't work reliably for :multiple questions.
+    ;        Submit answers as [form data](https://data-star.dev/examples/form_data) instead of signals?
+    ;        Or submit via a GET query parameter?
     (let [post (format "@post('/answer/%s')" game-id)
-          signal-and-post (format "($answer = evt.target.dataset.answer) && %s" post)]
+          signal-and-post (format "($answer = evt.target.dataset.answer, %s)" post)]
       {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
                                 (if signal? post signal-and-post))})))
 
@@ -180,7 +182,7 @@
 (defn submit-button
   [tr
    ^String game-id]
-  [:button.btn.btn-primary#submit
+  [:button.btn#submit
    {:data-on:click (format "@post('/answer/%s')" game-id)}
    (tr [:submit])])
 
@@ -204,7 +206,7 @@
        [:button.btn
         {:class (when answer-revealed?
                   (if correct? "correct" "incorrect"))
-         :data-answer (format "'%d'" index)
+         :data-answer index
          :disabled (or disabled? answer-revealed?)}
         [:span.answer
           text

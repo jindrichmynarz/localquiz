@@ -65,7 +65,10 @@
 
                             hk-gen/on-close
                             (fn [sse-gen status]
-                              (log/infof "Closing the connection to game %s with status %s." game-id status)
+                              (log/infof "Closing the session %s to game %s with status %s."
+                                         session-id
+                                         game-id
+                                         status)
                               (a/>!! <cancel :cancel)
                               (when (and (not (:is-dev? config)) ; Don't close connections in development to allow testing.
                                          player-game-id

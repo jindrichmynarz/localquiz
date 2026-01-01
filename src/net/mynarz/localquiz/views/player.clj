@@ -1,6 +1,6 @@
 (ns net.mynarz.localquiz.views.player
   (:require [net.mynarz.localquiz.game :as game]
-            [net.mynarz.localquiz.util :refer [long-str]]
+            [net.mynarz.localquiz.util :refer [decimal-format long-str]]
             [net.mynarz.localquiz.views.common :as views]))
 
 (def waiting-icon
@@ -53,7 +53,7 @@
   [{:keys [tr]}]
   [:section#content
    [:h2.error
-    [:i.material-icons.md-36 "videogame_asset_off"]
+    [:i.material-icons.md-light "videogame_asset_off"]
     (tr [:game-not-exists])]])
 
 (defmethod views/game-view [:player :new]
@@ -88,18 +88,25 @@
   [{:keys [tr]
     {:keys [game-id]} :path-params
     player-id :sid}]
-  ; TODO: Show if the player's answer was correct or not?
-  ;       This requires either re-evaluating whether the answer is correct or persisting the evaluation.
-  [:section#content
-   [:h2 "Show answers"]])
+  (let [{:answer/keys [correct?] :as answer} (game/player-answer game-id player-id)]
+    [:section#content
+     ; TODO: How to rate answers for the consensus questions?
+     (cond (some? correct?) [:i.material-icons.answer-mark (if correct? "check" "close")]
+           (nil? answer) [:p (tr [:no-answer])])]))
 
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params
     :keys [tr]
     player-id :sid}]
-  ; TODO: What to show for the intermediate leaderboard?
-  (when (and (game/all-questions-answered? game-id) (= player-id (game/winner game-id)))
-    [:section#content
+  [:section#content
+   (if (and (game/all-questions-answered? game-id) (= player-id (game/winner game-id)))
      [:h2.winner
       (tr [:you-won])
-      [:i.material-icons.md-36 "emoji_events"]]]))
+      [:i.material-icons.md-36 "emoji_events"]]
+     (let [{:answer/keys [score]} (game/player-answer game-id player-id)
+           points (format "+ %s %s"
+                          (decimal-format score)
+                          (tr [(cond (= score 1.0) :point
+                                     (>= score 2.0) :points
+                                     :else :point-fraction)]))]
+       [:h2 points]))])

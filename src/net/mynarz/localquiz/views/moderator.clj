@@ -54,8 +54,8 @@
 (defn leaderboard
   [tr
    ^String game-id]
-  (let [{:keys [questions-remaining questions-total]} (game/game-progress game-id)
-        questions-answered (- questions-total questions-remaining)
+  (let [{:game/keys [questions questions-total]} (game/game-progress game-id)
+        questions-answered (- questions-total questions)
         leaderboard-data (game/leaderboard game-id)
         max-score (->> leaderboard-data
                        (map :score)
@@ -137,6 +137,8 @@
    ^String game-id
    ^Boolean answer-revealed?]
   (let [{:keys [scoring] :as question} (game/current-question game-id)
+        {:keys [total answered]} (game/answer-progress game-id)
+        answer-progress-text (format "%d/%d" answered total)
         scoring-icon (if (= scoring :consensus)
                        "join_inner"
                        "task_alt")]
@@ -144,6 +146,14 @@
       end-game
       (timer answer-revealed?)
       [:div#question
+       [:p#answer-progress
+        [:label
+         (tr [:players-answered])
+         [:br]
+         [:progress
+          {:max total
+           :value answered}
+          answer-progress-text]]]
        (:text question)
        [:i.material-icons.md-36.scoring-icon scoring-icon]
        (answers-view tr

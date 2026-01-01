@@ -346,8 +346,9 @@ i.material-icons {
   }
 }
 
-.answer-mark {
-  float: right;
+i.material-icons.answer-mark {
+  font-size: 3em;
+  text-shadow: 0 3px 0 var(--darker);
 }
 
 .incorrect {
@@ -474,14 +475,16 @@ input[type="range"] {
 progress {
   background: none;
   text-align: left;
-}
+  height: 8px;
+  vertical-align: middle;
 
-progress::-webkit-progress-bar {
-  background-color: var(--offwhite);
-}
+  &::-webkit-progress-bar {
+    background-color: var(--offwhite);
+  }
 
-progress::-webkit-progress-value {
-  background: var(--orange);
+  &::-webkit-progress-value {
+    background: var(--orange);
+  }
 }
 
 p.waiting-icon {
@@ -583,5 +586,16 @@ p.waiting-icon {
   input[type="checkbox"]:checked + .switch::after {
     transform: translateX(20px);
   }
+}
 
+#answer-progress {
+  text-align: center;
+  font-size: 12px;
+}
+
+.error i.material-icons {
+  font-size: 2em;
+  margin-right: .2em;
+  vertical-align: middle;
+  color: var(--orange);
 }

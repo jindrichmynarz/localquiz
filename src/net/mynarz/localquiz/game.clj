@@ -115,9 +115,9 @@
 (defn get-answers
   [^String game-id]
   (->> game-id
-       (d/q '[:find ?player ?answer ?answer-time
+       (d/q '[:find ?player ?answer-entity ?answer ?answer-time
               :in $ ?game-id
-              :keys player answer answer-time
+              :keys player answer-entity answer answer-time
               :where [?game :game/id ?game-id]
                      [?game :game/players ?player]
                      [?game :game/current-question _ ?question-tx]
@@ -140,34 +140,39 @@
 
 (defmethod score-answers [:multiple nil]
   [{:keys [choices]} answers]
-  (for [answer answers]
-    (assoc answer :score (->> answer
-                              :answer
-                              (nth choices)
-                              :correct?
-                              boolean
-                              boolean->score))))
+  (for [answer answers
+        :let [correct? (->> answer
+                            :answer
+                            (nth choices)
+                            :correct?
+                            boolean)]]
+    (assoc answer :correct? correct?
+                  :score (boolean->score correct?))))
 
 (defmethod score-answers [:yesno nil]
   [{:keys [correct?]} answers]
-  (for [answer answers]
-    (assoc answer :score (-> answer
-                             :answer
-                             (= correct?)
-                             boolean->score))))
+  (for [answer answers
+        :let [answer-correct? (= (:answer answer) correct?)]]
+    (assoc answer :correct? answer-correct?
+                  :score (boolean->score answer-correct?))))
 
 (defmethod score-answers [:open nil]
   [question answers]
   (let [expected (-> question :answer normalize-answer)]
     (for [answer answers
-          :let [actual (-> answer :answer normalize-answer)]]
-      (assoc answer :score (boolean->score (> (jaro-winkler actual expected)
-                                              (:similarity-threshold config)))))))
+          :let [actual (-> answer :answer normalize-answer)
+                correct? (> (jaro-winkler actual expected)
+                            (:similarity-threshold config))]]
+      (assoc answer :correct? correct?
+                    :score (boolean->score correct?)))))
 
 (defmethod score-answers [:percent-range nil]
   [{:keys [percentage]} answers]
-  (for [answer answers]
-    (assoc answer :score (- 1 (/ (Math/abs (- ^double (:answer answer) percentage)) 100)))))
+  (for [answer answers
+        :let [difference (Math/abs (- ^double (:answer answer) percentage))
+              correct? (<= difference 5)]] ; TODO: Allow to configure tolerated difference?
+    (assoc answer :correct? correct?
+                  :score (- 1 (/ difference 100)))))
 
 (defmethod score-answers [:sort nil]
   [{:keys [items]} answers]
@@ -176,11 +181,10 @@
                       (map vector (range))
                       (sort-by second)
                       (mapv first))]
-    (for [answer answers]
-      (assoc answer :score (->> answer
-                                :answer
-                                (= expected)
-                                boolean->score)))))
+    (for [answer answers
+          :let [correct? (= (:answer answer) expected)]]
+      (assoc answer :correct? correct?
+                    :score (boolean->score correct?)))))
 
 (defn consensus-scoring
   [answers]
@@ -224,8 +228,16 @@
        player
        answer-score))
 
+(defn store-scores
+  [scores]
+  (reduce (fn [acc {:keys [answer-entity correct? score]}]
+            (cond-> (conj acc [:db/add answer-entity :answer/score score])
+              (some? correct?) (conj [:db/add answer-entity :answer/correct? correct?])))
+          []
+          scores))
+
 (defn add-scores
-  "Create transaction data from `scores`."
+  "Create transaction data from `scores` to add them to the player scores."
   [scores]
   (mapv (fn [{:keys [player score]}]
           [:db.fn/call add-score player score])
@@ -311,13 +323,15 @@
 (defn evaluate-answers!
   [^String game-id]
   (swap! timeouts (partial cancel-timeout! game-id))
-  (let [question (current-question game-id)]
-    (->> game-id
-         get-answers
-         (score-answers question)
-         ;scale-scores-by-answer-times
-         add-scores
-         (into [[:db/add [:game/id game-id] :game/state :show-answers]])
+  (let [question (current-question game-id)
+        scores (->> game-id
+                    get-answers
+                    (score-answers question))]
+                    ;scale-scores-by-answer-times)
+    (->> [(store-scores scores)
+          (add-scores scores)
+          [[:db/add [:game/id game-id] :game/state :show-answers]]]
+         (reduce into)
          (d/transact db-conn))))
 
 (defn get-answer-ids
@@ -386,30 +400,40 @@
 
 (defn game-progress
   [^String game-id]
-  (->> game-id
-       (d/q '[:find (sum ?question) ?questions-total
-              :in $ ?game-id
-              :keys questions-remaining questions-total
-              :where [?game :game/id ?game-id]
-                     [?game :game/questions-total ?questions-total]
-                     (or-join [?game ?question]
-                              (and [?game :game/questions _]
-                                   [(ground 1) ?question])
-                              [(ground 0) ?question])]
-            @db-conn)
-       first))
+  (-> '[:find (pull ?game [:game/questions :game/questions-total]) .
+        :in $ ?game-id
+        :where [?game :game/id ?game-id]]
+      (d/q @db-conn game-id)
+      (update :game/questions count)))
 
 (game-progress "Co81uOWd9BtYxTG7-eu8PvEkTh8")
 
 (defn answer-progress
   [^String game-id]
-  ; FIXME: Datalog can't do left joins.
-  (d/q '[:find (count ?player) (count ?answer)
-         :in $ ?game-id
-         :keys total answered
+  (->> game-id
+       (d/q '[:find (count-distinct ?player) (sum ?answer)
+              :in $ ?game-id
+              :keys total answered
+              :where [?game :game/id ?game-id]
+                     [?game :game/players ?player]
+                     (or-join [?game ?player ?answer]
+                              (and [?game :game/answers ?answer-entity]
+                                   [?answer-entity :answer/player ?player]
+                                   [(ground 1) ?answer])
+                              [(ground 0) ?answer])]
+            @db-conn)
+       first))
+
+(defn player-answer
+  [^String game-id
+   ^String player-id]
+  (d/q '[:find (pull ?answer [:answer/score :answer/correct?]) .
+         :in $ ?game-id ?player-id
          :where [?game :game/id ?game-id]
                 [?game :game/players ?player]
-                (or-join [?game ?answer]
-                         [?game :game/answers ?answer])]
+                [?player :player/id ?player-id]
+                [?game :game/answers ?answer]
+                [?answer :answer/player ?player]]
        @db-conn
-       game-id))
+       game-id
+       player-id))

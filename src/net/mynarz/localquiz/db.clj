@@ -60,6 +60,14 @@
     :db/doc "Answer to the current question"
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
+   {:db/ident :answer/correct?
+    :db/doc "Is the answer correct?"
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :answer/score
+    :db/doc "The answer's score"
+    :db/valueType :db.type/double
+    :db/cardinality :db.cardinality/one}
    {:db/ident :game/players
     :db/doc "Players of a game"
     :db/valueType :db.type/ref
