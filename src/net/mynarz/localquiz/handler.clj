@@ -15,7 +15,7 @@
                          parameters/parameters-middleware
                          multipart/multipart-middleware
                          exception/exception-middleware
-                         middleware/wrap-parse-json-body
+                         middleware/wrap-parse-signals
                          middleware/wrap-i18n
                          middleware/wrap-session]}})
    (ring/routes

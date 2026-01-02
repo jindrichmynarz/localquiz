@@ -1,28 +1,25 @@
 (ns net.mynarz.localquiz.views.common
   (:require [net.mynarz.localquiz.crypto :as crypto]
+            [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [decimal-format long-str]]
             [charred.api :as charred]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
-            [starfederation.datastar.clojure.brotli :as brotli]
             [starfederation.datastar.clojure.api :refer [CDN-url]]
-            [taoensso.timbre :as log]
-            [net.mynarz.localquiz.game :as game]))
+            [starfederation.datastar.clojure.brotli :as brotli]))
 
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
 
-(def on-load-js
-  ;; Quirk with browsers is that cache settings are per URL not per
-  ;; URL + METHOD this means that GET and POST cache headers can
-  ;; mess with each other. To get around this an unused query param
-  ;; is added to the url.
-
+(defn on-load-js
   ;; Retry Infinity means we always try to reconnect. The other defaults
   ;; mean that this will at most take 30s (default max backoff).
-  "@post(window.location.pathname + (window.location.search + '&u=').replace(/^&/,'?'), {retryMaxCount: Infinity})")
+  [^String game-id]
+  (let [endpoint (cond-> "/sse"
+                    game-id (str "/" game-id))]
+    (format "@get('%s' + (window.location.search + '&u=').replace(/^&/,'?'), {retryMaxCount: Infinity})" endpoint)))
 
 (def submit-by-enter
    "evt.key === 'Enter' && document.getElementById('submit').click()")
@@ -31,7 +28,9 @@
   []
   [:input.offscreen#lang-toggle
     {:data-attr:checked "$language == 'en'"
-     :data-on:change "localStorage.setItem('language', {'cs': 'en', 'en': 'cs'}[$language]); location.reload()"
+     :data-on:change "$language = {'cs': 'en', 'en': 'cs'}[$language];
+                      localStorage.setItem('language', $language);
+                      location.reload()"
      :type "checkbox"}])
 
 (defn lang-switch
@@ -45,6 +44,8 @@
    [:span "EN"]])
 
 (defn footer
+  ; FIXME: This is not translated.
+  ;        Because it is outside of #morph?
   [tr]
   [:footer
    [:p
@@ -75,7 +76,8 @@
 
 (defn shim-page
   "A basic HTML page with Datastar setup."
-  [{:keys [tr]}]
+  [{{:keys [game-id]} :path-params
+    :keys [tr]}]
   [h/doctype-html5
    [:html
     {:data-attr:lang "$language"}
@@ -98,11 +100,11 @@
              :content "width=device-width, initial-scale=1.0"}]]
     [:body {:data-signals:csrf session/csrf-cookie-js
             :data-signals:language "localStorage.getItem('language') || navigator.language.slice(0, 2)"
-            :data-init on-load-js
+            :data-init (on-load-js game-id)
             ;; Reconnect when the user comes online after
             ;; being offline. Closes any existing connection
             ;; from this div.
-            :data-on:online__window on-load-js}
+            :data-on:online__window (on-load-js game-id)}
      [:noscript (tr [:no-js])]
      [:div#screen
       [:header

@@ -5,14 +5,7 @@
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [read-json]]
             [ring.middleware.reload :as reload]
-            [taoensso.timbre :as log]))
-
-(defn parse-json-body?
-  "Detemine if request's body should be parsed as JSON."
-  [{:keys [body content-type request-method]}]
-  (and (= request-method :post)
-       (= content-type "application/json")
-       body))
+            [starfederation.datastar.clojure.consts :as consts]))
 
 (defn reloading-ring-handler
   "Reload Ring handler on each request."
@@ -48,13 +41,19 @@
           (assoc :tr (partial i18n/tr [i18n-language]))
           handler))))
 
-(defn wrap-parse-json-body
-  "Ring middleware parsing request bodies in JSON."
+(defn wrap-parse-signals
+  "Ring middleware parsing Datastar signals in JSON."
   [handler]
-  (fn [request]
-    (cond-> request
-      (parse-json-body? request) (update :body read-json)
-      true                       handler)))
+  (fn [{:keys [body content-type request-method]
+        {signals consts/datastar-key} :query-params
+        :as request}]
+    (handler
+      (cond-> request
+        (and (= request-method :post) (= content-type "application/json") body)
+        (update :body read-json)
+
+        (and (= request-method :get) signals)
+        (assoc :body (read-json signals))))))
 
 (defn wrap-session
   "Ring middleware wrapping sessions"
