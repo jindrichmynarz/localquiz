@@ -1,8 +1,11 @@
 (ns net.mynarz.localquiz.util
-  (:require [charred.api :as charred]
+  (:require [net.mynarz.localquiz.question-spec :as question]
+            [charred.api :as charred]
             [clojure.java.io :as io]
+            [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [clojure.walk :refer [postwalk-replace]]
+            [expound.alpha :as e]
             [fast-edn.core :as edn])
   (:import (java.io PushbackReader)
            (java.text DecimalFormat DecimalFormatSymbols)
@@ -57,3 +60,11 @@
   "Replace React fragments (:<>) in `hiccup` with :div elements."
   [hiccup]
   (postwalk-replace {:<> :div} hiccup))
+
+(defn validate
+  [spec data]
+  (when-not (s/valid? spec data)
+    (e/expound-str spec data)))
+
+(def validate-questions
+  (partial validate ::question/data))

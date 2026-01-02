@@ -2,26 +2,11 @@
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.qrcode :refer [url->qrcode-svg]]
+            [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.util :refer [decimal-format]]
             [net.mynarz.localquiz.views.common :refer [answers-view game-view]]
             [charred.api :as charred]
             [taoensso.timbre :as log]))
-
-(defn pick-questions
-  [{:keys [tr]
-    game-id :sid}]
-  [:div
-   [:h1 "Localquiz"]
-   [:label
-    {:for "questions-upload"}
-    (tr [:upload-questions])]
-   [:input
-    {:accept ".edn"
-     :id "questions-upload"
-     :type "file"}]
-   [:button.btn
-    {:data:on-click "@post('/')"}
-    (tr [:submit])]])
 
 (defn copy-button
   [tr
@@ -84,7 +69,35 @@
 
 (defmethod game-view [:moderator nil]
   [{:keys [tr]}]
-  [:section#create-game
+  [:section#content
+   {:data-signals:tab-shown "'select-questions'"}
+   [:div.tabs
+    [:ul.tab-selector
+     [:li
+      [:a
+       {:data-class:active "$tabShown == 'select-questions'"
+        :data-on:click "$tabShown = 'select-questions'"}
+       (tr [:pick-questions])]]
+     [:li
+      [:a
+       {:data-class:active "$tabShown == 'upload-questions'"
+        :data-on:click "$tabShown = 'upload-questions'"}
+       (tr [:upload-questions])]]]
+    [:div.tab-content
+     [:div
+      {:data-show "$tabShown == 'select-questions'"}
+      [:select.questions-picker
+       {:data-bind "questions-source"}
+       (for [question-source (keys question-sources)]
+         [:option
+          {:value question-source}
+          question-source])]]
+     [:div
+      {:data-show "$tabShown == 'upload-questions'"
+       :style "display: none"}
+      [:input#questions-upload
+       {:accept ".edn"
+        :type "file"}]]]]
    [:button.btn.btn-primary
     {:data-on:mousedown "@post('/create')"}
     (tr [:create-game])]])
@@ -97,7 +110,7 @@
         has-enough-players? (game/has-enough-players? game-id)]
     [:div#sections
      end-game
-     [:section#join-game
+     [:section#content
       [:div
        [:div#qrcode (url->qrcode-svg play-game-url)]
        [:p

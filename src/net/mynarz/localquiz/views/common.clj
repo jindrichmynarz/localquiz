@@ -8,7 +8,8 @@
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.api :refer [CDN-url]]
-            [starfederation.datastar.clojure.brotli :as brotli]))
+            [starfederation.datastar.clojure.brotli :as brotli]
+            [taoensso.timbre :as log]))
 
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
@@ -19,7 +20,7 @@
   [^String game-id]
   (let [endpoint (cond-> "/sse"
                     game-id (str "/" game-id))]
-    (format "@get('%s' + (window.location.search + '&u=').replace(/^&/,'?'), {retryMaxCount: Infinity})" endpoint)))
+    (format "@get('%s', {retryMaxCount: Infinity})" endpoint)))
 
 (def submit-by-enter
    "evt.key === 'Enter' && document.getElementById('submit').click()")
@@ -44,7 +45,7 @@
    [:span "EN"]])
 
 (defn footer
-  ; FIXME: This is not translated.
+  ; FIXME: This is not translated to Czech.
   ;        Because it is outside of #morph?
   [tr]
   [:footer
