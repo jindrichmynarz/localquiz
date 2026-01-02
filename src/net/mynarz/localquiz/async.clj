@@ -1,8 +1,7 @@
 (ns net.mynarz.localquiz.async
   (:require [net.mynarz.localquiz.util :as util]
             [clojure.core.async :as a]
-            [mount.core :refer [defstate]]
-            [clojure.core :as c]))
+            [mount.core :refer [defstate]]))
 
 (defn throttle
   "Throttle `<in-ch` by a number of `msec` to avoid rapid consequent events."
