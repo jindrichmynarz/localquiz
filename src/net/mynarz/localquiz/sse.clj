@@ -1,5 +1,5 @@
 (ns net.mynarz.localquiz.sse
-  (:require [net.mynarz.localquiz.async :refer [refresh-pub]]
+  (:require [net.mynarz.localquiz.async :refer [refresh-pub throttle]]
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.cpu-pool :refer [on-cpu-pool]]
             [net.mynarz.localquiz.error :as error]
@@ -21,6 +21,7 @@
     :as request}]
   (let [game-id (or player-game-id session-id)
         <ch (a/sub refresh-pub game-id (a/chan (a/dropping-buffer 1)))
+        throttled<ch (throttle (:max-refresh-ms config) <ch)
         ; Poison pill for work cancelling
         <cancel (a/chan)]
     (hk-gen/->sse-response request
@@ -35,10 +36,10 @@
                                 (loop [last-view-hash last-event-id]
                                   (a/alt!!
                                     [<cancel]
-                                    (do (a/close! <ch)
-                                        (a/close! <cancel))
+                                    (doseq [ch [throttled<ch <ch <cancel]]
+                                      (a/close! ch))
 
-                                    [<ch]
+                                    [throttled<ch]
                                     ([_]
                                      (some-> ; Stop in case of error
                                       (on-cpu-pool ; CPU work on real threads
