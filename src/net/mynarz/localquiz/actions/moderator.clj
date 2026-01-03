@@ -3,6 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :as util]
             [datahike.api :as d]
+            [fast-edn.core :as edn]
             [taoensso.timbre :as log]))
 
 (defn pick-questions!
@@ -28,6 +29,12 @@
                           :game/state :new
                           :game/questions questions
                           :game/questions-total questions-total}])))
+
+(defn validate-questions
+  [request])
+  ;[{{questions-file :questionsFile} :body}]
+  ;(log/info (-> questions-file util/base-64-decode edn/read-string)))
+  ;(util/validate-questions))
 
 (defn leaderboard!
   [{game-id :sid}]

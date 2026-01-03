@@ -9,7 +9,7 @@
             [fast-edn.core :as edn])
   (:import (java.io PushbackReader)
            (java.text DecimalFormat DecimalFormatSymbols)
-           (java.util Locale)))
+           (java.util Base64 Locale)))
 
 (def ^:private buf-size 1024)
 
@@ -68,3 +68,7 @@
 
 (def validate-questions
   (partial validate ::question/data))
+
+(defn base-64-decode
+  [^String s]
+  (String. (.decode (Base64/getDecoder) s)))

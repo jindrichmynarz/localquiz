@@ -13,7 +13,9 @@
   [; Moderator's routes
    ["/" {:get views/shim-view}]
    ["/sse" {:get morph-view}]
-   ["/create" {:post (partial views/view moderator-actions/create-game!)}]
+   ["/create"
+    ["" {:post (partial views/view moderator-actions/create-game!)}]
+    ["/validate" {:post partial views/view moderator-actions/validate-questions}]]
    ["/question" {:post (partial views/view moderator-actions/next-question!)}]
    ["/leaderboard" {:post (partial views/view moderator-actions/leaderboard!)}]
    ["/end" {:post (partial views/view moderator-actions/end-game!)}]

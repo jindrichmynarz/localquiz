@@ -70,33 +70,39 @@
 (defmethod game-view [:moderator nil]
   [{:keys [tr]}]
   [:section#content
-   {:data-signals:tab-shown "'select-questions'"}
+   {:data-signals:_tab-shown "'select-questions'"}
    [:div.tabs
     [:ul.tab-selector
      [:li
       [:a
-       {:data-class:active "$tabShown == 'select-questions'"
-        :data-on:click "$tabShown = 'select-questions'"}
+       {:data-class:active "$_tabShown == 'select-questions'"
+        :data-on:click "$_tabShown = 'select-questions'"}
        (tr [:pick-questions])]]
      [:li
       [:a
-       {:data-class:active "$tabShown == 'upload-questions'"
-        :data-on:click "$tabShown = 'upload-questions'"}
+       {:data-class:active "$_tabShown == 'upload-questions'"
+        :data-on:click "$_tabShown = 'upload-questions'"}
        (tr [:upload-questions])]]]
     [:div.tab-content
      [:div
-      {:data-show "$tabShown == 'select-questions'"}
+      {:data-show "$_tabShown == 'select-questions'"}
       [:select.questions-picker
-       {:data-bind "questions-source"}
+       {:data-bind "questionsSource"}
        (for [question-source (keys question-sources)]
          [:option
           {:value question-source}
           question-source])]]
-     [:div
-      {:data-show "$tabShown == 'upload-questions'"
+     [:form
+      {:data-show "$_tabShown == 'upload-questions'"
        :style "display: none"}
+      [:input
+       {:name "csrf"
+        :type "hidden"
+        :data-attr:value "$csrf"}]
       [:input#questions-upload
        {:accept ".edn"
+        :data-on:change "@post('/create/validate', {contentType: 'form'})"
+        :name "questionsFile"
         :type "file"}]]]]
    [:button.btn.btn-primary
     {:data-on:mousedown "@post('/create')"}
