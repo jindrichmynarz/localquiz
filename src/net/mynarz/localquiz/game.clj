@@ -218,7 +218,7 @@
   "A transaction function that adds `answer-score` to the current score of the `player`."
   [db
    ^long player
-   ^long answer-score]
+   ^double answer-score]
   (d/q '[:find ?player ?score
          :in $ ?player ?answer-score
          :keys db/id player/score
