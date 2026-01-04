@@ -60,10 +60,10 @@
   [handler]
   (let [csrf-keyspec (crypto/secret-key->hmac-sha256-keyspec (:csrf-secret config))
         sid->csrf (fn [sid] (crypto/hmac-md5 csrf-keyspec sid))]
-    (fn [{{:keys [csrf]} :body
-          :keys [headers request-method]
+    (fn [{:keys [body headers request-method]
           :as request}]
-      (let [sid (session/get-sid headers)]
+      (let [csrf (or (get headers "x-csrf-token") (:csrf body))
+            sid (session/get-sid headers)]
         (cond
           ; If user has a sid and csrf, handle the request.
           (and sid (= csrf (sid->csrf sid)))
@@ -71,7 +71,7 @@
                           :sid sid
                           :csrf csrf))
 
-          ; :get request and user does not have session we create one
+          ; GET request and user does not have session we create one
           ; if they do not have a csrf cookie we give them one
           (= request-method :get)
           (let [new-sid (or sid (crypto/random-unguessable-uid))

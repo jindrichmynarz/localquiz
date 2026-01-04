@@ -84,16 +84,17 @@
         :data-on:click "$_tabShown = 'upload-questions'"}
        (tr [:upload-questions])]]]
     [:div.tab-content
-     [:div
+     [:form
       {:data-show "$_tabShown == 'select-questions'"}
       [:select.questions-picker
-       {:data-bind "questionsSource"}
+       {:name "questions-source"}
        (for [question-source (keys question-sources)]
          [:option
           {:value question-source}
           question-source])]]
      [:form
       {:data-show "$_tabShown == 'upload-questions'"
+       :enctype "multipart/form-data"
        :style "display: none"}
       [:input
        {:name "csrf"
@@ -102,7 +103,7 @@
       [:input#questions-upload
        {:accept ".edn"
         :data-on:change "@post('/create/validate', {contentType: 'form'})"
-        :name "questionsFile"
+        :name "questions-file"
         :type "file"}]]]]
    [:button.btn.btn-primary
     {:data-on:mousedown "@post('/create')"}

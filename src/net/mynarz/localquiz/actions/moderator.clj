@@ -4,6 +4,7 @@
             [net.mynarz.localquiz.util :as util]
             [datahike.api :as d]
             [fast-edn.core :as edn]
+            [ring.util.response :refer [redirect-after-post]]
             [taoensso.timbre :as log]))
 
 (defn pick-questions!
@@ -32,7 +33,7 @@
 
 (defn validate-questions
   [request])
-  ;[{{questions-file :questionsFile} :body}]
+  ;[{{questions-file :questionsFile} :form-params}]
   ;(log/info (-> questions-file util/base-64-decode edn/read-string)))
   ;(util/validate-questions))
 

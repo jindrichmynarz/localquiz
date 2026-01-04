@@ -75,6 +75,9 @@
      {:data-on:click "window.close()"}
      "Exit"]]])
 
+(def material-icons
+  "https://fonts.googleapis.com/icon?family=Material+Icons")
+
 (defn shim-page
   "A basic HTML page with Datastar setup."
   [{{:keys [game-id]} :path-params
@@ -86,16 +89,25 @@
      [:title "Localquiz"]
      [:meta
       {:charset "UTF-8"}]
+     [:link
+      {:crossorigin true
+       :href "https://fonts.gstatic.com"
+       :rel "preconnect"}]
+     [:link
+      {:as "style"
+       :href material-icons
+       :rel "preload"}]
+     [:link
+      {:href material-icons
+       :rel "stylesheet"}]
      [:link#css
       {:rel "stylesheet"
        :type "text/css"
        :href "/css/style.css"}]
-     [:link
-      {:href "https://fonts.googleapis.com/icon?family=Material+Icons"
-       :rel "stylesheet"}]
-     [:script {:defer true
-               :src CDN-url
-               :type "module"}]
+     [:script
+      {:defer true
+       :src CDN-url
+       :type "module"}]
      ; Enables responsiveness on mobile devices
      [:meta {:name "viewport"
              :content "width=device-width, initial-scale=1.0"}]]
@@ -151,18 +163,22 @@
        game-view
        (vector :main#morph)))
 
-(defn answer-click-handler
+(defn answer-handler
+  [^String game-id]
+  (format "@post('/answer/%s', {contentType: 'form', headers: {'X-Csrf-Token': $csrf}})" game-id))
+
+(defn answer-form-handler
   [^Boolean disabled?
-   ^Boolean signal?
    ^String game-id]
   (when-not disabled?
-    ; FIXME: Still doesn't work reliably for :multiple questions.
-    ;        Submit answers as [form data](https://data-star.dev/examples/form_data) instead of signals?
-    ;        Or submit via a GET query parameter?
-    (let [post (format "@post('/answer/%s')" game-id)
-          signal-and-post (format "($answer = evt.target.dataset.answer, %s)" post)]
-      {:data-on:click (long-str "evt.target.tagName = 'BUTTON' &&"
-                                (if signal? post signal-and-post))})))
+    {:data-on:click (str "evt.target.tagName == 'INPUT' &&" (answer-handler game-id))}))
+
+(defn submit-button
+  [tr
+   ^String game-id]
+  [:button.btn#submit
+   {:data-on:click (answer-handler game-id)}
+   (tr [:submit])])
 
 (defn- mark-answer
   [^Boolean answer-revealed?
@@ -182,13 +198,6 @@
   [coll]
   (map-indexed (fn [index item] (assoc item :index index)) coll))
 
-(defn submit-button
-  [tr
-   ^String game-id]
-  [:button.btn#submit
-   {:data-on:click (format "@post('/answer/%s')" game-id)}
-   (tr [:submit])])
-
 (defmulti answers-view
   (fn [& args]
     (-> args
@@ -201,19 +210,21 @@
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [choices note]}]
-  [:section#answers
+  [:form#answers
    [:ul#choices
-    (answer-click-handler (or disabled? answer-revealed?) false game-id)
+    (answer-form-handler disabled? game-id)
     (for [{:keys [correct? index text]} (->> choices add-index crypto/deterministic-shuffle)]
-      [:li
-       [:button.btn
-        {:class (when answer-revealed?
-                  (if correct? "correct" "incorrect"))
-         :data-answer index
-         :disabled (or disabled? answer-revealed?)}
-        [:span.answer
-          text
-         (mark-answer answer-revealed? correct?)]]])]
+      [:label.btn
+       {:class (when answer-revealed?
+                 (if correct? "correct" "incorrect"))}
+       [:input
+        {:disabled (or disabled? answer-revealed?)
+         :name "answer"
+         :type "checkbox"
+         :value index}]
+       [:span.answer
+        text
+        (mark-answer answer-revealed? correct?)]])]
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :yesno
@@ -222,23 +233,25 @@
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [correct? note]}]
-  [:section#answers
-   [:p
-    (answer-click-handler (or disabled? answer-revealed?) false game-id)
-    [:button.btn
-     {:class (when answer-revealed?
-               (if correct? "correct" "incorrect"))
-      :data-answer "true"
-      :disabled disabled?}
-     (tr [:question.yesno/yes])
-     (mark-answer answer-revealed? correct?)]
-    [:button.btn
-     {:class (when answer-revealed?
-               (if-not correct? "correct" "incorrect"))
-      :data-answer "false"
-      :disabled disabled?}
-     (tr [:question.yesno/no])
-     (mark-answer answer-revealed? (not correct?))]]
+  [:form#answers
+   [:p#choices
+    (answer-form-handler disabled? game-id)
+    (for [{:keys [correct? label value]} [{:correct? correct?
+                                           :label :question.yesno/yes
+                                           :value "true"}
+                                          {:correct? (not correct?)
+                                           :label :question.yesno/no
+                                           :value "false"}]]
+     [:label.btn
+      {:class (when answer-revealed?
+                (if correct? "correct" "incorrect"))}
+      [:input
+       {:disabled (or disabled? answer-revealed?)
+        :name "answer"
+        :type "checkbox"
+        :value value}]
+      (tr [label])
+      (mark-answer answer-revealed? correct?)])]
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :percent-range
@@ -247,15 +260,16 @@
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [note percentage]}]
-  [:section#answers
+  [:div
    (when-not disabled?
-     [:div
+     [:form#answers
       [:p.range-input
        [:input#answer
-        {:data-bind "answer"
+        {:data-bind "_answer"
          :list "markers"
          :max "100"
          :min "0"
+         :name "answer"
          :type "range"
          :value "50"}]
        [:datalist#markers
@@ -266,13 +280,13 @@
           [:option {:value value}])]]
       [:p
        [:button.btn
-        {:data-on:click "$answer--"}
+        {:data-on:click "$_answer--"}
         "-"]
        [:label.percentage
-        {:data-text "$answer + ' %'"
+        {:data-text "$_answer + ' %'"
          :for "answer"}]
        [:button.btn
-        {:data-on:click "$answer++"}
+        {:data-on:click "$_answer++"}
         "+"]]
       [:p
        (submit-button tr game-id)]])
@@ -286,13 +300,13 @@
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [answer note]}]
-  [:section#answers
+  [:form#answers
    (when-not disabled?
      [:p
       [:input
        {:autofocus true
-        :data-bind "answer"
         :data-on:keydown submit-by-enter
+        :name "answer"
         :type "text"}]
       (submit-button tr game-id)])
    (when answer-revealed?
@@ -305,14 +319,14 @@
    ^Boolean answer-revealed?
    ^String game-id
    {:keys [items note]}]
-  [:section#answers
+  [:form#answers
    [:ul#sortableList
     {:class (when disabled? "disabled")
-     :data-signals:answer (->> items
-                               count
-                               range
-                               charred/write-json-str)
-     :data-on:reordered "$answer = evt.detail"}
+     :data-signals:_answer (->> items
+                                count
+                                range
+                                charred/write-json-str)
+     :data-on:reordered "$_answer = evt.detail"}
     (if answer-revealed?
       (for [{:keys [sort-value text]} items]
         [:li
@@ -322,6 +336,10 @@
         [:li
          {:data-index index}
          [:span text]]))
+    [:input
+     {:data-attr:value "$_answer"
+      :name "answer"
+      :type "hidden"}]
     (when-not disabled?
       [:p
        [:script {:src "/js/sortable.js"

@@ -28,11 +28,11 @@
                                             :player/name player-name}]}]))))
 
 (defn answer-question!
-  [{{:keys [game-id]} :path-params
+  [{{answer "answer"} :form-params
+    {:keys [game-id]} :path-params
     :keys [tr]
-    player-id :sid
-    {:keys [answer]} :body}]
+    player-id :sid}]
   (log/infof "Player %s answers %s." player-id answer)
   (when-let [{:keys [error]} (game/answer-question! game-id player-id answer)]
     [:section#content
-     [:h2.error (tr [error])]]))
+      [:h2.error (tr [error])]]))
