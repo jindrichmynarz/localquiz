@@ -172,7 +172,7 @@
      [:section#content
       (end-game tr)
       (timer answer-revealed?)
-      [:div#question
+      [:div
        [:p#answer-progress
         [:label
          (tr [:players-answered])
@@ -181,7 +181,9 @@
           {:max total
            :value answered}
           answer-progress-text]]]
-       (:text question)
+       [:div#question
+        {:data-init "el.querySelector('audio')?.play()"} ; Play any audio if present in the question.
+        (:text question)]
        [:i.material-icons.md-36.scoring-icon scoring-icon]
        (answers-view tr
                      true

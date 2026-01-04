@@ -261,13 +261,13 @@
       [:p
        {:data-signals "{_answer: 50}"}
        [:button.btn
-        {:data-on:click "$_answer-- && evt.preventDefault()"}
+        {:data-on:click__prevent "$_answer--"}
         "-"]
        [:label.percentage
         {:data-text "$_answer + ' %'"
          :for "answer"}]
        [:button.btn
-        {:data-on:click "$_answer++ && evt.preventDefault()"}
+        {:data-on:click__prevent "$_answer++"}
         "+"]]
       [:p.range-input
        [:input

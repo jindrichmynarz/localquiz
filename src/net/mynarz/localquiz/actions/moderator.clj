@@ -18,12 +18,12 @@
   "Create a game identified by `game-id`."
   [{game-id :sid}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
-  (let [questions (->> "questions/femquiz.edn"
+  (let [questions (->> "questions/animal_quiz.edn"
                         util/read-edn-resource
                         :questions
-                        (filter (comp #{:percent-range} :type))
+                        ;(filter (comp #{:sort} :type))
                         shuffle
-                        (take 1)
+                        (take 20)
                         (map (comp pr-str util/replace-react-fragments)))
         questions-total (-> questions count long)]
     (log/infof "Creating a new game %s." game-id)
