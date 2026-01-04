@@ -2,7 +2,9 @@
   (:require [taoensso.tempura :as tempura]))
 
 (def dictionary
-  {:cs {:and "a"
+  {:cs {:accept "Souhlasím"
+        :and "a"
+        :cookie-warning "Localquiz pro své funkce používá cookies."
         :copy "Kopírovat"
         :copied "Zkopírováno!"
         :create-game "Vytvořit hru"
@@ -10,7 +12,9 @@
         :errors {:player-name {:length "Jméno hráče musí mít mezi 1 až 20 znaky."
                                :taken "Hráč tohoto jména už je ve hře."}
                  :time-out "Čas vypršel!"}
-        :footer {:made-with "Vyrobeno pomocí"
+        :exit-game "Zavřít hru"
+        :footer {:made-by "Vyrobil"
+                 :with "s"
                  :persistence "nerozumnou vytrvalostí"
                  :using "s použitím"}
         :game-not-exists "Tato hra neexistuje!"
@@ -37,7 +41,9 @@
         :wait-for-game-start "Počkej prosím na zahájení hry."
         :wait-for-players "Čekáme alespoň na dva hráče..."
         :you-won "Vyhrál jsi!"}
-   :en {:and "and"
+   :en {:accept "Accept"
+        :and "and"
+        :cookie-warning "Localquiz uses cookies for its functionality."
         :copy "Copy"
         :copied "Copied!"
         :create-game "Create a game"
@@ -45,7 +51,9 @@
         :errors {:player-name {:length "Player name must have between 1 to 20 characters."
                                :taken "This name is already taken."}
                  :time-out "Time's out!"}
-        :footer {:made-with "Made with"
+        :exit-game "Exit game"
+        :footer {:made-by "Made by"
+                 :with "with"
                  :persistence "unreasonable persistence"
                  :using "using"}
         :game-not-exists "This game does not exist!"

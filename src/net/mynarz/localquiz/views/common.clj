@@ -52,7 +52,9 @@
    [:p
     (interpose
       " "
-      [(tr [:footer/made-with])
+      [(tr [:footer/made-by])
+       [:a {:href "https://mynarz.net/#jindrich"} "Jindřich Mynarz"]
+       (tr [:footer/with])
        [:abbr {:title (tr [:footer/persistence])} "🧡"]
        (tr [:footer/using])
        [:a {:href "https://clojure.org"} "Clojure"]
@@ -60,20 +62,21 @@
        [:a {:href "https://data-star.dev"} "Datastar"]
        "🚀."])]])
 
-(def cookie-warning
+(defn cookie-warning
+  [tr]
   [:div#cookie-warning
    {:aria-live "polite"
     :data-signals:_cookie-accepted "localStorage.getItem('cookie-accepted') || false"
     :data-show "!$_cookieAccepted"
     :role "dialog"}
-   [:p "Localquiz uses cookies for its functionality."]
+   [:p (tr [:cookie-warning])]
    [:div.buttons
     [:button.btn.btn-primary
      {:data-on:click "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
-     "Accept"]
+     (tr [:accept])]
     [:button.btn
      {:data-on:click "window.close()"}
-     "Exit"]]])
+     (tr [:exit-game])]]])
 
 (def material-icons
   "https://fonts.googleapis.com/icon?family=Material+Icons")
@@ -125,7 +128,7 @@
        (lang-switch tr)]
       [:main#morph]
       (footer tr)
-      cookie-warning]]]])
+      (cookie-warning tr)]]]])
 
 (defn view
   [handler request]
