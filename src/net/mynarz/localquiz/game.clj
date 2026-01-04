@@ -251,17 +251,14 @@
 (defn leaderboard
   "Get the player leaderboard for `game-id` using the database `conn`."
   [^String game-id]
-  (->> game-id
-       (d/q '[:find ?player-id ?player-name ?score
-              :in $ ?game-id
-              :keys player-id player-name score
-              :where [?game :game/id ?game-id]
-                     [?game :game/players ?player]
-                     [?player :player/id ?player-id]
-                     [?player :player/name ?player-name]
-                     [(get-else $ ?player :player/score 0.0) ?score]]
-            @db-conn)
-       (sort-by :score descending-order)))
+  (some->> game-id
+           (d/q '[:find (pull ?game [{:game/players [[:player/name :as :player-name]
+                                                     [:player/score :default 0.0 :as :score]]}]) .
+                  :in $ ?game-id
+                  :where [?game :game/id ?game-id]]
+                @db-conn)
+           :game/players
+           (sort-by :player/score descending-order)))
 
 (defn winner
   "Get the ID of the winning player."
@@ -269,7 +266,7 @@
   (-> game-id
       leaderboard
       first
-      :player-id))
+      :player-name))
 
 (defn has-enough-players?
   "Test if the game with `game-id` has at least 2 players."
@@ -366,7 +363,7 @@
            game-id
            (future
              (Thread/sleep ^int (* 1000 (:question-time-out config)))
-             (log/infof "Time-out in game %s!" game-id)
+             (log/infof "Time-out in game %s for question %s!" game-id question)
              (evaluate-answers! game-id)))))
 
 (defn answer-question!

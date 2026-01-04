@@ -266,31 +266,31 @@
   [:div
    (when-not disabled?
      [:form#answers
+      [:p
+       {:data-signals "{_answer: 50}"}
+       [:button.btn
+        {:data-on:click "$_answer-- && evt.preventDefault()"}
+        "-"]
+       [:label.percentage
+        {:data-text "$_answer + ' %'"
+         :for "answer"}]
+       [:button.btn
+        {:data-on:click "$_answer++ && evt.preventDefault()"}
+        "+"]]
       [:p.range-input
-       [:input#answer
+       [:input
         {:data-bind "_answer"
          :list "markers"
          :max "100"
          :min "0"
          :name "answer"
-         :type "range"
-         :value "50"}]
+         :type "range"}]
        [:datalist#markers
         (for [value (->> 0
                          (iterate (partial + 25))
                          (take 5)
                          (map str))]
           [:option {:value value}])]]
-      [:p
-       [:button.btn
-        {:data-on:click "$_answer--"}
-        "-"]
-       [:label.percentage
-        {:data-text "$_answer + ' %'"
-         :for "answer"}]
-       [:button.btn
-        {:data-on:click "$_answer++"}
-        "+"]]
       [:p
        (submit-button tr game-id)]])
    (when answer-revealed?
@@ -342,10 +342,11 @@
     [:input
      {:data-attr:value "$_answer"
       :name "answer"
-      :type "hidden"}]
-    (when-not disabled?
-      [:p
-       [:script {:src "/js/sortable.js"
-                 :type "module"}]
-       (submit-button tr game-id)])
-    (note-view answer-revealed? note)]])
+      :type "hidden"}]]
+   (when-not disabled?
+     [:p
+      [:script
+       {:src "/js/sortable.js"
+        :type "module"}]
+      (submit-button tr game-id)])
+   (note-view answer-revealed? note)])

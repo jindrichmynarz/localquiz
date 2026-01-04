@@ -30,11 +30,18 @@
    (tr [:next])
    [:i.material-icons "arrow_circle_right"]])
 
-(def end-game
-  [:span#end-game
-   {:data-on:click "confirm('Do you want to end the game?') && @post('/end')"
-    :title "End the game"}
-   [:i.material-icons.md-light.md-36 "cancel"]])
+(def end-game-cmd
+  "@post('/end')")
+
+(defn end-game
+  [tr]
+  (let [click-handler (format "confirm('%s') && %s"
+                              (tr [:confirm-end-game])
+                              end-game-cmd)]
+    [:span#end-game
+     {:data-on:click click-handler
+      :title (tr [:end-game])}
+     [:i.material-icons.md-light.md-36 "cancel"]]))
 
 (defn leaderboard
   [tr
@@ -116,7 +123,7 @@
         lobby (game/lobby game-id)
         has-enough-players? (game/has-enough-players? game-id)]
     [:div#sections
-     end-game
+     (end-game tr)
      [:section#content
       [:div
        [:div#qrcode (url->qrcode-svg play-game-url)]
@@ -163,7 +170,7 @@
                        "join_inner"
                        "task_alt")]
      [:section#content
-      end-game
+      (end-game tr)
       (timer answer-revealed?)
       [:div#question
        [:p#answer-progress
@@ -202,10 +209,11 @@
      (leaderboard tr game-id)
      [:p
       [:button.btn.btn-primary
-       {:data-on:click "@post('/end')"}
+       {:data-on:click end-game-cmd
+        :data-on:keydown__window end-game-cmd}
        (tr [:end-game])
        [:i.material-icons.md-light.md-36 "cancel"]]]]
     [:section#content
-     end-game
+     (end-game tr)
      (leaderboard tr game-id)
      [:p (next-button tr "@post('/question')")]]))

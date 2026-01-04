@@ -21,8 +21,9 @@
   (let [questions (->> "questions/femquiz.edn"
                         util/read-edn-resource
                         :questions
+                        (filter (comp #{:percent-range} :type))
                         shuffle
-                        (take 20)
+                        (take 1)
                         (map (comp pr-str util/replace-react-fragments)))
         questions-total (-> questions count long)]
     (log/infof "Creating a new game %s." game-id)

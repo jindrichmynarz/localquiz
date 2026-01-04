@@ -29,6 +29,13 @@ body {
   min-height: 100vh;
 }
 
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 .5em;
+}
+
 main#morph {
   display: flex;
   flex-direction: column;
@@ -109,6 +116,7 @@ footer {
   justify-content: center;
   align-items: flex-end;
   background: rgb(from var(--darker) r g b / 50%);
+  padding: 0 1em;
 
   abbr {
     text-decoration: none;
@@ -129,7 +137,7 @@ footer {
   padding: .5em;
   position: relative;
   top: -5px;
-  left: -5px;
+  /* left: -5px; */
   z-index: 1;
   cursor: pointer;
   transition: opacity 1s ease-in;
@@ -325,7 +333,7 @@ label {
 
 i.material-icons {
   vertical-align: bottom;
-  padding-left: .2em;
+  padding: 0 .2em;
 }
 
 .answer {
@@ -337,7 +345,7 @@ i.material-icons {
 }
 
 i.material-icons.answer-mark {
-  font-size: 3em;
+  font-size: 6em;
   text-shadow: 0 3px 0 var(--darker);
 }
 
@@ -379,7 +387,7 @@ i.material-icons.answer-mark {
 }
 
 input[type="range"] {
-  color: var(--blue);
+  color: var(--dark);
 }
 
 .percentage {
@@ -389,7 +397,13 @@ input[type="range"] {
 }
 
 .range-input {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  max-width: 400px;
+
+  input {
+    width: 50vw;
+  }
 }
 
 #leaderboard {
@@ -529,10 +543,6 @@ p.waiting-icon {
 }
 
 #lang-switch {
-  position: absolute;
-  top: 1em;
-  right: 3em;
-
   span {
     display: inline-block;
     padding: 0 4px;
@@ -659,4 +669,30 @@ input::file-selector-button {
   padding: .5em;
   cursor: pointer;
   margin-right: .5em;
+}
+
+#player-name-input {
+  display: flex;
+}
+
+@media (max-width: 950px) or (orientation: portrait) {
+  #player-name-input {
+    flex-direction: column;
+    gap: .5em;
+  }
+}
+
+body:has(.winner) {
+  animation: 5s ease-in-out infinite pulsate;
+}
+
+@keyframes pulsate {
+  from {
+    background-color: var(--dark);
+    color: var(--offwhite);
+  }
+  to {
+    background-color: var(--offwhite);
+    color: var(--dark);
+  }
 }

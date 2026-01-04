@@ -59,16 +59,7 @@
         (is (= (get-score player) 6.0))))))
 
 (deftest winner
-  (let [winner-id (d/q '[:find ?player-id .
-                         :in $ ?game-id ?player-name
-                         :where [?game :game/id ?game-id]
-                                [?game :game/players ?player]
-                                [?player :player/id ?player-id]
-                                [?player :player/name ?player-name]]
-                       @db/db-conn
-                       fixtures/game-id
-                       "Jane")]
-    (is (= (game/winner fixtures/game-id) winner-id))))
+  (is (= (game/winner fixtures/game-id) "Jane")))
 
 (deftest leaderboard
   (is (= (->> fixtures/game-id

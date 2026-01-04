@@ -22,12 +22,12 @@
                                "$playerName.length != 0 &&"
                                (format "@post('/join/%s/validate', {requestCancellation: $_controller})" game-id))]
      [:section#content
-      [:p
+      [:p#player-name-input
        {:data-signals "{_controller: new AbortController(), _submitted: false}"}
        [:label
         {:for "player-name"}
         (tr [:player-name])]
-       [:input
+       [:input#player-name
         {:aria-live "polite"
          :autofocus true
          :data-bind "playerName"
@@ -35,7 +35,6 @@
          :aria-invalid disabled?
          :data-on:keydown views/submit-by-enter
          :data-on:keydown__debounce.500ms validate-js
-         :id "player-name"
          :minlength 1
          :maxlength 20
          :required true
@@ -44,6 +43,7 @@
         {:aria-disabled disabled?
          :disabled disabled?
          :data-on:click (format "$_controller.abort(); $_submitted = true; @post('/join/%s')" game-id)}
+        [:i.material-icons "play_circle"]
         (tr [:join-game])]]
       (when validation-error
         [:p#name-error.error
@@ -92,7 +92,7 @@
     [:section#content
      ; TODO: How to rate answers for the consensus questions?
      (cond (some? correct?) [:i.material-icons.answer-mark (if correct? "check" "close")]
-           (nil? answer) [:p (tr [:no-answer])])]))
+           (nil? answer) [:h2 (tr [:no-answer])])]))
 
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params

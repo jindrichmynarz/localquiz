@@ -4,6 +4,7 @@
 (def dictionary
   {:cs {:accept "Souhlasím"
         :and "a"
+        :confirm-end-game "Opravdu chcete hru ukončit?"
         :cookie-warning "Localquiz pro své funkce používá cookies."
         :copy "Kopírovat"
         :copied "Zkopírováno!"
@@ -43,6 +44,7 @@
         :you-won "Vyhrál jsi!"}
    :en {:accept "Accept"
         :and "and"
+        :confirm-end-game "Do you want to end the game?"
         :cookie-warning "Localquiz uses cookies for its functionality."
         :copy "Copy"
         :copied "Copied!"
