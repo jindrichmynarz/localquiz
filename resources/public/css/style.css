@@ -27,6 +27,7 @@ body {
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 header {
@@ -355,8 +356,8 @@ i.material-icons.answer-mark {
 
 #end-game {
   position: fixed;
-  top: 0;
-  right: 0;
+  top: .5em;
+  right: 6em;
   padding: 1em;
   cursor: pointer;
 }
@@ -446,7 +447,7 @@ input[type="range"] {
 
 #sortableList {
   margin: 0;
-  margin-bottom: 1em;
+  margin-bottom: 2em;
   padding-left: 0;
 
   li {
@@ -682,8 +683,23 @@ input::file-selector-button {
   }
 }
 
+.winner {
+  display: flex;
+  flex-direction: column;
+  gap: .5em;
+
+  i.material-icons {
+    font-size: 3em;
+  }
+}
+
 body:has(.winner) {
-  animation: 5s ease-in-out infinite pulsate;
+  background-image: none;
+  animation: 3s ease-in-out infinite alternate pulsate;
+
+  footer {
+    display: none;
+  }
 }
 
 @keyframes pulsate {

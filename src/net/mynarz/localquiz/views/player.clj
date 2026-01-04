@@ -100,9 +100,9 @@
     player-id :sid}]
   [:section#content
    (if (and (game/all-questions-answered? game-id) (= player-id (game/winner game-id)))
-     [:h2.winner
-      (tr [:you-won])
-      [:i.material-icons.md-36 "emoji_events"]]
+     [:div.winner
+      [:i.material-icons.md-36 "emoji_events"]
+      [:h2 (tr [:you-won])]]
      (let [{:answer/keys [score]} (game/player-answer game-id player-id)
            points (format "+ %s %s"
                           (decimal-format score)

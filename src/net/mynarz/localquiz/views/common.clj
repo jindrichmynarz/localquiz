@@ -93,14 +93,6 @@
      [:meta
       {:charset "UTF-8"}]
      [:link
-      {:crossorigin true
-       :href "https://fonts.gstatic.com"
-       :rel "preconnect"}]
-     [:link
-      {:as "style"
-       :href material-icons
-       :rel "preload"}]
-     [:link
       {:href material-icons
        :rel "stylesheet"}]
      [:link#css

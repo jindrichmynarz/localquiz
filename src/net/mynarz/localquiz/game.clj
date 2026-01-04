@@ -252,7 +252,8 @@
   "Get the player leaderboard for `game-id` using the database `conn`."
   [^String game-id]
   (some->> game-id
-           (d/q '[:find (pull ?game [{:game/players [[:player/name :as :player-name]
+           (d/q '[:find (pull ?game [{:game/players [[:player/id :as :player-id]
+                                                     [:player/name :as :player-name]
                                                      [:player/score :default 0.0 :as :score]]}]) .
                   :in $ ?game-id
                   :where [?game :game/id ?game-id]]
@@ -266,7 +267,7 @@
   (-> game-id
       leaderboard
       first
-      :player-name))
+      :player-id))
 
 (defn has-enough-players?
   "Test if the game with `game-id` has at least 2 players."

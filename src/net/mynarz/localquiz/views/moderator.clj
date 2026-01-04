@@ -210,7 +210,7 @@
      [:p
       [:button.btn.btn-primary
        {:data-on:click end-game-cmd
-        :data-on:keydown__window end-game-cmd}
+        :data-on:keydown__window (format "evt.key === 'Enter' && %s" end-game-cmd)}
        (tr [:end-game])
        [:i.material-icons.md-light.md-36 "cancel"]]]]
     [:section#content
