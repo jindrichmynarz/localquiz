@@ -81,14 +81,14 @@
    [:div.tabs
     [:ul.tab-selector
      [:li
+      {:data-class:active "$_tabShown == 'select-questions'"}
       [:a
-       {:data-class:active "$_tabShown == 'select-questions'"
-        :data-on:click "$_tabShown = 'select-questions'"}
+       {:data-on:click "$_tabShown = 'select-questions'"}
        (tr [:pick-questions])]]
      [:li
+      {:data-class:active "$_tabShown == 'upload-questions'"}
       [:a
-       {:data-class:active "$_tabShown == 'upload-questions'"
-        :data-on:click "$_tabShown = 'upload-questions'"}
+       {:data-on:click "$_tabShown = 'upload-questions'"}
        (tr [:upload-questions])]]]
     [:div.tab-content
      [:form
