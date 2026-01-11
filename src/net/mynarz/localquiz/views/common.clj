@@ -3,7 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
-            [net.mynarz.localquiz.util :refer [decimal-format long-str]]
+            [net.mynarz.localquiz.util :refer [decimal-format]]
             [charred.api :as charred]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
@@ -84,7 +84,7 @@
 (defn shim-page
   "A basic HTML page with Datastar setup."
   [{{:keys [game-id]} :path-params
-    :keys [tr]}]
+    :tempura/keys [tr]}]
   [h/doctype-html5
    [:html
     {:data-attr:lang "$language"}

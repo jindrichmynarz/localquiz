@@ -1,6 +1,7 @@
 (ns net.mynarz.localquiz.util
   (:require [net.mynarz.localquiz.question-spec :as question]
             [charred.api :as charred]
+            [dev.onionpancakes.chassis.core :as h]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]
@@ -12,6 +13,10 @@
            (java.util Base64 Locale)))
 
 (def ^:private buf-size 1024)
+
+(defn base-64-decode
+  [^String s]
+  (String. (.decode (Base64/getDecoder) s)))
 
 (def decimal-format
   "Format doubles as decimal numbers with up to 2 decimal places."
@@ -41,25 +46,27 @@
                           :bufsize buf-size
                           :key-fn keyword}))
 
+(defn replace-react-fragments
+  "Replace React fragments (:<>) in `hiccup` with :div elements."
+  [hiccup]
+  (postwalk-replace {:<> :div} hiccup))
+
+(defmacro svg
+  "Load SVG `resource`."
+  [^String resource]
+  (-> resource
+      io/resource
+      slurp
+      h/raw))
+
+(svg "public/img/wifi_exercise_animated.svg")
+
 (defmacro thread
   "Starts a virtual thread. Conveys bindings."
   [& body]
   `(Thread/startVirtualThread
     (bound-fn* ;; binding conveyance
      (fn [] ~@body))))
-
-(defmacro while-some
-  {:clj-kondo/lint-as 'clojure.core/let}
-  [bindings & body]
-  `(loop []
-     (when-some ~bindings
-       ~@body
-       (recur))))
-
-(defn replace-react-fragments
-  "Replace React fragments (:<>) in `hiccup` with :div elements."
-  [hiccup]
-  (postwalk-replace {:<> :div} hiccup))
 
 (defn validate
   [spec data]
@@ -69,6 +76,10 @@
 (def validate-questions
   (partial validate ::question/data))
 
-(defn base-64-decode
-  [^String s]
-  (String. (.decode (Base64/getDecoder) s)))
+(defmacro while-some
+  {:clj-kondo/lint-as 'clojure.core/let}
+  [bindings & body]
+  `(loop []
+     (when-some ~bindings
+       ~@body
+       (recur))))

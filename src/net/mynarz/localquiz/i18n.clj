@@ -33,6 +33,7 @@
         :points "bodů"
         :question {:yesno {:yes "Ano"
                            :no "Ne"}}
+        :replay-audio "Přehrát znovu"
         :score "Skóre"
         :start-game "Zahájit hru"
         :submit "Odeslat"
@@ -41,6 +42,7 @@
         :wait-for-answers "Čekáme na další odpovědi..."
         :wait-for-game-start "Počkej prosím na zahájení hry."
         :wait-for-players "Čekáme alespoň na dva hráče..."
+        :you-lost "Prohrál jste, saláte."
         :you-won "Vyhrál jsi!"}
    :en {:accept "Accept"
         :and "and"
@@ -73,6 +75,7 @@
         :points "points"
         :question {:yesno {:yes "Yes"
                            :no "No"}}
+        :replay-audio "Replay"
         :score "Score"
         :start-game "Start the game"
         :submit "Submit"
@@ -81,7 +84,5 @@
         :wait-for-answers "Waiting for other answers..."
         :wait-for-game-start "Please wait for the game to start."
         :wait-for-players "Waiting for at least two players to join..."
+        :you-lost "You lost."
         :you-won "You won!"}})
-
-(def tr
-  (partial tempura/tr {:dict dictionary}))

@@ -21,15 +21,6 @@
                                   join-game-url)
        :data-text "$_copyLabel[0]"}]]))
 
-(defn next-button
-  [tr
-   ^String next-action]
-  [:button.btn.btn-primary
-   {:data-on:click next-action
-    :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
-   (tr [:next])
-   [:i.material-icons "arrow_circle_right"]])
-
 (def end-game-cmd
   "@post('/end')")
 
@@ -42,6 +33,15 @@
      {:data-on:click click-handler
       :title (tr [:end-game])}
      [:i.material-icons.md-light.md-36 "cancel"]]))
+
+(defn next-button
+  [tr
+   ^String next-action]
+  [:button.btn.btn-primary
+   {:data-on:click next-action
+    :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
+   (tr [:next])
+   [:i.material-icons "arrow_circle_right"]])
 
 (defn leaderboard
   [tr
@@ -75,7 +75,7 @@
           [:td score-decimal]])]]]))
 
 (defmethod game-view [:moderator nil]
-  [{:keys [tr]}]
+  [{:tempura/keys [tr]}]
   [:section#content
    {:data-signals:_tab-shown "'select-questions'"}
    [:div.tabs
@@ -117,7 +117,7 @@
     (tr [:create-game])]])
 
 (defmethod game-view [:moderator :new]
-  [{:keys [tr]
+  [{:tempura/keys [tr]
     game-id :sid}]
   (let [play-game-url (str (:url config) "/play/" game-id)
         lobby (game/lobby game-id)
@@ -127,8 +127,8 @@
      [:section#content
       [:div
        [:div#qrcode (url->qrcode-svg play-game-url)]
-       [:p
-        [:input#game-url
+       [:p#game-url
+        [:input
          {:readonly true
           :type "text"
           :value play-game-url}]
@@ -182,8 +182,17 @@
            :value answered}
           answer-progress-text]]]
        [:div#question
-        {:data-init "el.querySelector('audio')?.play()"} ; Play any audio if present in the question.
-        (:text question)]
+        {:data-signals:_audio "el.querySelector('audio')"
+         :data-init (if answer-revealed?
+                      "$_audio && $_audio.pause()"
+                      "$_audio && $_audio.play()")} ; Play any audio if present in the question.
+        (:text question)
+        (when answer-revealed?
+          [:a.replay-audio
+           {:data-show "$_audio"
+            :data-on:click "$_audio.currentTime = 0; $_audio.play()"
+            :title (tr [:replay-audio])}
+           [:i.material-icons.md-36 "replay"]])]
        [:i.material-icons.md-36.scoring-icon scoring-icon]
        (answers-view tr
                      true
@@ -194,17 +203,17 @@
         [:p (next-button tr "@post('/leaderboard')")])]))
 
 (defmethod game-view [:moderator :question]
-  [{:keys [tr]
+  [{:tempura/keys [tr]
     game-id :sid}]
   (question-view tr game-id false))
 
 (defmethod game-view [:moderator :show-answers]
-  [{:keys [tr]
+  [{:tempura/keys [tr]
     game-id :sid}]
   (question-view tr game-id true))
 
 (defmethod game-view [:moderator :leaderboard]
-  [{:keys [tr]
+  [{:tempura/keys [tr]
     game-id :sid}]
   (if (game/all-questions-answered? game-id)
     [:section#content

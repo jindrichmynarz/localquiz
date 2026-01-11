@@ -18,7 +18,7 @@
   "Create a game identified by `game-id`."
   [{game-id :sid}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
-  (let [questions (->> "questions/animal_quiz.edn"
+  (let [questions (->> "questions/metelesku_blesku.edn"
                         util/read-edn-resource
                         :questions
                         ;(filter (comp #{:sort} :type))

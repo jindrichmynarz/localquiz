@@ -252,13 +252,14 @@ label {
   flex-direction: column;
   align-items: center;
   gap: 1em;
+
+  img {
+    display: inline-block;
+    width: 4em;
+    fill: var(--offwhite);
+  }
 }
 
-#waiting-for-players img {
-  display: inline-block;
-  width: 4em;
-  fill: var(--offwhite);
-}
 
 #content {
   display: flex;

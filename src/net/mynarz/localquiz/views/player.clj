@@ -15,7 +15,7 @@
   ([request]
    (player-name-input request nil))
   ([{{:keys [game-id]} :path-params
-     :keys [tr]}
+     :tempura/keys [tr]}
     validation-error]
    (let [disabled? (some? validation-error)
          validate-js (long-str "!$_submitted &&"
@@ -50,7 +50,7 @@
          (tr [validation-error])])])))
 
 (defmethod views/game-view [:player nil]
-  [{:keys [tr]}]
+  [{:tempura/keys [tr]}]
   [:section#content
    [:h2.error
     [:i.material-icons.md-light "videogame_asset_off"]
@@ -58,7 +58,7 @@
 
 (defmethod views/game-view [:player :new]
   [{{:keys [game-id]} :path-params
-    :keys [tr]
+    :tempura/keys [tr]
     player-id :sid
     :as request}]
   (if (game/player-in-game? game-id player-id)
@@ -69,7 +69,7 @@
 
 (defmethod views/game-view [:player :question]
   [{{:keys [game-id]} :path-params
-    :keys [tr]
+    :tempura/keys [tr]
     player-id :sid}]
   [:section#content
    (if (game/player-answered? player-id)
@@ -85,7 +85,7 @@
                            current-question)))])
 
 (defmethod views/game-view [:player :show-answers]
-  [{:keys [tr]
+  [{:tempura/keys [tr]
     {:keys [game-id]} :path-params
     player-id :sid}]
   (let [{:answer/keys [correct?] :as answer} (game/player-answer game-id player-id)]
@@ -96,13 +96,17 @@
 
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params
-    :keys [tr]
+    :tempura/keys [tr]
     player-id :sid}]
   [:section#content
-   (if (and (game/all-questions-answered? game-id) (= player-id (game/winner game-id)))
-     [:div.winner
-      [:i.material-icons.md-36 "emoji_events"]
-      [:h2 (tr [:you-won])]]
+   (if (game/all-questions-answered? game-id)
+     (if (= player-id (game/winner game-id))
+       [:div.verdict.winner
+        [:i.material-icons.md-36 "emoji_events"]
+        [:h2 (tr [:you-won])]]
+       [:div.verdict
+        [:i.material-icons.md-36 "sentiment_very_dissatisfied"]
+        [:h2 (tr [:you-lost])]])
      (let [{:answer/keys [score]} (game/player-answer game-id player-id)
            points (format "+ %s %s"
                           (decimal-format score)

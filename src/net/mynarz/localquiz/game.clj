@@ -214,6 +214,15 @@
       (update score :score * time-modifier))
     scores))
 
+(comment
+  (def times
+    [1234 2345 345 12929])
+
+  (map (fn [t]
+         (/ t
+           (apply max times)))
+       times))
+
 (defn add-score
   "A transaction function that adds `answer-score` to the current score of the `player`."
   [db
@@ -321,6 +330,7 @@
 (defn evaluate-answers!
   [^String game-id]
   (swap! timeouts (partial cancel-timeout! game-id))
+  ; FIXME: Don't evaluate answers if they were evaluated before.
   (let [question (current-question game-id)
         scores (->> game-id
                     get-answers

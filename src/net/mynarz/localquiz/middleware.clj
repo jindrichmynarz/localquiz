@@ -1,7 +1,6 @@
 (ns net.mynarz.localquiz.middleware
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.crypto :as crypto]
-            [net.mynarz.localquiz.i18n :as i18n]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [read-json]]
             [ring.middleware.reload :as reload]
@@ -30,16 +29,14 @@
 
       :else (handler request))))
 
-(defn wrap-i18n
-  "Ring middleware adding an internalization function for the preferred language under the `:tr` key."
+(defn wrap-language
+  "Ring middleware adding the $language signal for Tempura."
   [handler]
   (fn [{{:keys [language]} :body
-        {accept-language "accept-language"} :headers
         :as request}]
-    (let [i18n-language (keyword (or language (some-> accept-language (subs 0 2)) "en"))]
-      (-> request
-          (assoc :tr (partial i18n/tr [i18n-language]))
-          handler))))
+    (-> request
+       (cond-> language (assoc :tempura/locales [(keyword language)]))
+       handler)))
 
 (defn wrap-parse-signals
   "Ring middleware parsing Datastar signals in JSON."
