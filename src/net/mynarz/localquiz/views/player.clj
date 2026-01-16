@@ -19,30 +19,33 @@
     validation-error]
    (let [disabled? (some? validation-error)
          validate-js (long-str "!$_submitted &&"
-                               "$playerName.length != 0 &&"
-                               (format "@post('/join/%s/validate', {requestCancellation: $_controller})" game-id))]
+                               (views/post (format "/join/%s/validate" game-id)
+                                           "requestCancellation: $_controller"))]
      [:section#content
-      [:p#player-name-input
-       {:data-signals "{_controller: new AbortController(), _submitted: false}"}
+      [:form#player-name-input
+       {:data-signals "{_controller: new AbortController(),
+                        _submitted: false}"}
        [:label
         {:for "player-name"}
         (tr [:player-name])]
        [:input#player-name
         {:aria-live "polite"
          :autofocus true
-         :data-bind "playerName"
          :aria-errormessage "name-error"
          :aria-invalid disabled?
          :data-on:keydown views/submit-by-enter
          :data-on:keydown__debounce.500ms validate-js
          :minlength 1
          :maxlength 20
+         :name "player-name"
          :required true
          :type "text"}]
        [:button.btn#submit
         {:aria-disabled disabled?
          :disabled disabled?
-         :data-on:click (format "$_controller.abort(); $_submitted = true; @post('/join/%s')" game-id)}
+         :data-on:click (long-str "$_controller.abort();"
+                                  "$_submitted = true;"
+                                  (views/post (str "/join" game-id)))}
         [:i.material-icons "play_circle"]
         (tr [:join-game])]]
       (when validation-error

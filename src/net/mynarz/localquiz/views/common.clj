@@ -3,7 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
-            [net.mynarz.localquiz.util :refer [decimal-format]]
+            [net.mynarz.localquiz.util :refer [decimal-format deep-merge]]
             [charred.api :as charred]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
@@ -158,9 +158,18 @@
        game-view
        (vector :main#morph)))
 
+(defn post
+  ([^String endpoint]
+   (post endpoint ""))
+  ([^String endpoint
+    ^String additional-params]
+   (format "@post('%s', {contentType: 'form', headers: {'X-Csrf-Token': $csrf}, %s})"
+           endpoint
+           additional-params)))
+
 (defn answer-handler
   [^String game-id]
-  (format "@post('/answer/%s', {contentType: 'form', headers: {'X-Csrf-Token': $csrf}})" game-id))
+  (post (str "/answer/" game-id)))
 
 (defn answer-form-handler
   [^Boolean disabled?

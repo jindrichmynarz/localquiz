@@ -6,18 +6,19 @@
             [taoensso.timbre :as log]))
 
 (defn validate-player-name
-  [{{:keys [game-id]} :path-params
-    {player-name :playerName} :body
+  [{{player-name "player-name"} :form-params
+    {:keys [game-id]} :path-params
     :as request}]
+  (log/infof "Validating player name '%s'." player-name)
   (if-let [validation-error (game/validate-player-name game-id player-name)]
     (views/player-name-input request validation-error)
     (views/player-name-input request)))
 
 (defn join-game!
   "Add `player` to the game identified by `game-id`."
-  [{{:keys [game-id]} :path-params
+  [{{player-name "player-name"} :form-params
+    {:keys [game-id]} :path-params
     player-id :sid
-    {player-name :playerName} :body
     :as request}]
   (if-let [validation-error (game/validate-player-name game-id player-name)]
     (views/player-name-input request validation-error)

@@ -4,7 +4,6 @@
             [net.mynarz.localquiz.routes :refer [routes]]
             [reitit.ring :as ring]
             [reitit.ring.middleware.exception :as exception]
-            [reitit.ring.middleware.multipart :as multipart]
             [reitit.ring.middleware.parameters :as parameters]
             [taoensso.tempura :as tempura]))
 
@@ -15,7 +14,7 @@
     routes
     {:data {:middleware [middleware/wrap-blocker
                          parameters/parameters-middleware
-                         multipart/multipart-middleware
+                         middleware/wrap-multipart
                          exception/exception-middleware
                          middleware/wrap-parse-signals
                          middleware/wrap-language

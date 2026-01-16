@@ -5,8 +5,7 @@
             [net.mynarz.localquiz.test-fixtures :as fixtures]
             [net.mynarz.localquiz.actions.player :as player]
             [clojure.test :refer [are deftest is testing use-fixtures]]
-            [datahike.api :as d]
-            [taoensso.timbre :as log]))
+            [datahike.api :as d]))
 
 (defn get-player-id
   [player-name]
@@ -28,7 +27,7 @@
   (is (= (set (game/lobby fixtures/game-id))
          #{"Jane" "Bob"}))
   (let [player-name "Latecomer"]
-    (player/join-game! {:body {:playerName player-name}
+    (player/join-game! {:form-params {"player-name" player-name}
                         :path-params {:game-id fixtures/game-id}
                         :sid (crypto/random-unguessable-uid)})
     (is (= (last (game/lobby fixtures/game-id)) player-name))))
@@ -59,7 +58,13 @@
         (is (= (get-score player) 6.0))))))
 
 (deftest winner
-  (is (= (game/winner fixtures/game-id) "Jane")))
+  (let [expected-winner-id (d/q '[:find ?player-id .
+                                  :in $ ?player-name
+                                  :where [?player :player/name ?player-name]
+                                         [?player :player/id ?player-id]]
+                                @db/db-conn
+                                "Jane")]
+    (is (= (game/winner fixtures/game-id) expected-winner-id))))
 
 (deftest leaderboard
   (is (= (->> fixtures/game-id

@@ -7,16 +7,17 @@
 
 (use-fixtures :each fixtures/test-db)
 
+(defn player-params
+  [^String player-name]
+  {:form-params {"player-name" player-name}
+   :path-params {:game-id fixtures/game-id}
+   :sid (crypto/random-unguessable-uid)
+   :tempura/tr fixtures/tr})
+
 (deftest join-game!
-  (are [player-name key-fn] (key-fn (player/join-game! {:body {:playerName player-name}
-                                                        :path-params {:game-id fixtures/game-id}
-                                                        :sid (crypto/random-unguessable-uid)
-                                                        :tr fixtures/tr}))
+  (are [player-name key-fn] (key-fn (player/join-game! (player-params player-name)))
        "Jane" vector? ; Returns error Hiccup
        "Angela" :tx-data) ; Returns transaction data
   (let [player-name "Felix"]
-    (player/join-game! {:body {:playerName player-name}
-                        :path-params {:game-id fixtures/game-id}
-                        :sid (crypto/random-unguessable-uid)
-                        :tr fixtures/tr})
+    (player/join-game! (player-params player-name))
     (is ((set (game/lobby fixtures/game-id)) player-name))))

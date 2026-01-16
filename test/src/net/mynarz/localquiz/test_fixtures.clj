@@ -4,7 +4,8 @@
             [net.mynarz.localquiz.db :as db]
             [net.mynarz.localquiz.i18n :as i18n]
             [mount.core :as mount]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [taoensso.tempura :as tempura]))
 
 (defonce game-id
   (crypto/random-unguessable-uid))
@@ -38,4 +39,4 @@
   (mount/stop))
 
 (def tr
-  (partial i18n/tr [:en]))
+  (partial tempura/tr {:dict i18n/dictionary} [:en]))

@@ -4,7 +4,7 @@
             [net.mynarz.localquiz.qrcode :refer [url->qrcode-svg]]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.util :refer [decimal-format]]
-            [net.mynarz.localquiz.views.common :refer [answers-view game-view]]
+            [net.mynarz.localquiz.views.common :as views]
             [charred.api :as charred]
             [taoensso.timbre :as log]))
 
@@ -20,6 +20,12 @@
                                   setTimeout(() => $_copyLabel.reverse(), 2000);"
                                   join-game-url)
        :data-text "$_copyLabel[0]"}]]))
+
+(defn create-button
+  [tr]
+  [:button.btn.btn-primary
+   {:data-on:click (views/post "/create")}
+   (tr [:create-game])])
 
 (def end-game-cmd
   "@post('/end')")
@@ -74,7 +80,7 @@
           [:td [:span.score-bar {:style score-style}]]
           [:td score-decimal]])]]]))
 
-(defmethod game-view [:moderator nil]
+(defmethod views/game-view [:moderator nil]
   [{:tempura/keys [tr]}]
   [:section#content
    {:data-signals:_tab-shown "'select-questions'"}
@@ -93,30 +99,27 @@
     [:div.tab-content
      [:form
       {:data-show "$_tabShown == 'select-questions'"}
-      [:select.questions-picker
-       {:name "questions-source"}
-       (for [question-source (keys question-sources)]
-         [:option
-          {:value question-source}
-          question-source])]]
+      [:p
+       [:select.questions-picker
+        {:name "questions-source"}
+        (for [question-source (keys question-sources)]
+          [:option
+           {:value question-source}
+           question-source])]]
+      (create-button tr)]
      [:form
       {:data-show "$_tabShown == 'upload-questions'"
        :enctype "multipart/form-data"
        :style "display: none"}
-      [:input
-       {:name "csrf"
-        :type "hidden"
-        :data-attr:value "$csrf"}]
-      [:input#questions-upload
-       {:accept ".edn"
-        :data-on:change "@post('/create/validate', {contentType: 'form'})"
-        :name "questions-file"
-        :type "file"}]]]]
-   [:button.btn.btn-primary
-    {:data-on:mousedown "@post('/create')"}
-    (tr [:create-game])]])
+      [:p
+       [:input#questions-upload
+        {:accept ".edn"
+         :data-on:change (views/post "/create/validate")
+         :name "questions-file"
+         :type "file"}]]
+      (create-button tr)]]]])
 
-(defmethod game-view [:moderator :new]
+(defmethod views/game-view [:moderator :new]
   [{:tempura/keys [tr]
     game-id :sid}]
   (let [play-game-url (str (:url config) "/play/" game-id)
@@ -194,25 +197,25 @@
             :title (tr [:replay-audio])}
            [:i.material-icons.md-36 "replay"]])]
        [:i.material-icons.md-36.scoring-icon scoring-icon]
-       (answers-view tr
-                     true
-                     answer-revealed?
-                     game-id
-                     question)]
+       (views/answers-view tr
+                           true
+                           answer-revealed?
+                           game-id
+                           question)]
       (when answer-revealed?
         [:p (next-button tr "@post('/leaderboard')")])]))
 
-(defmethod game-view [:moderator :question]
+(defmethod views/game-view [:moderator :question]
   [{:tempura/keys [tr]
     game-id :sid}]
   (question-view tr game-id false))
 
-(defmethod game-view [:moderator :show-answers]
+(defmethod views/game-view [:moderator :show-answers]
   [{:tempura/keys [tr]
     game-id :sid}]
   (question-view tr game-id true))
 
-(defmethod game-view [:moderator :leaderboard]
+(defmethod views/game-view [:moderator :leaderboard]
   [{:tempura/keys [tr]
     game-id :sid}]
   (if (game/all-questions-answered? game-id)

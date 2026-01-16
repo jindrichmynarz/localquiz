@@ -3,6 +3,8 @@
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [read-json]]
+            [clojure.math :as math]
+            [reitit.ring.middleware.multipart :as multipart]
             [ring.middleware.reload :as reload]
             [starfederation.datastar.clojure.consts :as consts]))
 
@@ -38,6 +40,10 @@
        (cond-> language (assoc :tempura/locales [(keyword language)]))
        handler)))
 
+(def wrap-multipart
+  (multipart/create-multipart-middleware {:max-file-size (math/pow 10 6) ; 1 MB
+                                          :max-file-count 1}))
+
 (defn wrap-parse-signals
   "Ring middleware parsing Datastar signals in JSON."
   [handler]
@@ -59,7 +65,8 @@
         sid->csrf (fn [sid] (crypto/hmac-md5 csrf-keyspec sid))]
     (fn [{:keys [body headers request-method]
           :as request}]
-      (let [csrf (or (get headers "x-csrf-token") (:csrf body))
+      (let [csrf (or (get headers "x-csrf-token")
+                     (:csrf body))
             sid (session/get-sid headers)]
         (cond
           ; If user has a sid and csrf, handle the request.

@@ -1,5 +1,4 @@
-(ns net.mynarz.localquiz.i18n
-  (:require [taoensso.tempura :as tempura]))
+(ns net.mynarz.localquiz.i18n)
 
 (def dictionary
   {:cs {:accept "Souhlasím"

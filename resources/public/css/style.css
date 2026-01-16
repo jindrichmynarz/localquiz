@@ -637,12 +637,16 @@ p.waiting-icon {
   }
 
   .tab-content {
-    flex: 1;
     background-color: var(--dark);
-    padding: 1.5em;
+    padding: .5em;
     margin-bottom: 1.5em;
     border: solid 1px var(--darker);
     border-top-color: transparent;
+    box-shadow: 3px 3px 12px var(--darker);
+
+    button {
+      margin-top: 1em;
+    }
   }
 }
 

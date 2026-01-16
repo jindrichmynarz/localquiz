@@ -25,6 +25,18 @@
     (fn [^double n]
       (.format formatter n))))
 
+(defn map-or-nil?
+  [x]
+  (or (map? x) (nil? x)))
+
+(defn deep-merge
+  [& vals]
+  (if (every? map-or-nil? vals)
+    (apply merge-with deep-merge vals)
+    (if (every? sequential? vals)
+      (apply concat vals)
+      (last vals))))
+
 (defn long-str
   [& strings]
   (->> strings
@@ -58,8 +70,6 @@
       io/resource
       slurp
       h/raw))
-
-(svg "public/img/wifi_exercise_animated.svg")
 
 (defmacro thread
   "Starts a virtual thread. Conveys bindings."
