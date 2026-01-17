@@ -24,6 +24,7 @@
        @db/db-conn
        player-name))
 
+; TODO: Split the tests that require DB fixtures and the tests that don't.
 (use-fixtures :each fixtures/test-db)
 
 (deftest get-game-state
@@ -118,7 +119,7 @@
        [1.0 0.0 1.0]))
 
 (deftest consensus-scoring
-  (are [answers scores] (= (map :score (game/consensus-scoring answers)) scores)
+  (are [answers scores] (= (map :score (game/score-answers {:scoring :consensus} answers)) scores)
        [{:answer 1} {:answer 1} {:answer 3}]
        [0.5 0.5 0.0]
 
@@ -127,3 +128,14 @@
 
        [{:answer 1} {:answer 1}]
        [1.0 1.0]))
+
+(deftest scale-scores-by-answer-times
+  (are [scores scaled-scores] (= (map :score (game/scale-scores-by-answer-times scores)) scaled-scores)
+       [{:score 1.0 :answer-time 10} {:score 1.0 :answer-time 20}]
+       [1.0 0.5]
+
+       []
+       []
+
+       [{:score 0.0 :answer-time 10} {:score 1.0 :answer-time 50}]
+       [0.0 1.0]))

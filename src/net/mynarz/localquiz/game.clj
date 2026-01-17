@@ -139,8 +139,11 @@
 
 (defmulti score-answers
   "Mark if given answers are correct for the given question by adding the boolean :correct? flag
-  and give them numeric :score from [0, 1]."
-  (fn [{:keys [type scoring]} _] [type scoring]))
+  and give them numeric :score from <0, 1>."
+  (fn [{:keys [type scoring]} _]
+    (if (= scoring :consensus)
+      [scoring]
+      [type scoring])))
 
 (defmethod score-answers [:multiple nil]
   [{:keys [choices]} answers]
@@ -191,7 +194,8 @@
                     :score (boolean->score correct?)))))
 
 (defn consensus-scores
-  "Build a map of answers to their scores based on consensus."
+  "Build a map of answers to their scores based on consensus.
+  No consensus gets the score of 0, complete consensus the score of 1."
   [answers]
   (let [increment (double (/ 1 (dec (count answers))))]
     (->> answers
@@ -203,9 +207,8 @@
                 (transient {}))
         persistent!)))
 
-(defn consensus-scoring
-  "Score `answers` based on consensus."
-  [answers]
+(defmethod score-answers [:consensus]
+  [_ answers]
   (let [answer->score (->> answers
                            (map :answer)
                            consensus-scores)]
@@ -214,34 +217,22 @@
                                :answer
                                answer->score)))))
 
-(defmethod score-answers [:multiple :consensus]
-  [_ answers]
-  (consensus-scoring answers))
-
-(defmethod score-answers [:yesno :consensus]
-  [_ answers]
-  (consensus-scoring answers))
-
 (defn scale-scores-by-answer-times
   [scores]
-  (if-let [max-answer-time (some->> scores
-                                    (keep :answer-time)
-                                    seq
-                                    (apply max))]
-    (for [score scores
-          ; TODO: Think of less penalizing scaling.
-          :let [time-modifier (- 1 (/ (:answer-time score) max-answer-time))]]
-      (update score :score * time-modifier))
+  (if (seq scores)
+    (let [answer-times (->> scores
+                            (filter (comp pos? :score)) ; Ignore incorrect answers
+                            (map :answer-time))
+          min-answer-time (apply min answer-times)
+          max-answer-time (apply max answer-times)
+          time-range (- max-answer-time min-answer-time)]
+      (if (zero? time-range) ; Don't scale if all answer times are the same (e.g., there's only one correct answer).
+        scores
+        (for [{:keys [answer-time]
+               :as score} scores
+              :let [time-coefficient (+ 0.5 (* 0.5 (- 1 (/ (- answer-time min-answer-time) time-range))))]]
+          (update score :score * time-coefficient))))
     scores))
-
-(comment
-  (def times
-    [1234 2345 345 12929])
-
-  (map (fn [t]
-         (/ t
-           (apply max times)))
-       times))
 
 (defn add-score
   "A transaction function that adds `answer-score` to the current score of the `player`."
@@ -339,23 +330,23 @@
   (atom {}))
 
 (defn cancel-timeout!
-  [^String game-id
-   timeouts]
+  [timeouts
+   ^String game-id]
   (if-let [timeout (timeouts game-id)]
-    (do (when-not (future-done? timeout)
-          (future-cancel timeout))
+    (do (or (future-done? timeout) (future-cancel timeout))
         (dissoc timeouts game-id))
     timeouts))
 
 (defn evaluate-answers!
   [^String game-id]
-  (swap! timeouts (partial cancel-timeout! game-id))
-  ; FIXME: Don't evaluate answers if they were evaluated before.
+  (swap! timeouts cancel-timeout! game-id)
+  ; FIXME: Is it possible that this is evaluated more than once for the same question?
+  ;        Shall we store a "lock" indicating if the question was already evaluated? Don't evaluate answers if they were evaluated before.
   (let [question (current-question game-id)
         scores (->> game-id
                     get-answers
-                    (score-answers question))]
-                    ;scale-scores-by-answer-times)
+                    (score-answers question)
+                    scale-scores-by-answer-times)]
     (->> [(store-scores scores)
           (add-scores scores)
           [[:db/add [:game/id game-id] :game/state :show-answers]]]
