@@ -89,7 +89,7 @@
            edn/read-string))
 
 (defn parse-answer
-  ; TODO: Shall we just use edn/read-string?
+  "Parse `answer` to Clojure data types."
   [^String answer]
   (case answer
     nil nil
@@ -113,6 +113,7 @@
        player-id))
 
 (defn get-answers
+  "Get the current answers for `game-id`."
   [^String game-id]
   (->> game-id
        (d/q '[:find ?player ?answer-entity ?answer ?answer-time
@@ -136,7 +137,10 @@
   {true 1.0
    false 0.0})
 
-(defmulti score-answers (fn [{:keys [type scoring]} _] [type scoring]))
+(defmulti score-answers
+  "Mark if given answers are correct for the given question by adding the boolean :correct? flag
+  and give them numeric :score from [0, 1]."
+  (fn [{:keys [type scoring]} _] [type scoring]))
 
 (defmethod score-answers [:multiple nil]
   [{:keys [choices]} answers]
@@ -186,13 +190,29 @@
       (assoc answer :correct? correct?
                     :score (boolean->score correct?)))))
 
+(defn consensus-scores
+  "Build a map of answers to their scores based on consensus."
+  [answers]
+  (let [increment (double (/ 1 (dec (count answers))))]
+    (->> answers
+        (reduce (fn [scores answer]
+                  (let [answer-score (get scores answer)]
+                    (assoc! scores
+                            answer
+                            (or (and answer-score (+ answer-score increment)) 0.0))))
+                (transient {}))
+        persistent!)))
+
 (defn consensus-scoring
+  "Score `answers` based on consensus."
   [answers]
   (let [answer->score (->> answers
                            (map :answer)
-                           frequencies)]
+                           consensus-scores)]
     (for [answer answers]
-      (assoc answer :score (- (answer->score (:answer answer)) 1.0)))))
+      (assoc answer :score (-> answer
+                               :answer
+                               answer->score)))))
 
 (defmethod score-answers [:multiple :consensus]
   [_ answers]

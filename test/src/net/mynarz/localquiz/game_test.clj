@@ -7,15 +7,40 @@
             [clojure.test :refer [are deftest is testing use-fixtures]]
             [datahike.api :as d]))
 
-(defn get-player-id
-  [player-name]
+(defn get-player-db-id
+  [^String player-name]
   (d/q '[:find ?player .
          :in $ ?player-name
          :where [?player :player/name ?player-name]]
         @db/db-conn
         player-name))
 
+(defn get-player-id
+  [^String player-name]
+  (d/q '[:find ?player-id .
+         :in $ ?player-name
+         :where [?player :player/name ?player-name]
+                [?player :player/id ?player-id]]
+       @db/db-conn
+       player-name))
+
 (use-fixtures :each fixtures/test-db)
+
+(deftest get-game-state
+  (is (= (game/get-game-state fixtures/game-id) :new)))
+
+(deftest player-in-game?
+  (is (game/player-in-game? fixtures/game-id (get-player-id "Jane"))))
+
+(deftest player-name-valid-length?
+  (let [characters (repeat "x")]
+    (are [length predicate] (->> characters
+                                 (take length)
+                                 (apply concat)
+                                 game/player-name-valid-length?
+                                 predicate)
+         5 true?
+         50 false?)))
 
 (deftest player-name-in-game?
   (are [player-name] (game/player-name-in-game? fixtures/game-id player-name)
@@ -44,13 +69,13 @@
                          @db/db-conn
                          player))]
     (testing "Player without score"
-      (let [player (get-player-id "Bob")]
+      (let [player (get-player-db-id "Bob")]
         (->> [{:player player :score 1}]
              game/add-scores
              (d/transact db/db-conn))
         (is (= (get-score player) 1.0))))
     (testing "Player with score"
-      (let [player (get-player-id "Jane")]
+      (let [player (get-player-db-id "Jane")]
         (->> [{:player player :score 4}
               {:player player :score 1}]
              game/add-scores
@@ -58,12 +83,7 @@
         (is (= (get-score player) 6.0))))))
 
 (deftest winner
-  (let [expected-winner-id (d/q '[:find ?player-id .
-                                  :in $ ?player-name
-                                  :where [?player :player/name ?player-name]
-                                         [?player :player/id ?player-id]]
-                                @db/db-conn
-                                "Jane")]
+  (let [expected-winner-id (get-player-id "Jane")]
     (is (= (game/winner fixtures/game-id) expected-winner-id))))
 
 (deftest leaderboard
@@ -82,6 +102,9 @@
        "[1,3,0,2]" [1 3 0 2]
        "bork" "bork"))
 
+(deftest player-answered?
+  (is (not (game/player-answered? (get-player-id "Jane")))))
+
 (deftest score-answers
   (are [question answers scores] (= (map :score (game/score-answers question answers)) scores)
        {:type :multiple
@@ -96,8 +119,11 @@
 
 (deftest consensus-scoring
   (are [answers scores] (= (map :score (game/consensus-scoring answers)) scores)
-       [{:answer 1} {:answer 3} {:answer 1}]
-       [1.0 0.0 1.0]
+       [{:answer 1} {:answer 1} {:answer 3}]
+       [0.5 0.5 0.0]
 
-       [{:answer false} {:answer true} {:answer false}]
-       [1.0 0.0 1.0]))
+       [{:answer false} {:answer true}]
+       [0.0 0.0]
+
+       [{:answer 1} {:answer 1}]
+       [1.0 1.0]))
