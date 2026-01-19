@@ -78,6 +78,9 @@
 (s/def db
   (s/map-of ::game-id ::game))
 
+(s/def ::number-of-questions
+  (s/and int? (partial < 1)))
+
 (comment
   (def db
     {"MWfvlS3tbFg29yW2fekQW-8CsTM"

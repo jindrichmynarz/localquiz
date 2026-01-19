@@ -10,13 +10,9 @@
             [fast-edn.core :as edn])
   (:import (java.io PushbackReader)
            (java.text DecimalFormat DecimalFormatSymbols)
-           (java.util Base64 Locale)))
+           (java.util Locale)))
 
 (def ^:private buf-size 1024)
-
-(defn base-64-decode
-  [^String s]
-  (String. (.decode (Base64/getDecoder) s)))
 
 (def decimal-format
   "Format doubles as decimal numbers with up to 2 decimal places."

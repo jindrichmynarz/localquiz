@@ -43,7 +43,7 @@
 (def wrap-multipart
   "Allows uploading 1 file up to 1 MB in size."
   (multipart/create-multipart-middleware {:max-file-size (math/pow 10 6)})) ; 1 MB
-                                          ;:max-file-count 1}))
+                                          ;; :max-file-count 1})) ; FIXME: Why does this count other form parameters as files?
 
 (defn wrap-parse-signals
   "Ring middleware parsing Datastar signals in JSON."

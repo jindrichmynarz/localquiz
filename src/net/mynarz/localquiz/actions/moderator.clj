@@ -2,7 +2,7 @@
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
-            [net.mynarz.localquiz.views.moderator :refer [upload-questions]]
+            [net.mynarz.localquiz.views.common :refer [game-view]]
             [net.mynarz.localquiz.util :as util]
             [datahike.api :as d]
             [fast-edn.core :as edn]
@@ -23,13 +23,13 @@
   [{{{question-file :tempfile} "question-file"} :multipart-params
     :as request}]
   (let [{:keys [error]} (parse-questions question-file)]
-    (upload-questions
+    (game-view
       (cond-> request
         error (assoc :error error)))))
 
 (defn create-game!
   "Create a game identified by `game-id`."
-  [{{number-of-questions "number-of-questions"
+  [{{:keys [number-of-questions]
      question-source "question-source"
      :or {number-of-questions 20}} :form-params
     {{question-file :tempfile} "question-file"} :multipart-params
@@ -45,7 +45,7 @@
     (if error
       (-> request
           (assoc :error error)
-          upload-questions)
+          game-view)
       (let [questions (->> success
                            :questions
                            shuffle
