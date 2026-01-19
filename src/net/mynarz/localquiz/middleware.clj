@@ -34,15 +34,16 @@
 (defn wrap-language
   "Ring middleware adding the $language signal for Tempura."
   [handler]
-  (fn [{{:keys [language]} :body
+  (fn [{{:keys [language]} :signals
         :as request}]
     (-> request
        (cond-> language (assoc :tempura/locales [(keyword language)]))
        handler)))
 
 (def wrap-multipart
-  (multipart/create-multipart-middleware {:max-file-size (math/pow 10 6) ; 1 MB
-                                          :max-file-count 1}))
+  "Allows uploading 1 file up to 1 MB in size."
+  (multipart/create-multipart-middleware {:max-file-size (math/pow 10 6)})) ; 1 MB
+                                          ;:max-file-count 1}))
 
 (defn wrap-parse-signals
   "Ring middleware parsing Datastar signals in JSON."
@@ -53,27 +54,26 @@
     (handler
       (cond-> request
         (and (= request-method :post) (= content-type "application/json") body)
-        (update :body read-json)
+        (assoc :signals (read-json body))
 
         (and (= request-method :get) signals)
-        (assoc :body (read-json signals))))))
+        (assoc :signals (read-json signals))))))
 
 (defn wrap-session
   "Ring middleware wrapping sessions"
   [handler]
   (let [csrf-keyspec (crypto/secret-key->hmac-sha256-keyspec (:csrf-secret config))
         sid->csrf (fn [sid] (crypto/hmac-md5 csrf-keyspec sid))]
-    (fn [{:keys [body headers request-method]
+    (fn [{:keys [headers request-method signals]
           :as request}]
-      (let [csrf (or (get headers "x-csrf-token")
-                     (:csrf body))
+      (let [csrf (or (get headers "x-csrf-token") (:csrf signals))
             sid (session/get-sid headers)]
         (cond
           ; If user has a sid and csrf, handle the request.
           (and sid (= csrf (sid->csrf sid)))
-          (handler (assoc request
-                          :sid sid
-                          :csrf csrf))
+          (-> request
+              (assoc :sid sid)
+              handler)
 
           ; GET request and user does not have session we create one
           ; if they do not have a csrf cookie we give them one
@@ -81,8 +81,7 @@
           (let [new-sid (or sid (crypto/random-unguessable-uid))
                 new-csrf (sid->csrf new-sid)]
             (-> request
-                (assoc :sid new-sid
-                       :csrf new-csrf)
+                (assoc :sid new-sid)
                 handler
                 (assoc-in [:headers "Set-Cookie"]
                           ; These cookies won't be set on local host on chrome/safari

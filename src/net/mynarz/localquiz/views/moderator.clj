@@ -6,7 +6,7 @@
             [net.mynarz.localquiz.util :refer [decimal-format]]
             [net.mynarz.localquiz.views.common :as views]
             [charred.api :as charred]
-            [taoensso.timbre :as log]))
+            [net.mynarz.localquiz.i18n :as i18n]))
 
 (defn copy-button
   [tr
@@ -80,44 +80,59 @@
           [:td [:span.score-bar {:style score-style}]]
           [:td score-decimal]])]]]))
 
+(defn number-of-questions
+  [tr]
+  [:p
+   [:label
+    {:for "number-of-questions"}
+    (tr [:number-of-questions])]
+   [:input#number-of-questions
+    {:min 1
+     :name "number-of-questions"
+     :type "number"
+     :value 20}]])
+
 (defmethod views/game-view [:moderator nil]
-  [{:tempura/keys [tr]}]
+  [{:keys [error]
+    :tempura/keys [tr]}]
   [:section#content
-   {:data-signals:_tab-shown "'select-questions'"}
    [:div.tabs
-    [:ul.tab-selector
-     [:li
-      {:data-class:active "$_tabShown == 'select-questions'"}
-      [:a
-       {:data-on:click "$_tabShown = 'select-questions'"}
-       (tr [:pick-questions])]]
-     [:li
-      {:data-class:active "$_tabShown == 'upload-questions'"}
-      [:a
-       {:data-on:click "$_tabShown = 'upload-questions'"}
-       (tr [:upload-questions])]]]
-    [:div.tab-content
-     [:form
-      {:data-show "$_tabShown == 'select-questions'"}
-      [:p
-       [:select.questions-picker
-        {:name "questions-source"}
-        (for [question-source (keys question-sources)]
-          [:option
-           {:value question-source}
-           question-source])]]
-      (create-button tr)]
-     [:form
-      {:data-show "$_tabShown == 'upload-questions'"
-       :enctype "multipart/form-data"
-       :style "display: none"}
-      [:p
-       [:input#questions-upload
-        {:accept ".edn"
-         :data-on:change (views/post "/create/validate")
-         :name "questions-file"
-         :type "file"}]]
-      (create-button tr)]]]])
+    [:input#select-questions-checkbox
+     {:checked true
+      :name "tab-picker"
+      :type "radio"}]
+    [:label
+     {:for "select-questions-checkbox"}
+     (tr [:pick-questions])]
+    [:form
+     [:p
+      [:select#question-picker
+       {:name "question-source"
+        :placeholder (tr [:pick-questions])}
+       (for [question-source (keys question-sources)]
+         [:option
+          {:value question-source}
+          question-source])]]
+     (number-of-questions tr)
+     (create-button tr)]
+    [:input#upload-questions-checkbox
+     {:name "tab-picker"
+      :type "radio"}]
+    [:label
+     {:for "upload-questions-checkbox"}
+     (tr [:upload-questions])]
+    [:form
+     {:enctype "multipart/form-data"}
+     [:p
+      [:input#questions-upload
+       {:accept ".edn"
+        :data-on:change (views/post "/create/validate")
+        :name "question-file"
+        :type "file"}]]
+     (number-of-questions tr)
+     (if error
+       [:pre.error error]
+       (create-button tr))]]])
 
 (defmethod views/game-view [:moderator :new]
   [{:tempura/keys [tr]

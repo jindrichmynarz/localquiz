@@ -5,6 +5,7 @@
             [net.mynarz.localquiz.views.player] ; Require to load the player-specific methods of view/view.
             [net.mynarz.localquiz.actions.moderator :as moderator-actions]
             [net.mynarz.localquiz.actions.player :as player-actions]
+            [reitit.coercion.spec :refer [coercion]]
             [reitit.ring.middleware.multipart :as multipart]))
 
 (def morph-view
@@ -16,8 +17,11 @@
    ["/sse" {:get morph-view}]
    ["/create"
     ["" {:post (partial views/view moderator-actions/create-game!)}]
-    ["/validate" {:parameters {:multipart {:file multipart/temp-file-part}}
-                  :post (partial views/view moderator-actions/validate-questions)}]]
+    ["/validate" {:post (partial views/view moderator-actions/validate-questions)
+                  ; FIXME: Is this the correct syntax?
+                  ;        <https://github.com/metosin/reitit/blob/master/doc/ring/coercion.md>
+                  ;        <https://github.com/metosin/reitit/blob/master/doc/coercion/clojure_spec_coercion.md>
+                  :parameters {:multipart {:question-file multipart/temp-file-part}}}]]
    ["/question" {:post (partial views/view moderator-actions/next-question!)}]
    ["/leaderboard" {:post (partial views/view moderator-actions/leaderboard!)}]
    ["/end" {:post (partial views/view moderator-actions/end-game!)}]

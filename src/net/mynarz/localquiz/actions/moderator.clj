@@ -1,41 +1,64 @@
 (ns net.mynarz.localquiz.actions.moderator
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.game :as game]
+            [net.mynarz.localquiz.question-sources :refer [question-sources]]
+            [net.mynarz.localquiz.views.moderator :refer [upload-questions]]
             [net.mynarz.localquiz.util :as util]
             [datahike.api :as d]
             [fast-edn.core :as edn]
             [taoensso.timbre :as log]))
 
-(defn pick-questions!
-  [{game-id :sid
-    :as request}])
-  ; TODO
-  ; - Destructure POST parameter "questions-upload"
-  ; - Transact the questions to the database
+(defn parse-questions
+  [questions-file]
+  (try
+    (let [questions (edn/read-once questions-file)]
+      (if-let [validation-report (util/validate-questions questions)]
+        {:error validation-report}
+        {:success questions}))
+    (catch Exception ex
+      {:error (.getMessage ex)})))
+
+(defn validate-questions
+  "Validate the uploaded questions according to their spec."
+  [{{{question-file :tempfile} "question-file"} :multipart-params
+    :as request}]
+  (let [{:keys [error]} (parse-questions question-file)]
+    (upload-questions
+      (cond-> request
+        error (assoc :error error)))))
 
 (defn create-game!
   "Create a game identified by `game-id`."
-  [{game-id :sid}]
+  [{{number-of-questions "number-of-questions"
+     question-source "question-source"
+     :or {number-of-questions 20}} :form-params
+    {{question-file :tempfile} "question-file"} :multipart-params
+    game-id :sid
+    :as request}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
-  (let [questions (->> "questions/metelesku_blesku.edn"
-                        util/read-edn-resource
-                        :questions
-                        ;(filter (comp #{:sort} :type))
-                        shuffle
-                        (take 20)
-                        (map (comp pr-str util/replace-react-fragments)))
-        questions-total (-> questions count long)]
-    (log/infof "Creating a new game %s." game-id)
-    (d/transact db-conn [{:game/id game-id
-                          :game/state :new
-                          :game/questions questions
-                          :game/questions-total questions-total}])))
-
-(defn validate-questions
-  [request]
-  (log/info (:multipart-params request)))
-  ;(log/info (-> questions-file util/base-64-decode edn/read-string)))
-  ;(util/validate-questions))
+  (let [{:keys [error success]} (cond
+                                   question-source (->> question-source
+                                                        (get question-sources)
+                                                        edn/read-once
+                                                        (hash-map :success))
+                                   question-file (parse-questions question-file))]
+    (if error
+      (-> request
+          (assoc :error error)
+          upload-questions)
+      (let [questions (->> success
+                           :questions
+                           shuffle
+                           (take number-of-questions)
+                           (map (comp pr-str util/replace-react-fragments)))
+            questions-total (-> questions
+                                count
+                                long)]
+        (log/infof "Creating a new game %s." game-id)
+        (d/transact db-conn [{:game/id game-id
+                              :game/state :new
+                              :game/questions questions
+                              :game/questions-total questions-total}])))))
 
 (defn leaderboard!
   [{game-id :sid}]

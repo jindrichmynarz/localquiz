@@ -31,8 +31,8 @@
 (defn answer-question!
   [{{answer "answer"} :form-params
     {:keys [game-id]} :path-params
-    :keys [tr]
-    player-id :sid}]
+    player-id :sid
+    :tempura/keys [tr]}]
   (log/infof "Player %s answers %s." player-id answer)
   (when-let [{:keys [error]} (game/answer-question! game-id player-id answer)]
     [:section#content

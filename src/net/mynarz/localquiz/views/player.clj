@@ -61,8 +61,8 @@
 
 (defmethod views/game-view [:player :new]
   [{{:keys [game-id]} :path-params
-    :tempura/keys [tr]
     player-id :sid
+    :tempura/keys [tr]
     :as request}]
   (if (game/player-in-game? game-id player-id)
     [:section#content
@@ -72,8 +72,8 @@
 
 (defmethod views/game-view [:player :question]
   [{{:keys [game-id]} :path-params
-    :tempura/keys [tr]
-    player-id :sid}]
+    player-id :sid
+    :tempura/keys [tr]}]
   [:section#content
    (if (game/player-answered? player-id)
      [:div
@@ -88,9 +88,9 @@
                            current-question)))])
 
 (defmethod views/game-view [:player :show-answers]
-  [{:tempura/keys [tr]
-    {:keys [game-id]} :path-params
-    player-id :sid}]
+  [{{:keys [game-id]} :path-params
+    player-id :sid
+    :tempura/keys [tr]}]
   (let [{:answer/keys [correct?] :as answer} (game/player-answer game-id player-id)]
     [:section#content
      ; TODO: How to rate answers for the consensus questions?
@@ -99,8 +99,8 @@
 
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params
-    :tempura/keys [tr]
-    player-id :sid}]
+    player-id :sid
+    :tempura/keys [tr]}]
   [:section#content
    (if (game/all-questions-answered? game-id)
      (if (= player-id (game/winner game-id))
