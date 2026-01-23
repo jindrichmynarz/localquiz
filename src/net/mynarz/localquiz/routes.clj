@@ -4,8 +4,8 @@
             [net.mynarz.localquiz.spec :as s]
             [net.mynarz.localquiz.sse :as sse]
             [net.mynarz.localquiz.views.common :as views]
-            [net.mynarz.localquiz.views.moderator] ; Require to load the moderator-specific methods of views/view.
-            [net.mynarz.localquiz.views.player] ; Require to load the player-specific methods of view/view.
+            [net.mynarz.localquiz.views.moderator] ; Required to load the moderator-specific methods of views/view.
+            [net.mynarz.localquiz.views.player] ; Required to load the player-specific methods of view/view.
             [reitit.ring.middleware.multipart :as multipart]))
 
 (def morph-view

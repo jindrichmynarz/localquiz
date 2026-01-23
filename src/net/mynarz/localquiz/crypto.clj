@@ -1,15 +1,10 @@
 (ns net.mynarz.localquiz.crypto
-  (:import [clojure.lang RT]
-           [java.security MessageDigest]
-           [java.security SecureRandom]
-           [java.util ArrayList
-                      Base64
-                      Base64$Encoder
-                      Collection
-                      Collections
-                      Random]
-           [javax.crypto Mac]
-           [javax.crypto.spec SecretKeySpec]))
+  (:import (java.security MessageDigest)
+           (java.security SecureRandom)
+           (java.util Base64
+                      Base64$Encoder)
+           (javax.crypto Mac)
+           (javax.crypto.spec SecretKeySpec)))
 
 (def ^SecureRandom secure-random
   (SecureRandom/new))
@@ -20,13 +15,6 @@
 (defn bytes->base64
   [^byte/1 b]
   (.encodeToString base64-encoder b))
-
-(defn deterministic-shuffle
-  "Shuffle `coll`, always the same."
-  [^Collection coll]
-  (let [array-list (ArrayList. coll)]
-    (Collections/shuffle array-list (Random. (hash coll)))
-    (RT/vector (.toArray array-list))))
 
 (defn digest
   "Short digest, compact but with a higher collision rate."

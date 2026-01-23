@@ -2,17 +2,21 @@
   (:require [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
-            [net.mynarz.localquiz.views.common :refer [game-view]]
+            [net.mynarz.localquiz.question-spec :as qs]
+            [net.mynarz.localquiz.spec :as s]
             [net.mynarz.localquiz.util :as util]
+            [net.mynarz.localquiz.views.common :refer [game-view]]
             [datahike.api :as d]
             [fast-edn.core :as edn]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (java.io File)))
 
 (defn parse-questions
-  [questions-file]
+  [^File questions-file]
+  (log/info (type questions-file))
   (try
     (let [questions (edn/read-once questions-file)]
-      (if-let [validation-report (util/validate-questions questions)]
+      (if-let [validation-report (s/validate ::qs/data questions)]
         {:error validation-report}
         {:success questions}))
     (catch Exception ex
@@ -37,11 +41,11 @@
     :as request}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
   (let [{:keys [error success]} (cond
+                                   question-file (parse-questions question-file)
                                    question-source (->> question-source
                                                         (get question-sources)
                                                         edn/read-once
-                                                        (hash-map :success))
-                                   question-file (parse-questions question-file))]
+                                                        (hash-map :success)))]
     (if error
       (-> request
           (assoc :error error)

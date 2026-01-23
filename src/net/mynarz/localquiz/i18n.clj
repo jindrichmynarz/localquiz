@@ -19,7 +19,7 @@
                  :using "s použitím"}
         :game-not-exists "Tato hra neexistuje!"
         :join-game "Hrát"
-        :next "Další"
+        :next "Dále"
         :no-answer "Bez odpovědi"
         :no-js "Váš prohlížeč nepodporuje JavaScript!"
         :number-of-questions "Počet otázek"

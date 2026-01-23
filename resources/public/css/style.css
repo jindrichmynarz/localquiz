@@ -135,7 +135,7 @@ footer {
   border-radius: 5px;
   padding: .5em;
   position: relative;
-  top: -5px;
+  /* top: -5px; */
   /* left: -5px; */
   z-index: 1;
   cursor: pointer;
@@ -569,7 +569,7 @@ p.waiting-icon {
     height: 20px;
     background-color: var(--darker);
     border-radius: 20px;
-    transition: all 0.3s;
+    transition: transform 0.3s;
   }
 
   .switch::after {
@@ -581,7 +581,7 @@ p.waiting-icon {
     background-color: var(--offwhite);
     top: 1px;
     left: 1px;
-    transition: all 0.3s;
+    transition: transform 0.3s;
     cursor: pointer;
   }
 
@@ -616,7 +616,7 @@ p.waiting-icon {
     padding: .5em 1em;
     color: var(--grey);
     z-index: 1;
-    transition: color .4s, background-color .4s;
+    transition: color .4s;
 
     &:hover {
       color: var(--orange);

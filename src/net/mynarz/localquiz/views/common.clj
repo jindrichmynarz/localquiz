@@ -3,13 +3,12 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
-            [net.mynarz.localquiz.util :refer [decimal-format deep-merge]]
+            [net.mynarz.localquiz.util :refer [decimal-format deterministic-shuffle]]
             [charred.api :as charred]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.api :refer [CDN-url]]
-            [starfederation.datastar.clojure.brotli :as brotli]
-            [taoensso.timbre :as log]))
+            [starfederation.datastar.clojure.brotli :as brotli]))
 
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
@@ -185,15 +184,15 @@
    (tr [:submit])])
 
 (defn- mark-answer
-  [^Boolean answer-revealed?
+  [answers
    ^Boolean correct?]
-  (when (and answer-revealed? correct?)
+  (when (and answers correct?)
     [:i.material-icons "check"]))
 
 (defn- note-view
-  [^Boolean answer-revealed?
+  [answers
    note]
-  (when (and answer-revealed? note)
+  (when (and answers note)
     [:div.note
      [:div [:i.material-icons.md-light.md-24 "info"]]
      [:div note]]))
@@ -201,6 +200,16 @@
 (defn add-index
   [coll]
   (map-indexed (fn [index item] (assoc item :index index)) coll))
+
+(defn answer-frequency
+  [{:keys [answer-count
+           answer-frequencies
+           answer-revealed?]}
+   answer]
+  (when answer-revealed?
+    [:progress.answer-frequency
+     {:max answer-count
+      :value (get answer-frequencies answer)}]))
 
 (defmulti answers-view
   (fn [& args]
@@ -211,13 +220,14 @@
 (defmethod answers-view :multiple
   [_
    ^Boolean disabled?
-   ^Boolean answer-revealed?
+   {:keys [answer-revealed?]
+    :as answers}
    ^String game-id
    {:keys [choices note]}]
   [:form#answers
    [:ul#choices
     (answer-form-handler disabled? game-id)
-    (for [{:keys [correct? index text]} (->> choices add-index crypto/deterministic-shuffle)]
+    (for [{:keys [correct? index text]} (->> choices add-index deterministic-shuffle)]
       [:label.btn
        {:class (when answer-revealed?
                  (if correct? "correct" "incorrect"))}
@@ -228,24 +238,26 @@
          :value index}]
        [:span.answer
         text
-        (mark-answer answer-revealed? correct?)]])]
+        (mark-answer answer-revealed? correct?)
+        (answer-frequency answers index)]])]
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :yesno
   [tr
    ^Boolean disabled?
-   ^Boolean answer-revealed?
+   {:keys [answer-revealed?]
+    :as answers}
    ^String game-id
    {:keys [correct? note]}]
   [:form#answers
    [:p#choices
     (answer-form-handler disabled? game-id)
-    (for [{:keys [correct? label value]} [{:correct? correct?
-                                           :label :question.yesno/yes
-                                           :value "true"}
-                                          {:correct? (not correct?)
-                                           :label :question.yesno/no
-                                           :value "false"}]]
+    (for [{:keys [answer correct? label]} [{:answer true
+                                            :correct? correct?
+                                            :label :question.yesno/yes}
+                                           {:answer false
+                                            :correct? (not correct?)
+                                            :label :question.yesno/no}]]
      [:label.btn
       {:class (when answer-revealed?
                 (if correct? "correct" "incorrect"))}
@@ -253,15 +265,16 @@
        {:disabled (or disabled? answer-revealed?)
         :name "answer"
         :type "checkbox"
-        :value value}]
+        :value (str answer)}]
       (tr [label])
-      (mark-answer answer-revealed? correct?)])]
-   (note-view answer-revealed? note)])
+      (mark-answer answer-revealed? correct?)
+      (answer-frequency answers answer)])
+    (note-view answer-revealed? note)]])
 
 (defmethod answers-view :percent-range
   [tr
    ^Boolean disabled?
-   ^Boolean answer-revealed?
+   {:keys [answer-revealed?]}
    ^String game-id
    {:keys [note percentage]}]
   [:div
@@ -301,7 +314,7 @@
 (defmethod answers-view :open
   [tr
    ^Boolean disabled?
-   ^Boolean answer-revealed?
+   {:keys [answer-revealed?]}
    ^String game-id
    {:keys [answer note]}]
   [:form#answers
@@ -320,7 +333,7 @@
 (defmethod answers-view :sort
   [tr
    ^Boolean disabled?
-   ^Boolean answer-revealed?
+   {:keys [answer-revealed?]}
    ^String game-id
    {:keys [items note]}]
   [:form#answers
@@ -336,7 +349,7 @@
         [:li
          [:span text]
          [:span.sort-value sort-value]])
-      (for [{:keys [index text]} (->> items add-index crypto/deterministic-shuffle)]
+      (for [{:keys [index text]} (->> items add-index deterministic-shuffle)]
         [:li
          {:data-index index}
          [:span text]]))

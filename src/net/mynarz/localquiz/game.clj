@@ -1,12 +1,13 @@
 (ns net.mynarz.localquiz.game
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db :refer [db-conn]]
-            [net.mynarz.localquiz.normalize :refer [normalize-answer]]
-            [clj-fuzzy.jaro-winkler :refer [jaro-winkler]]
+            [net.mynarz.localquiz.scoring :as scoring]
+            [net.mynarz.localquiz.spec :as s]
             [clojure.string :as string]
             [datahike.api :as d]
             [fast-edn.core :as edn]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [spec-tools.core :as st]))
 
 (defn get-game-state
   "Get game state for the given `game-id`."
@@ -91,15 +92,7 @@
 (defn parse-answer
   "Parse `answer` to Clojure data types."
   [^String answer]
-  (case answer
-    nil nil
-    "true" true
-    "false" false
-    (cond
-      (re-matches #"^\d+$" answer) (Integer/parseInt answer)
-      (re-matches #"^\d+\.\d+$" answer) (Double/parseDouble answer)
-      (re-matches #"^\[(\d+(,\s*)?)+\]$" answer) (edn/read-string answer)
-      :else answer)))
+  (st/coerce ::s/player-answer answer st/string-transformer))
 
 (defn player-answered?
   "Test if a player with `player-id` has already answered
@@ -132,107 +125,6 @@
                      [?answer-entity :answer/answer ?answer]]
             @db-conn)
        (map (fn [result] (update result :answer parse-answer)))))
-
-(def boolean->score
-  {true 1.0
-   false 0.0})
-
-(defmulti score-answers
-  "Mark if given answers are correct for the given question by adding the boolean :correct? flag
-  and give them numeric :score from <0, 1>."
-  (fn [{:keys [type scoring]} _]
-    (if (= scoring :consensus)
-      [scoring]
-      [type scoring])))
-
-(defmethod score-answers [:multiple nil]
-  [{:keys [choices]} answers]
-  (for [answer answers
-        :let [correct? (->> answer
-                            :answer
-                            (nth choices)
-                            :correct?
-                            boolean)]]
-    (assoc answer :correct? correct?
-                  :score (boolean->score correct?))))
-
-(defmethod score-answers [:yesno nil]
-  [{:keys [correct?]} answers]
-  (for [answer answers
-        :let [answer-correct? (= (:answer answer) correct?)]]
-    (assoc answer :correct? answer-correct?
-                  :score (boolean->score answer-correct?))))
-
-(defmethod score-answers [:open nil]
-  [question answers]
-  (let [expected (-> question :answer normalize-answer)]
-    (for [answer answers
-          :let [actual (-> answer :answer normalize-answer)
-                correct? (> (jaro-winkler actual expected)
-                            (:similarity-threshold config))]]
-      (assoc answer :correct? correct?
-                    :score (boolean->score correct?)))))
-
-(defmethod score-answers [:percent-range nil]
-  [{:keys [percentage]} answers]
-  (for [answer answers
-        :let [difference (Math/abs (- ^double (:answer answer) percentage))
-              correct? (<= difference 5)]] ; TODO: Allow to configure tolerated difference?
-    (assoc answer :correct? correct?
-                  :score (- 1 (/ difference 100)))))
-
-(defmethod score-answers [:sort nil]
-  [{:keys [items]} answers]
-  (let [expected (->> items
-                      (map :sort-value)
-                      (map vector (range))
-                      (sort-by second)
-                      (mapv first))]
-    (for [answer answers
-          :let [correct? (= (:answer answer) expected)]]
-      (assoc answer :correct? correct?
-                    :score (boolean->score correct?)))))
-
-(defn consensus-scores
-  "Build a map of answers to their scores based on consensus.
-  No consensus gets the score of 0, complete consensus the score of 1."
-  [answers]
-  (let [increment (double (/ 1 (dec (count answers))))]
-    (->> answers
-        (reduce (fn [scores answer]
-                  (let [answer-score (get scores answer)]
-                    (assoc! scores
-                            answer
-                            (or (and answer-score (+ answer-score increment)) 0.0))))
-                (transient {}))
-        persistent!)))
-
-(defmethod score-answers [:consensus]
-  [_ answers]
-  (let [answer->score (->> answers
-                           (map :answer)
-                           consensus-scores)]
-    (for [answer answers]
-      (assoc answer :score (-> answer
-                               :answer
-                               answer->score)))))
-
-(defn scale-scores-by-answer-times
-  [scores]
-  (if (seq scores)
-    (let [answer-times (->> scores
-                            (filter (comp pos? :score)) ; Ignore incorrect answers
-                            (map :answer-time))
-          min-answer-time (apply min answer-times)
-          max-answer-time (apply max answer-times)
-          time-range (- max-answer-time min-answer-time)]
-      (if (zero? time-range) ; Don't scale if all answer times are the same (e.g., there's only one correct answer).
-        scores
-        (for [{:keys [answer-time]
-               :as score} scores
-              :let [time-coefficient (+ 0.5 (* 0.5 (- 1 (/ (- answer-time min-answer-time) time-range))))]]
-          (update score :score * time-coefficient))))
-    scores))
 
 (defn add-score
   "A transaction function that adds `answer-score` to the current score of the `player`."
@@ -345,8 +237,8 @@
   (let [question (current-question game-id)
         scores (->> game-id
                     get-answers
-                    (score-answers question)
-                    scale-scores-by-answer-times)]
+                    (scoring/score-answers question)
+                    scoring/scale-scores-by-answer-times)]
     (->> [(store-scores scores)
           (add-scores scores)
           [[:db/add [:game/id game-id] :game/state :show-answers]]]

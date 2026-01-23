@@ -1,16 +1,19 @@
 (ns net.mynarz.localquiz.util
-  (:require [net.mynarz.localquiz.question-spec :as question]
-            [charred.api :as charred]
+  (:require [charred.api :as charred]
             [dev.onionpancakes.chassis.core :as h]
             [clojure.java.io :as io]
-            [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [clojure.walk :refer [postwalk-replace]]
-            [expound.alpha :as e]
             [fast-edn.core :as edn])
-  (:import (java.io PushbackReader)
-           (java.text DecimalFormat DecimalFormatSymbols)
-           (java.util Locale)))
+  (:import  (clojure.lang RT)
+            (java.io PushbackReader)
+            (java.text DecimalFormat
+                       DecimalFormatSymbols)
+            (java.util ArrayList
+                       Collection
+                       Collections
+                       Locale
+                       Random)))
 
 (def ^:private buf-size 1024)
 
@@ -21,17 +24,12 @@
     (fn [^double n]
       (.format formatter n))))
 
-(defn map-or-nil?
-  [x]
-  (or (map? x) (nil? x)))
-
-(defn deep-merge
-  [& vals]
-  (if (every? map-or-nil? vals)
-    (apply merge-with deep-merge vals)
-    (if (every? sequential? vals)
-      (apply concat vals)
-      (last vals))))
+(defn deterministic-shuffle
+  "Shuffle `coll`, always the same."
+  [^Collection coll]
+  (let [array-list (ArrayList. coll)]
+    (Collections/shuffle array-list (Random. (hash coll)))
+    (RT/vector (.toArray array-list))))
 
 (defn long-str
   [& strings]
@@ -73,14 +71,6 @@
   `(Thread/startVirtualThread
     (bound-fn* ;; binding conveyance
      (fn [] ~@body))))
-
-(defn validate
-  [spec data]
-  (when-not (s/valid? spec data)
-    (e/expound-str spec data)))
-
-(def validate-questions
-  (partial validate ::question/data))
 
 (defmacro while-some
   {:clj-kondo/lint-as 'clojure.core/let}

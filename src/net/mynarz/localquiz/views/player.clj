@@ -19,7 +19,7 @@
     validation-error]
    (let [disabled? (some? validation-error)
          validate-js (long-str "!$_submitted &&"
-                               (views/post (format "/join/%s/validate" game-id)
+                               (views/post (str "/join/" game-id "/validate")
                                            "requestCancellation: $_controller"))]
      [:section#content
       [:form#player-name-input
@@ -45,7 +45,7 @@
          :disabled disabled?
          :data-on:click (long-str "$_controller.abort();"
                                   "$_submitted = true;"
-                                  (views/post (str "/join" game-id)))}
+                                  (views/post (str "/join/" game-id)))}
         [:i.material-icons "play_circle"]
         (tr [:join-game])]]
       (when validation-error
@@ -67,7 +67,7 @@
   (if (game/player-in-game? game-id player-id)
     [:section#content
      waiting-icon
-     [:p (tr [:wait-for-game-start])]]
+     [:h2 (tr [:wait-for-game-start])]]
     (player-name-input request)))
 
 (defmethod views/game-view [:player :question]
@@ -78,7 +78,7 @@
    (if (game/player-answered? player-id)
      [:div
       waiting-icon
-      [:p (tr [:wait-for-answers])]]
+      [:h2 (tr [:wait-for-answers])]]
      (let [answer-revealed? (game/all-players-answered? game-id)
            current-question (game/current-question game-id)]
        (views/answers-view tr

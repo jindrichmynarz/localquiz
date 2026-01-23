@@ -19,10 +19,9 @@
     {player-game-id :game-id} :path-params
     session-id :sid
     :as request}]
-  (log/info request)
   (let [game-id (or player-game-id session-id)
         <ch (a/sub refresh-pub game-id (a/chan (a/dropping-buffer 1)))
-        throttled<ch (throttle (:max-refresh-ms config) <ch)
+        <throttled-ch (throttle (:max-refresh-ms config) <ch)
         ; Poison pill for work cancelling
         <cancel (a/chan)]
     (hk-gen/->sse-response request
@@ -37,10 +36,10 @@
                                 (loop [last-view-hash last-event-id]
                                   (a/alt!!
                                     [<cancel]
-                                    (doseq [ch [throttled<ch <ch <cancel]]
+                                    (doseq [ch [<throttled-ch <ch <cancel]]
                                       (a/close! ch))
 
-                                    [throttled<ch]
+                                    [<throttled-ch]
                                     ([_]
                                      (some-> ; Stop in case of error
                                       (on-cpu-pool ; CPU work on real threads
