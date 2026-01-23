@@ -10,15 +10,14 @@
 (defn copy-button
   [tr
    ^String join-game-url]
-  (let [copy-labels (charred/write-json-str [(tr [:copy]) (tr [:copied])])]
-    [:span.copy-button-wrapper
-     {:data-signals:_copy-label copy-labels}
-     [:button.btn#copy-join-url
-      {:data-on:mousedown (format "navigator.clipboard.writeText('%s');
-                                  $_copyLabel.reverse();
-                                  setTimeout(() => $_copyLabel.reverse(), 2000);"
-                                  join-game-url)
-       :data-text "$_copyLabel[0]"}]]))
+  [:span.copy-button-wrapper
+   {:data-signals:_copy-label (charred/write-json-str [(tr [:copy]) (tr [:copied])])}
+   [:button.btn#copy-join-url
+    {:data-on:mousedown (format "navigator.clipboard.writeText('%s');
+                                 $_copyLabel.reverse();
+                                 setTimeout(() => $_copyLabel.reverse(), 2000);"
+                                join-game-url)
+     :data-text "$_copyLabel[0]"}]])
 
 (defn create-button
   [tr]
@@ -31,13 +30,24 @@
 
 (defn end-game
   [tr]
-  (let [click-handler (format "confirm('%s') && %s"
-                              (tr [:confirm-end-game])
-                              end-game-cmd)]
-    [:span#end-game
-     {:data-on:click click-handler
-      :title (tr [:end-game])}
-     [:i.material-icons.md-light.md-36 "cancel"]]))
+  [:div
+   [:dialog#end-game-dialog
+    {:data-ref "_end-game-dialog"}
+    [:button#close-end-game-modal
+     {:aria-label (tr [:close])
+      :data-on:click "$_endGameDialog.close()"}
+     [:i.material-icons
+      {:aria-hidden "true"}
+      "close"]]
+    [:button.btn.btn-primary
+     {:data-on:click end-game-cmd}
+     (tr [:confirm-end-game])]]
+   [:button#end-game
+    {:data-on:click "$_endGameDialog.showModal()"
+     :title (tr [:end-game])}
+    [:i.material-icons.md-light.md-36
+     {:aria-hidden "true"}
+     "cancel"]]])
 
 (defn get-answers
   [^String game-id]
@@ -55,7 +65,9 @@
    {:data-on:click next-action
     :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
    (tr [:next])
-   [:i.material-icons "arrow_circle_right"]])
+   [:i.material-icons
+    {:aria-hidden "true"}
+    "arrow_circle_right"]])
 
 (defn leaderboard
   [tr
@@ -196,9 +208,11 @@
    (let [{:keys [scoring] :as question} (game/current-question game-id)
          {:keys [total answered]} (game/answer-progress game-id)
          answer-progress-text (format "%d/%d" answered total)
-         scoring-icon (if (= scoring :consensus)
-                        "join_inner"
-                        "task_alt")]
+         {:keys [scoring-icon scoring-label]} (if (= scoring :consensus)
+                                                {:scoring-icon "join_inner"
+                                                 :scoring-label :consensus}
+                                                {:scoring-icon "task_alt"
+                                                 :scoring-label :correctness})]
       [:section#content
        (end-game tr)
        (timer answer-revealed?)
@@ -222,8 +236,13 @@
             {:data-show "$_audio"
              :data-on:click "$_audio.currentTime = 0; $_audio.play()"}
             (tr [:replay-audio])
-            [:i.material-icons.md-36 "replay"]])]
-        [:i.material-icons.md-36.scoring-icon scoring-icon]
+            [:i.material-icons.md-36
+             {:aria-hidden "true"}
+             "replay"]])]
+        [:i.material-icons.md-36.scoring-icon
+         {:aria-hidden "true"
+          :aria-label (tr [scoring-label])}
+         scoring-icon]
         (views/answers-view tr
                             true
                             answers
@@ -254,7 +273,9 @@
        {:data-on:click end-game-cmd
         :data-on:keydown__window (format "evt.key === 'Enter' && %s" end-game-cmd)}
        (tr [:end-game])
-       [:i.material-icons.md-light.md-36 "cancel"]]]]
+       [:i.material-icons.md-light.md-36
+        {:aria-hidden "true"}
+        "cancel"]]]]
     [:section#content
      (end-game tr)
      (leaderboard tr game-id)

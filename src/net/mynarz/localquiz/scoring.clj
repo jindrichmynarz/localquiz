@@ -88,6 +88,7 @@
                                answer->score)))))
 
 (defn scale-scores-by-answer-times
+  "Scale `scores` by answer times."
   [scores]
   (if (seq scores)
     (let [answer-times (->> scores

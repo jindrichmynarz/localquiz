@@ -6,7 +6,8 @@
 (def waiting-icon
   [:p.waiting-icon
    [:i.material-icons
-    {:data-signals:_iconIndex "0"
+    {:aria-hidden "true"
+     :data-signals:_iconIndex "0"
      :data-on-interval__duration.3s "$_iconIndex++"
      :data-text "['hourglass_empty', 'hourglass_bottom', 'hourglass_top'][$_iconIndex % 3]"}]
    [:span.shadow]])
@@ -46,7 +47,9 @@
          :data-on:click (long-str "$_controller.abort();"
                                   "$_submitted = true;"
                                   (views/post (str "/join/" game-id)))}
-        [:i.material-icons "play_circle"]
+        [:i.material-icons
+         {:aria-hidden "true"}
+         "play_circle"]
         (tr [:join-game])]]
       (when validation-error
         [:p#name-error.error
@@ -56,7 +59,9 @@
   [{:tempura/keys [tr]}]
   [:section#content
    [:h2.error
-    [:i.material-icons.md-light "videogame_asset_off"]
+    [:i.material-icons.md-light
+     {:aria-hidden "true"}
+     "videogame_asset_off"]
     (tr [:game-not-exists])]])
 
 (defmethod views/game-view [:player :new]
@@ -94,8 +99,17 @@
   (let [{:answer/keys [correct?] :as answer} (game/player-answer game-id player-id)]
     [:section#content
      ; TODO: How to rate answers for the consensus questions?
-     (cond (some? correct?) [:i.material-icons.answer-mark (if correct? "check" "close")]
-           (nil? answer) [:h2 (tr [:no-answer])])]))
+     (cond (some? correct?) (let [{:keys [icon label]} (if correct?
+                                                         {:icon "check"
+                                                          :label :correct}
+                                                         {:icon "close"
+                                                          :label :incorrect})]
+                              [:i.material-icons.answer-mark
+                               {:aria-hidden "true"
+                                :aria-label (tr [label])}
+                               icon])
+           (nil? answer) [:h2
+                          (tr [:no-answer])])]))
 
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params
@@ -105,10 +119,14 @@
    (if (game/all-questions-answered? game-id)
      (if (= player-id (game/winner game-id))
        [:div.verdict.winner
-        [:i.material-icons.md-36 "emoji_events"]
+        [:i.material-icons.md-36
+         {:aria-hidden "true"}
+         "emoji_events"]
         [:h2 (tr [:you-won])]]
        [:div.verdict
-        [:i.material-icons.md-36 "sentiment_very_dissatisfied"]
+        [:i.material-icons.md-36
+         {:aria-hidden "true"}
+         "sentiment_very_dissatisfied"]
         [:h2 (tr [:you-lost])]])
      (let [{:answer/keys [score]} (game/player-answer game-id player-id)
            points (format "+ %s %s"

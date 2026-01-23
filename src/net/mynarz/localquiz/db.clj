@@ -20,10 +20,10 @@
 
 (defn valid-questions?
   [db eid]
-  (let [questions (->> eid
-                       (d/entity db)
-                       :game/questions)]
-    (every? (comp (partial s/validate ::qs/question) edn/read-string) questions)))
+  (->> eid
+       (d/entity db)
+       :game/questions
+       (every? (comp (partial s/validate ::qs/question) edn/read-string))))
 
 (def schema
   [{:db/ident :game/id

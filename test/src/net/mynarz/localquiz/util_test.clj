@@ -8,6 +8,13 @@
        1.2 "1.2"
        3.333 "3.33"))
 
+(deftest deterministic-shuffle
+  (are [coll] (= (util/deterministic-shuffle coll)
+                 (util/deterministic-shuffle coll))
+       [0 1 2 4]
+       [:a :b :c :d]
+       ["foo" "bar" "baz"]))
+
 (deftest replace-react-fragments
   (is (= (util/replace-react-fragments [:section
                                         [:<>

@@ -5,15 +5,15 @@
             [clojure.string :as string]
             [clojure.walk :refer [postwalk-replace]]
             [fast-edn.core :as edn])
-  (:import  (clojure.lang RT)
-            (java.io PushbackReader)
-            (java.text DecimalFormat
-                       DecimalFormatSymbols)
-            (java.util ArrayList
-                       Collection
-                       Collections
-                       Locale
-                       Random)))
+  (:import (clojure.lang RT)
+           (java.io PushbackReader)
+           (java.text DecimalFormat
+                      DecimalFormatSymbols)
+           (java.util ArrayList
+                      Collection
+                      Collections
+                      Locale
+                      Random)))
 
 (def ^:private buf-size 1024)
 

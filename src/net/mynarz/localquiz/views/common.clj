@@ -184,17 +184,24 @@
    (tr [:submit])])
 
 (defn- mark-answer
-  [answers
+  [tr
+   ^Boolean answer-revealed?
    ^Boolean correct?]
-  (when (and answers correct?)
-    [:i.material-icons "check"]))
+  (when (and answer-revealed? correct?)
+    [:i.material-icons
+     {:aria-hidden "true"
+      :aria-label (tr [:correct])}
+     "check"]))
 
 (defn- note-view
   [answers
    note]
   (when (and answers note)
     [:div.note
-     [:div [:i.material-icons.md-light.md-24 "info"]]
+     [:div
+      [:i.material-icons.md-light.md-24
+       {:aria-hidden "true"}
+       "info"]]
      [:div note]]))
 
 (defn add-index
@@ -218,7 +225,7 @@
         :type)))
 
 (defmethod answers-view :multiple
-  [_
+  [tr
    ^Boolean disabled?
    {:keys [answer-revealed?]
     :as answers}
@@ -238,7 +245,7 @@
          :value index}]
        [:span.answer
         text
-        (mark-answer answer-revealed? correct?)
+        (mark-answer tr answer-revealed? correct?)
         (answer-frequency answers index)]])]
    (note-view answer-revealed? note)])
 
@@ -267,7 +274,7 @@
         :type "checkbox"
         :value (str answer)}]
       (tr [label])
-      (mark-answer answer-revealed? correct?)
+      (mark-answer tr answer-revealed? correct?)
       (answer-frequency answers answer)])
     (note-view answer-revealed? note)]])
 

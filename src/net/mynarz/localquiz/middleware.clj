@@ -41,7 +41,7 @@
        handler)))
 
 (def wrap-multipart
-  "Allows uploading 1 file up to 1 MB in size."
+  "Allows uploading files up to 1 MB in size."
   (multipart/create-multipart-middleware {:max-file-size (math/pow 10 6)})) ; 1 MB
 
 (defn wrap-parse-signals

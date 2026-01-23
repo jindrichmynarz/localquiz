@@ -747,3 +747,13 @@ pre.error {
   margin: .5em;
   padding: .5em;
 }
+
+#end-game-dialog {
+  border-color: var(--darker);
+  box-shadow: 0 .25em 0 var(--darker);
+}
+
+#end-game-dialog::backdrop {
+  background: hsl(from var(--darker) h s l / 0.5);
+  backdrop-filter: blur(2px);
+}

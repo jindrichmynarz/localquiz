@@ -1,6 +1,7 @@
 (ns net.mynarz.localquiz.normalize
   (:require [clojure.string :as string])
-  (:import (java.text Normalizer Normalizer$Form)))
+  (:import (java.text Normalizer
+                      Normalizer$Form)))
 
 (defn remove-punctuation
   "Remove punctuation from `s`."
