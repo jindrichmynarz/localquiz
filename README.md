@@ -12,6 +12,6 @@ To build an uber-JAR with the application, run `make build`.
 
 ## License
 
-Copyright © 2025 Jindřich Mynarz
+Copyright © 2025-2026 Jindřich Mynarz
 
 Distributed under the terms of the Eclipse Public License 2.0.
