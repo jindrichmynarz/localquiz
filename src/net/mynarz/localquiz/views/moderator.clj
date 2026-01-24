@@ -5,7 +5,8 @@
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.util :refer [decimal-format]]
             [net.mynarz.localquiz.views.common :as views]
-            [charred.api :as charred]))
+            [charred.api :as charred]
+            [taoensso.timbre :as log]))
 
 (defn copy-button
   [tr
@@ -30,22 +31,21 @@
 
 (defn end-game
   [tr]
-  [:div
+  [:div#end-game
    [:dialog#end-game-dialog
-    {:data-ref "_end-game-dialog"}
-    [:button#close-end-game-modal
-     {:aria-label (tr [:close])
-      :data-on:click "$_endGameDialog.close()"}
-     [:i.material-icons
-      {:aria-hidden "true"}
-      "close"]]
-    [:button.btn.btn-primary
-     {:data-on:click end-game-cmd}
-     (tr [:confirm-end-game])]]
-   [:button#end-game
+    {:data-ref "_endGameDialog"}
+    [:p (tr [:confirm-end-game])]
+    [:p
+     [:button.btn
+      {:data-on:click end-game-cmd}
+      (tr [:question.yesno/yes])]
+     [:button.btn
+      {:data-on:click "$_endGameDialog.close()"}
+      (tr [:question.yesno/no])]]]
+   [:button
     {:data-on:click "$_endGameDialog.showModal()"
      :title (tr [:end-game])}
-    [:i.material-icons.md-light.md-36
+    [:i.material-icons.md-light
      {:aria-hidden "true"}
      "cancel"]]])
 
@@ -54,9 +54,8 @@
   (let [answers (game/get-answers game-id)]
     {:answer-count (count answers)
      :answer-frequencies (->> answers
-                           (map :answer)
-                           frequencies)
-     :answer-revealed? (boolean (seq answers))}))
+                              (map :answer)
+                              frequencies)}))
 
 (defn next-button
   [tr
@@ -81,6 +80,7 @@
     [:div#leaderboard
      [:table
       [:caption
+       [:div (tr [:question/progress] [questions-answered questions-total])]
        [:progress
         {:max questions-total
          :value questions-answered}]]
@@ -190,7 +190,7 @@
             [:tr [:td player-name]])]]])]))
 
 (defn timer
-  [answer-revealed?]
+  [^Boolean answer-revealed?]
   (when-not answer-revealed?
     (let [duration (:question-time-out config)]
       [:div.timer
@@ -216,33 +216,33 @@
       [:section#content
        (end-game tr)
        (timer answer-revealed?)
-       [:div
-        [:p#answer-progress
-         [:label
+       [:div#question-container
+        [:div#question-menu
+         [:label#answer-progress
           (tr [:players-answered])
-          [:br]
           [:progress
            {:max total
             :value answered}
-           answer-progress-text]]]
-        [:div#question
-         {:data-signals:_audio "el.querySelector('audio')"
-          :data-init (if answer-revealed?
-                       "$_audio && $_audio.pause()"
-                       "$_audio && $_audio.play()")} ; Play any audio if present in the question.
-         (:text question)
+           answer-progress-text]]
          (when answer-revealed?
-           [:a.replay-audio
+           [:a#replay-audio
             {:data-show "$_audio"
              :data-on:click "$_audio.currentTime = 0; $_audio.play()"}
             (tr [:replay-audio])
             [:i.material-icons.md-36
              {:aria-hidden "true"}
-             "replay"]])]
-        [:i.material-icons.md-36.scoring-icon
-         {:aria-hidden "true"
-          :aria-label (tr [scoring-label])}
-         scoring-icon]
+             "replay"]])
+         [:i.material-icons.md-36#scoring-icon
+          {:aria-hidden "true"
+           :aria-label (tr [scoring-label])
+           :title (tr [scoring-label])}
+          scoring-icon]]
+        [:div#question
+         {:data-signals:_audio "el.querySelector('audio')"
+          :data-init (if answer-revealed?
+                       "$_audio && $_audio.pause()"
+                       "$_audio && $_audio.play()")} ; Play any audio if present in the question.
+         (:text question)]
         (views/answers-view tr
                             true
                             answers
@@ -259,7 +259,9 @@
 (defmethod views/game-view [:moderator :show-answers]
   [{:tempura/keys [tr]
     game-id :sid}]
-  (let [answers (get-answers game-id)]
+  (let [answers (-> game-id
+                    get-answers
+                    (assoc :answer-revealed? true))]
     (question-view tr game-id answers)))
 
 (defmethod views/game-view [:moderator :leaderboard]

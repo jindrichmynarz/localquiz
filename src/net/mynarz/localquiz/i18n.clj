@@ -36,7 +36,8 @@
         :point "bod"
         :point-fraction "bodu"
         :points "bodů"
-        :question {:yesno {:yes "Ano"
+        :question {:progress "Otázka %1/%2"
+                   :yesno {:yes "Ano"
                            :no "Ne"}}
         :replay-audio "Přehrát znovu"
         :score "Skóre"
@@ -84,7 +85,8 @@
         :point "point"
         :point-fraction "points"
         :points "points"
-        :question {:yesno {:yes "Yes"
+        :question {:progress "Question %1/%2"
+                   :yesno {:yes "Yes"
                            :no "No"}}
         :replay-audio "Replay"
         :score "Score"

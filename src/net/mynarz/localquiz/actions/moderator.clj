@@ -12,8 +12,8 @@
   (:import (java.io File)))
 
 (defn parse-questions
+  "Parse quiz questions from `questions-file`."
   [^File questions-file]
-  (log/info (type questions-file))
   (try
     (let [questions (edn/read-once questions-file)]
       (if-let [validation-report (s/validate ::qs/data questions)]

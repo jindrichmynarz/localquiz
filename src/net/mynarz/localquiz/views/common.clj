@@ -213,10 +213,10 @@
            answer-frequencies
            answer-revealed?]}
    answer]
-  (when answer-revealed?
+  (when-let [frequency (and answer-revealed? (get answer-frequencies answer))]
     [:progress.answer-frequency
      {:max answer-count
-      :value (get answer-frequencies answer)}]))
+      :value frequency}]))
 
 (defmulti answers-view
   (fn [& args]
@@ -243,9 +243,10 @@
          :name "answer"
          :type "checkbox"
          :value index}]
-       [:span.answer
-        text
-        (mark-answer tr answer-revealed? correct?)
+       [:div.answer
+        [:div
+         text
+         (mark-answer tr answer-revealed? correct?)]
         (answer-frequency answers index)]])]
    (note-view answer-revealed? note)])
 
@@ -257,7 +258,7 @@
    ^String game-id
    {:keys [correct? note]}]
   [:form#answers
-   [:p#choices
+   [:ul#choices
     (answer-form-handler disabled? game-id)
     (for [{:keys [answer correct? label]} [{:answer true
                                             :correct? correct?
@@ -273,10 +274,12 @@
         :name "answer"
         :type "checkbox"
         :value (str answer)}]
-      (tr [label])
-      (mark-answer tr answer-revealed? correct?)
-      (answer-frequency answers answer)])
-    (note-view answer-revealed? note)]])
+      [:div.answer
+       [:div
+        (tr [label])
+        (mark-answer tr answer-revealed? correct?)]
+       (answer-frequency answers answer)]])]
+   (note-view answer-revealed? note)])
 
 (defmethod answers-view :percent-range
   [tr

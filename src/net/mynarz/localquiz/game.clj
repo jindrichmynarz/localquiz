@@ -171,7 +171,7 @@
                   :where [?game :game/id ?game-id]]
                 @db-conn)
            :game/players
-           (sort-by :player/score descending-order)))
+           (sort-by :score descending-order)))
 
 (defn winner
   "Get the ID of the winning player."
@@ -234,6 +234,7 @@
   (swap! timeouts cancel-timeout! game-id)
   ; FIXME: Is it possible that this is evaluated more than once for the same question?
   ;        Shall we store a "lock" indicating if the question was already evaluated? Don't evaluate answers if they were evaluated before.
+  (log/infof "Evaluating answers for game %s." game-id)
   (let [question (current-question game-id)
         scores (->> game-id
                     get-answers

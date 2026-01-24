@@ -49,7 +49,9 @@
         :let [difference (Math/abs (- ^double (:answer answer) percentage))
               correct? (<= difference 5)]] ; TODO: Allow to configure tolerated difference?
     (assoc answer :correct? correct?
-                  :score (- 1 (/ difference 100)))))
+                  :score (if correct?
+                           (- 1 (/ difference 100))
+                           0.0))))
 
 (defmethod score-answers [:sort nil]
   [{:keys [items]} answers]
@@ -90,17 +92,16 @@
 (defn scale-scores-by-answer-times
   "Scale `scores` by answer times."
   [scores]
-  (if (seq scores)
-    (let [answer-times (->> scores
-                            (filter (comp pos? :score)) ; Ignore incorrect answers
-                            (map :answer-time))
-          min-answer-time (apply min answer-times)
-          max-answer-time (apply max answer-times)
-          time-range (- max-answer-time min-answer-time)]
-      (if (zero? time-range) ; Don't scale if all answer times are the same (e.g., there's only one correct answer).
-        scores
-        (for [{:keys [answer-time]
-               :as score} scores
-              :let [time-coefficient (+ 0.5 (* 0.5 (- 1 (/ (- answer-time min-answer-time) time-range))))]]
-          (update score :score * time-coefficient))))
+  (if-let [answer-times (when-let [correct-scores (->> scores
+                                                       (filter (comp pos? :score))
+                                                       seq)]
+                          (when (next correct-scores) ; Don't scale if there's only 1 correct answer.
+                            correct-scores))]
+    (for [{:keys [answer-time]
+           :as score} scores
+          :let [min-answer-time (apply min answer-times)
+                max-answer-time (apply max answer-times)
+                time-range (- max-answer-time min-answer-time)
+                time-coefficient (+ 0.5 (* 0.5 (- 1 (/ (- answer-time min-answer-time) time-range))))]]
+        (update score :score * time-coefficient))
     scores))
