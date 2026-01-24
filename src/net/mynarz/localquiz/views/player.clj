@@ -1,7 +1,8 @@
 (ns net.mynarz.localquiz.views.player
   (:require [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [decimal-format long-str]]
-            [net.mynarz.localquiz.views.common :as views]))
+            [net.mynarz.localquiz.views.common :as views]
+            [taoensso.timbre :as log]))
 
 (def waiting-icon
   [:p.waiting-icon
@@ -96,20 +97,20 @@
   [{{:keys [game-id]} :path-params
     player-id :sid
     :tempura/keys [tr]}]
-  (let [{:answer/keys [correct?] :as answer} (game/player-answer game-id player-id)]
+  (let [{:answer/keys [consensus correct?] :as answer} (game/player-answer game-id player-id)]
     [:section#content
-     ; TODO: How to rate answers for the consensus questions?
-     (cond (some? correct?) (let [{:keys [icon label]} (if correct?
-                                                         {:icon "check"
-                                                          :label :correct}
-                                                         {:icon "close"
-                                                          :label :incorrect})]
-                              [:i.material-icons.answer-mark
-                               {:aria-hidden "true"
-                                :aria-label (tr [label])}
-                               icon])
-           (nil? answer) [:h2
-                          (tr [:no-answer])])]))
+     [:h2
+      (cond (some? correct?) (let [{:keys [icon label]} (if correct?
+                                                          {:icon "check"
+                                                           :label :correct}
+                                                          {:icon "close"
+                                                           :label :incorrect})]
+                               [:i.material-icons.answer-mark
+                                {:aria-hidden "true"
+                                 :aria-label (tr [label])}
+                                icon])
+            (some? consensus) (tr [:consensus-evaluation] [(decimal-format consensus)])
+            (nil? answer) (tr [:no-answer]))]]))
 
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params
@@ -128,10 +129,10 @@
          {:aria-hidden "true"}
          "sentiment_very_dissatisfied"]
         [:h2 (tr [:you-lost])]])
-     (let [{:answer/keys [score]} (game/player-answer game-id player-id)
-           points (format "+ %s %s"
-                          (decimal-format score)
-                          (tr [(cond (= score 1.0) :point
-                                     (>= score 2.0) :points
-                                     :else :point-fraction)]))]
-       [:h2 points]))])
+     (if-let [{:answer/keys [score]} (game/player-answer game-id player-id)]
+       [:h2 (format "+ %s %s"
+                    (decimal-format score)
+                    (tr [(cond (= score 1.0) :point
+                               (>= score 2.0) :points
+                               :else :point-fraction)]))]
+       [:h2 (tr [:no-answer])]))])

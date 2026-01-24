@@ -92,11 +92,12 @@
 (defn scale-scores-by-answer-times
   "Scale `scores` by answer times."
   [scores]
-  (if-let [answer-times (when-let [correct-scores (->> scores
-                                                       (filter (comp pos? :score))
-                                                       seq)]
-                          (when (next correct-scores) ; Don't scale if there's only 1 correct answer.
-                            correct-scores))]
+  (if-let [answer-times (when-let [correct-times (->> scores
+                                                      (filter (comp pos? :score))
+                                                      (map :answer-time)
+                                                      seq)]
+                          (when (next correct-times) ; Don't scale if there's only 1 correct answer.
+                            correct-times))]
     (for [{:keys [answer-time]
            :as score} scores
           :let [min-answer-time (apply min answer-times)

@@ -244,6 +244,7 @@
           (add-scores scores)
           [[:db/add [:game/id game-id] :game/state :show-answers]]]
          (reduce into)
+         log/spy
          (d/transact db-conn))))
 
 (defn get-answer-ids
@@ -332,13 +333,28 @@
 (defn player-answer
   [^String game-id
    ^String player-id]
-  (d/q '[:find (pull ?answer [:answer/score :answer/correct?]) .
-         :in $ ?game-id ?player-id
-         :where [?game :game/id ?game-id]
-                [?game :game/players ?player]
-                [?player :player/id ?player-id]
-                [?game :game/answers ?answer]
-                [?answer :answer/player ?player]]
-       @db-conn
-       game-id
-       player-id))
+  (let [query '[:find (pull ?answer [:answer/score :answer/correct?])
+                      ?current-question
+                      (count-distinct ?other-answer)
+                      (count-distinct ?other-player)
+                :in $ ?game-id ?player-id
+                :keys answer current-question same-answer-count player-count
+                :where [?game :game/id ?game-id]
+                       [?game :game/players ?player]
+                       [?player :player/id ?player-id]
+                       [?game :game/answers ?answer]
+                       [?game :game/current-question ?current-question]
+                       [?answer :answer/player ?player]
+                       [?answer :answer/answer ?value]
+                       [?other-answer :answer/answer ?value]
+                       [?game :game/players ?other-player]]
+        {{:keys [scoring]} :current-question
+         :keys [answer
+                player-count
+                same-answer-count]} (-> query
+                                        (d/q @db-conn game-id player-id)
+                                        first
+                                        (update :current-question edn/read-string))]
+    (cond-> answer
+      (= scoring :consensus)
+      (assoc :answer/consensus (* (/ (dec same-answer-count) (dec player-count)) 100)))))

@@ -3,7 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.qrcode :refer [url->qrcode-svg]]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
-            [net.mynarz.localquiz.util :refer [decimal-format]]
+            [net.mynarz.localquiz.util :refer [decimal-format svg]]
             [net.mynarz.localquiz.views.common :as views]
             [charred.api :as charred]
             [taoensso.timbre :as log]))
@@ -208,11 +208,14 @@
    (let [{:keys [scoring] :as question} (game/current-question game-id)
          {:keys [total answered]} (game/answer-progress game-id)
          answer-progress-text (format "%d/%d" answered total)
-         {:keys [scoring-icon scoring-label]} (if (= scoring :consensus)
-                                                {:scoring-icon "join_inner"
-                                                 :scoring-label :consensus}
-                                                {:scoring-icon "task_alt"
-                                                 :scoring-label :correctness})]
+         scoring-icon (if (= scoring :consensus)
+                         [:span#venn-conversation
+                          (svg "public/img/venn_conversation_animated.svg")]
+                         [:i.material-icons.md-36#scoring-icon
+                          {:aria-hidden "true"
+                           :aria-label (tr [:correctness])
+                           :title (tr [:correctness])}
+                          "task_alt"])]
       [:section#content
        (end-game tr)
        (timer answer-revealed?)
@@ -232,11 +235,7 @@
             [:i.material-icons.md-36
              {:aria-hidden "true"}
              "replay"]])
-         [:i.material-icons.md-36#scoring-icon
-          {:aria-hidden "true"
-           :aria-label (tr [scoring-label])
-           :title (tr [scoring-label])}
-          scoring-icon]]
+         scoring-icon]
         [:div#question
          {:data-signals:_audio "el.querySelector('audio')"
           :data-init (if answer-revealed?

@@ -25,8 +25,7 @@
   (s/and
     (s/coll-of ::choice
                :min-count 2
-               :distinct true)
-    (partial some :correct?)))
+               :distinct true)))
 
 (s/def ::note ::hiccup)
 
@@ -37,7 +36,7 @@
 (defmulti question :type)
 
 (defmethod question :yesno [_]
-  (s/keys :req-un [::correct?]))
+  (s/keys :opt-un [::correct?]))
 
 (defmethod question :multiple [_]
   (s/keys :req-un [::choices]))

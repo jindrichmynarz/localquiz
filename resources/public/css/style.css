@@ -369,11 +369,11 @@ label {
 i.material-icons {
   vertical-align: bottom;
   padding: 0 .2em;
+}
 
-  .answer-mark {
-    font-size: 6em;
-    text-shadow: 0 3px 0 var(--darker);
-  }
+i.material-icons.answer-mark {
+  font-size: 3em;
+  text-shadow: 0 3px 0 var(--darker);
 }
 
 #choices label {
@@ -806,5 +806,17 @@ pre.error {
   &::backdrop {
     background: hsl(from var(--darker) h s l / 0.5);
     backdrop-filter: blur(2px);
+  }
+}
+
+#venn-conversation {
+  display: inline-block;
+  width: 3em;
+  vertical-align: bottom;
+  line-height: 1;
+
+  g {
+    stroke: var(--darker);
+    fill: var(--offwhite);
   }
 }
