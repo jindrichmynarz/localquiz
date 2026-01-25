@@ -244,7 +244,6 @@
           (add-scores scores)
           [[:db/add [:game/id game-id] :game/state :show-answers]]]
          (reduce into)
-         log/spy
          (d/transact db-conn))))
 
 (defn get-answer-ids

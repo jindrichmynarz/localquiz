@@ -5,8 +5,19 @@
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.util :refer [decimal-format svg]]
             [net.mynarz.localquiz.views.common :as views]
-            [charred.api :as charred]
-            [taoensso.timbre :as log]))
+            [charred.api :as charred]))
+
+(defn answer-progress
+  [tr
+   ^String game-id]
+  (let [{:keys [total answered]} (game/answer-progress game-id)
+        answer-progress-text (format "%d/%d" answered total)]
+    [:label#answer-progress
+     (tr [:players-answered])
+     [:progress
+      {:max total
+       :value answered}
+      answer-progress-text]]))
 
 (defn copy-button
   [tr
@@ -57,17 +68,6 @@
                               (map :answer)
                               frequencies)}))
 
-(defn next-button
-  [tr
-   ^String next-action]
-  [:button.btn.btn-primary
-   {:data-on:click next-action
-    :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
-   (tr [:next])
-   [:i.material-icons
-    {:aria-hidden "true"}
-    "arrow_circle_right"]])
-
 (defn leaderboard
   [tr
    ^String game-id]
@@ -100,9 +100,20 @@
           [:td [:span.score-bar {:style score-style}]]
           [:td score-decimal]])]]]))
 
+(defn next-button
+  [tr
+   ^String next-action]
+  [:button.btn.btn-primary
+   {:data-on:click next-action
+    :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
+   (tr [:next])
+   [:i.material-icons
+    {:aria-hidden "true"}
+    "arrow_circle_right"]])
+
 (defn number-of-questions
   [tr]
-  [:p
+  [:p.form-group
    [:label
     {:for "number-of-questions"}
     (tr [:number-of-questions])]
@@ -112,47 +123,58 @@
      :type "number"
      :value 20}]])
 
+(defn replay-audio
+  [tr]
+  [:a#replay-audio
+   {:data-show "$_audio"
+    :data-on:click "$_audio.currentTime = 0; $_audio.play()"}
+   (tr [:replay-audio])
+   [:i.material-icons.md-36
+    {:aria-hidden "true"}
+    "replay"]])
+
 (defmethod views/game-view [:moderator nil]
   [{:keys [error]
     :tempura/keys [tr]}]
-  [:section#content
-   [:div.tabs
-    [:input#select-questions-checkbox
-     {:checked true
-      :name "tab-picker"
-      :type "radio"}]
-    [:label
-     {:for "select-questions-checkbox"}
-     (tr [:pick-questions])]
-    [:form
-     [:p
-      [:select#question-picker
-       {:name "question-source"
-        :placeholder (tr [:pick-questions])}
-       (for [question-source (keys question-sources)]
-         [:option
-          {:value question-source}
-          question-source])]]
-     (number-of-questions tr)
-     (create-button tr)]
-    [:input#upload-questions-checkbox
-     {:name "tab-picker"
-      :type "radio"}]
-    [:label
-     {:for "upload-questions-checkbox"}
-     (tr [:upload-questions])]
-    [:form
-     {:enctype "multipart/form-data"}
-     [:p
-      [:input#questions-upload
-       {:accept ".edn"
-        :data-on:change (views/post "/create/validate")
-        :name "question-file"
-        :type "file"}]]
-     (number-of-questions tr)
-     (if error
-       [:pre.error error]
-       (create-button tr))]]])
+  {:main
+   [:section#content
+    [:div.tabs
+     [:input#select-questions-checkbox
+      {:checked true
+       :name "tab-picker"
+       :type "radio"}]
+     [:label
+      {:for "select-questions-checkbox"}
+      (tr [:pick-questions])]
+     [:form
+      [:p
+       [:select#question-picker
+        {:name "question-source"
+         :placeholder (tr [:pick-questions])}
+        (for [question-source (keys question-sources)]
+          [:option
+           {:value question-source}
+           question-source])]]
+      (number-of-questions tr)
+      (create-button tr)]
+     [:input#upload-questions-checkbox
+      {:name "tab-picker"
+       :type "radio"}]
+     [:label
+      {:for "upload-questions-checkbox"}
+      (tr [:upload-questions])]
+     [:form
+      {:enctype "multipart/form-data"}
+      [:p
+       [:input#questions-upload
+        {:accept ".edn"
+         :data-on:change (views/post "/create/validate")
+         :name "question-file"
+         :type "file"}]]
+      (number-of-questions tr)
+      (if error
+        [:pre.error error]
+        (create-button tr))]]]})
 
 (defmethod views/game-view [:moderator :new]
   [{:tempura/keys [tr]
@@ -160,34 +182,34 @@
   (let [play-game-url (str (:url config) "/play/" game-id)
         lobby (game/lobby game-id)
         has-enough-players? (game/has-enough-players? game-id)]
-    [:div#sections
-     (end-game tr)
-     [:section#content
-      [:div
-       [:div#qrcode (url->qrcode-svg play-game-url)]
-       [:p#game-url
-        [:input
-         {:readonly true
-          :type "text"
-          :value play-game-url}]
-        (copy-button tr play-game-url)]
-       (if has-enough-players?
-         [:p
-          [:button.btn.btn-primary
-           {:data-on:click "@post('/question')"
-            :disabled (not has-enough-players?)
-            :type "submit"}
-           (tr [:start-game])]]
-         [:p#waiting-for-players
-          [:img {:src "img/wifi_exercise_animated.svg"}]
-          (tr [:wait-for-players])])]]
-     (when (seq lobby)
-       [:section#lobby
-        [:table
-         [:thead [:tr [:th (tr [:players])]]]
-         [:tbody
-          (for [player-name lobby]
-            [:tr [:td player-name]])]]])]))
+    {:header (end-game tr)
+     :main [:div#sections
+            [:section#content
+             [:div
+              [:div#qrcode (url->qrcode-svg play-game-url)]
+              [:p#game-url
+               [:input
+                {:readonly true
+                 :type "text"
+                 :value play-game-url}]
+               (copy-button tr play-game-url)]
+              (if has-enough-players?
+                [:p
+                 [:button.btn.btn-primary
+                  {:data-on:click "@post('/question')"
+                   :disabled (not has-enough-players?)
+                   :type "submit"}
+                  (tr [:start-game])]]
+                [:p#waiting-for-players
+                 [:img {:src "img/wifi_exercise_animated.svg"}]
+                 (tr [:wait-for-players])])]]
+            (when (seq lobby)
+              [:section#lobby
+               [:table
+                [:thead [:tr [:th (tr [:players])]]]
+                [:tbody
+                 (for [player-name lobby]
+                   [:tr [:td player-name]])]]])]}))
 
 (defn timer
   [^Boolean answer-revealed?]
@@ -206,8 +228,6 @@
     {:keys [answer-revealed?]
      :as answers}]
    (let [{:keys [scoring] :as question} (game/current-question game-id)
-         {:keys [total answered]} (game/answer-progress game-id)
-         answer-progress-text (format "%d/%d" answered total)
          scoring-icon (if (= scoring :consensus)
                          [:span#venn-conversation
                           (svg "public/img/venn_conversation_animated.svg")]
@@ -215,26 +235,13 @@
                           {:aria-hidden "true"
                            :aria-label (tr [:correctness])
                            :title (tr [:correctness])}
-                          "task_alt"])]
+                          "task_alt"])
+         mark-correct? (and answer-revealed? (not= scoring :consensus))]
       [:section#content
-       (end-game tr)
        (timer answer-revealed?)
        [:div#question-container
         [:div#question-menu
-         [:label#answer-progress
-          (tr [:players-answered])
-          [:progress
-           {:max total
-            :value answered}
-           answer-progress-text]]
-         (when answer-revealed?
-           [:a#replay-audio
-            {:data-show "$_audio"
-             :data-on:click "$_audio.currentTime = 0; $_audio.play()"}
-            (tr [:replay-audio])
-            [:i.material-icons.md-36
-             {:aria-hidden "true"}
-             "replay"]])
+         (answer-progress tr game-id)
          scoring-icon]
         [:div#question
          {:data-signals:_audio "el.querySelector('audio')"
@@ -246,6 +253,7 @@
                             true
                             answers
                             game-id
+                            mark-correct?
                             question)]
        (when answer-revealed?
          [:p (next-button tr "@post('/leaderboard')")])])))
@@ -253,7 +261,9 @@
 (defmethod views/game-view [:moderator :question]
   [{:tempura/keys [tr]
     game-id :sid}]
-  (question-view tr game-id))
+  {:headers [:div
+             (end-game tr)]
+   :main (question-view tr game-id)})
 
 (defmethod views/game-view [:moderator :show-answers]
   [{:tempura/keys [tr]
@@ -261,23 +271,27 @@
   (let [answers (-> game-id
                     get-answers
                     (assoc :answer-revealed? true))]
-    (question-view tr game-id answers)))
+    {:header [:div
+              (replay-audio tr)
+              (end-game tr)]
+     :main (question-view tr game-id answers)}))
 
 (defmethod views/game-view [:moderator :leaderboard]
   [{:tempura/keys [tr]
     game-id :sid}]
-  (if (game/all-questions-answered? game-id)
-    [:section#content
-     (leaderboard tr game-id)
-     [:p
-      [:button.btn.btn-primary
-       {:data-on:click end-game-cmd
-        :data-on:keydown__window (format "evt.key === 'Enter' && %s" end-game-cmd)}
-       (tr [:end-game])
-       [:i.material-icons.md-light.md-36
-        {:aria-hidden "true"}
-        "cancel"]]]]
-    [:section#content
-     (end-game tr)
-     (leaderboard tr game-id)
-     [:p (next-button tr "@post('/question')")]]))
+  {:header (end-game tr)
+   :main
+   (if (game/all-questions-answered? game-id)
+     [:section#content
+      (leaderboard tr game-id)
+      [:p
+       [:button.btn.btn-primary
+        {:data-on:click end-game-cmd
+         :data-on:keydown__window (format "evt.key === 'Enter' && %s" end-game-cmd)}
+        (tr [:end-game])
+        [:i.material-icons.md-light.md-36
+         {:aria-hidden "true"}
+         "cancel"]]]]
+     [:section#content
+      (leaderboard tr game-id)
+      [:p (next-button tr "@post('/question')")]])})

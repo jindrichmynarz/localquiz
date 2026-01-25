@@ -1,14 +1,14 @@
 :root {
+  /* Colours */
   --offwhite: #fbfde3;
   --dark: #372937;
-  /* --darker: #1d131d; */
-  --darker: hsl(from var(--dark) h s calc(l - 10));
-  /* --blue: #35637d; */
-  /* --darkblue: #31576d; */
-  /* --darkestblue: #224255; */
+  --darker: #1d131d;
   --orange: #fc8314;
   --red: #ec5809;
   --grey: #999;
+
+  /* Fonts */
+  --font-size: 24px;
 }
 
 body {
@@ -20,27 +20,30 @@ body {
                     radial-gradient(circle, rgba(27, 27, 50, 1) 50%, rgba(6, 6, 24, 1) 100%);
 }
 
-#screen {
+#morph {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
   min-height: 100vh;
   min-height: 100dvh;
 }
 
 header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   padding: 0 .5em;
 }
 
-main#morph {
+#top-menu {
+  display: flex;
+  align-items: center;
+}
+
+main {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 1;
   align-items: flex-start;
-  view-transition-name: "morph";
+  font-size: var(--font-size);
 }
 
 h1, h2, h3, h4, h5 {
@@ -77,7 +80,6 @@ section {
 
 #lobby {
   font-size: 1.3em;
-
   table {
     table-layout: fixed;
     margin: 10px auto;
@@ -86,6 +88,7 @@ section {
     tr {
       animation: 1s ease-in fade-in;
     }
+
     td, th {
       text-align: left;
       padding: .25em 0;
@@ -113,7 +116,6 @@ a {
 footer {
   display: flex;
   justify-content: center;
-  align-items: flex-end;
   background: rgb(from var(--darker) r g b / 50%);
   padding: 0 1em;
 
@@ -132,14 +134,19 @@ button, a {
   }
 }
 
+input,
+button,
+select {
+  font: inherit;
+}
+
 .btn {
-  font-size: 1.2em;
   color: var(--offwhite);
   background-color: var(--dark);
   border-color: var(--darker);
   border: 3px solid;
   border-radius: 5px;
-  padding: .5em;
+  padding: .5lh 2ch;
   position: relative;
   /* top: -5px; */
   /* left: -5px; */
@@ -215,7 +222,7 @@ input[type="text"], input[type="number"] {
   padding: .5em;
   position: relative;
   /* top: -5px; */
-  font-size: 1.2em;
+  font-size: --var(font-size);
 
   &:focus {
     outline: 0;
@@ -227,7 +234,6 @@ input[type="number"] {
 }
 
 label {
-  font-size: 1.2em;
   padding: .5em;
 }
 
@@ -292,14 +298,6 @@ label {
   #question-menu {
     align-self: flex-end;
 
-    #answer-progress {
-      font-size: 12px;
-
-      progress {
-        margin-left: .5rem;
-      }
-    }
-
     #replay-audio {
       cursor: pointer;
     }
@@ -311,7 +309,6 @@ label {
 
   #question {
     text-align: center;
-    font-size: 1.3em;
 
     img {
       border: solid 3px var(--dark);
@@ -442,6 +439,7 @@ input[type="range"] {
 
   input {
     width: 50vw;
+    accent-color: var(--orange);
   }
 }
 
@@ -457,7 +455,6 @@ input[type="range"] {
 
     background-color: var(--dark);
     border: solid 3px var(--darker);
-    font-size: 1.3em;
 
     caption {
       margin: .5em 0;
@@ -496,7 +493,7 @@ input[type="range"] {
     padding: .5em 1em;
     margin-block-end: .4em;
     cursor: grab;
-    box-shadow: 0 .25em 0 var(--darker);
+    box-shadow: 0 .25em 0 -.25em var(--darker);
 
     .sort-value {
       padding-left: 1em;
@@ -681,7 +678,6 @@ p.waiting-icon {
 }
 
 #question-picker {
-  font-size: 1.2em;
   color: var(--offwhite);
   background-color: var(--dark);
   border: 3px solid var(--darker);
@@ -696,7 +692,6 @@ p.waiting-icon {
 }
 
 input::file-selector-button {
-  font-size: 1.2em;
   color: var(--offwhite);
   background-color: var(--dark);
   border: solid 3px var(--darker);
@@ -761,6 +756,10 @@ body:has(.winner) {
 
 #game-url {
   display: flex;
+
+  input {
+    user-select: all;
+  }
 }
 
 pre.error {
@@ -770,9 +769,6 @@ pre.error {
 }
 
 #end-game {
-  position: fixed;
-  top: .5em;
-  right: 6em;
   padding: 1em;
 }
 
@@ -796,7 +792,8 @@ pre.error {
   color: var(--offwhite);
   background-color: var(--dark);
   border: solid 3px var(--darker);
-  box-shadow: 0 1rem 2rem var(--darker);
+  box-shadow: 0 3px 0 var(--darker);
+  font-size: var(--font-size);
 
   p {
     display: flex;
@@ -818,5 +815,12 @@ pre.error {
   g {
     stroke: var(--darker);
     fill: var(--offwhite);
+  }
+}
+
+#answer-progress {
+  font-size: .8em;
+  progress {
+    margin-left: .5rem;
   }
 }

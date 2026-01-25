@@ -81,10 +81,25 @@
 (def material-icons
   "https://fonts.googleapis.com/icon?family=Material+Icons")
 
+(defn morph-body
+  ([request]
+   (morph-body request {}))
+  ([{:tempura/keys [tr]} {:keys [header main]}]
+   [:div#morph
+    [:header
+     [:h1 "Localquiz"]
+     [:div#top-menu
+      header
+      (lang-switch tr)]]
+    [:main main]
+    (footer tr)
+    (cookie-warning tr)]))
+
 (defn shim-page
   "A basic HTML page with Datastar setup."
   [{{:keys [game-id]} :path-params
-    :tempura/keys [tr]}]
+    :tempura/keys [tr]
+    :as request}]
   [h/doctype-html5
    [:html
     {:data-attr:lang "$language"}
@@ -114,13 +129,7 @@
             ;; from this div.
             :data-on:online__window (on-load-js game-id)}
      [:noscript (tr [:no-js])]
-     [:div#screen
-      [:header
-       [:h1 "Localquiz"]
-       (lang-switch tr)]
-      [:main#morph]
-      (footer tr)
-      (cookie-warning tr)]]]])
+     (morph-body request)]]])
 
 (defn view
   [handler request]
@@ -156,7 +165,7 @@
         :state (game/get-game-state (or game-id session-id))}
        (assoc request :game)
        game-view
-       (vector :main#morph)))
+       (morph-body request)))
 
 (defn post
   ([^String endpoint]
@@ -184,7 +193,7 @@
    {:data-on:click (answer-handler game-id)}
    (tr [:submit])])
 
-(defn- mark-answer
+(defn mark-answer
   [tr
    ^Boolean answer-revealed?
    ^Boolean correct?]
@@ -194,7 +203,7 @@
       :aria-label (tr [:correct])}
      "check"]))
 
-(defn- note-view
+(defn note-view
   [answers
    note]
   (when (and answers note)
@@ -231,13 +240,14 @@
    {:keys [answer-revealed?]
     :as answers}
    ^String game-id
+   ^Boolean mark-correct?
    {:keys [choices note]}]
   [:form#answers
    [:ul#choices
     (answer-form-handler disabled? game-id)
     (for [{:keys [correct? index text]} (->> choices add-index deterministic-shuffle)]
       [:label.btn
-       {:class (when answer-revealed?
+       {:class (when mark-correct?
                  (if correct? "correct" "incorrect"))}
        [:input
         {:disabled (or disabled? answer-revealed?)
@@ -247,7 +257,7 @@
        [:div.answer
         [:div
          text
-         (mark-answer tr answer-revealed? correct?)]
+         (mark-answer tr mark-correct? correct?)]
         (answer-frequency answers index)]])]
    (note-view answer-revealed? note)])
 
@@ -257,6 +267,7 @@
    {:keys [answer-revealed?]
     :as answers}
    ^String game-id
+   ^Boolean mark-correct?
    {:keys [correct? note]}]
   [:form#answers
    [:ul#choices
@@ -268,7 +279,7 @@
                                             :correct? (not correct?)
                                             :label :question.yesno/no}]]
      [:label.btn
-      {:class (when answer-revealed?
+      {:class (when mark-correct?
                 (if correct? "correct" "incorrect"))}
       [:input
        {:disabled (or disabled? answer-revealed?)
@@ -278,7 +289,7 @@
       [:div.answer
        [:div
         (tr [label])
-        (mark-answer tr answer-revealed? correct?)]
+        (mark-answer tr mark-correct? correct?)]
        (answer-frequency answers answer)]])]
    (note-view answer-revealed? note)])
 
@@ -287,6 +298,7 @@
    ^Boolean disabled?
    {:keys [answer-revealed?]}
    ^String game-id
+   _
    {:keys [note percentage]}]
   [:div
    (when-not disabled?
@@ -327,6 +339,7 @@
    ^Boolean disabled?
    {:keys [answer-revealed?]}
    ^String game-id
+   _
    {:keys [answer note]}]
   [:form#answers
    (when-not disabled?
@@ -346,6 +359,7 @@
    ^Boolean disabled?
    {:keys [answer-revealed?]}
    ^String game-id
+   ^Boolean mark-correct?
    {:keys [items note]}]
   [:form#answers
    [:ul#sortableList
@@ -355,7 +369,7 @@
                                 range
                                 charred/write-json-str)
      :data-on:reordered "$_answer = evt.detail"}
-    (if answer-revealed?
+    (if mark-correct?
       (for [{:keys [sort-value text]} items]
         [:li
          [:span text]
