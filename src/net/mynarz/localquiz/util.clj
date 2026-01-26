@@ -24,6 +24,11 @@
     (fn [^double n]
       (.format formatter n))))
 
+(defn descending-order
+  "Sort `a` and `b` in the descending order."
+  [a b]
+  (compare b a))
+
 (defn deterministic-shuffle
   "Shuffle `coll`, always the same."
   [^Collection coll]

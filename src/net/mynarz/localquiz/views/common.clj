@@ -3,7 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
-            [net.mynarz.localquiz.util :refer [decimal-format deterministic-shuffle]]
+            [net.mynarz.localquiz.util :as util]
             [charred.api :as charred]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
@@ -228,6 +228,29 @@
      {:max answer-count
       :value frequency}]))
 
+(defn open-answers
+  [tr
+   {:keys [answer-count
+           answer-frequencies
+           answer-revealed?]}]
+  (when answer-revealed?
+    [:table#open-answers
+     [:caption (tr [:most-common-answers])]
+     [:thead
+      [:tr
+       [:th (tr [:answer])]
+       [:th (tr [:frequency])]]]
+     [:tbody
+      (for [[answer frequency] (->> answer-frequencies
+                                    (sort-by val util/descending-order)
+                                    (take 10))]
+        [:tr
+         [:td answer]
+         [:td
+          [:progress.answer-frequency
+           {:max answer-count
+            :value frequency}]]])]]))
+
 (defmulti answers-view
   (fn [& args]
     (-> args
@@ -245,7 +268,7 @@
   [:form#answers
    [:ul#choices
     (answer-form-handler disabled? game-id)
-    (for [{:keys [correct? index text]} (->> choices add-index deterministic-shuffle)]
+    (for [{:keys [correct? index text]} (->> choices add-index util/deterministic-shuffle)]
       [:label.btn
        {:class (when mark-correct?
                  (if correct? "correct" "incorrect"))}
@@ -331,13 +354,14 @@
       [:p
        (submit-button tr game-id)]])
    (when answer-revealed?
-     [:p (format "%s %%" (decimal-format percentage))])
+     [:p (format "%s %%" (util/decimal-format percentage))])
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :open
   [tr
    ^Boolean disabled?
-   {:keys [answer-revealed?]}
+   {:keys [answer-revealed?]
+    :as answers}
    ^String game-id
    _
    {:keys [answer note]}]
@@ -351,7 +375,8 @@
         :type "text"}]
       (submit-button tr game-id)])
    (when answer-revealed?
-     [:p.answer answer])
+      [:p.answer answer])
+   (open-answers tr answers)
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :sort
@@ -374,7 +399,7 @@
         [:li
          [:span text]
          [:span.sort-value sort-value]])
-      (for [{:keys [index text]} (->> items add-index deterministic-shuffle)]
+      (for [{:keys [index text]} (->> items add-index util/deterministic-shuffle)]
         [:li
          {:data-index index}
          [:span text]]))

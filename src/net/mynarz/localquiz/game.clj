@@ -3,6 +3,7 @@
             [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.scoring :as scoring]
             [net.mynarz.localquiz.spec :as s]
+            [net.mynarz.localquiz.util :as util]
             [clojure.string :as string]
             [datahike.api :as d]
             [fast-edn.core :as edn]
@@ -155,11 +156,6 @@
           [:db.fn/call add-score player score])
         scores))
 
-(defn descending-order
-  "Sort `a` and `b` in the descending order."
-  [a b]
-  (compare b a))
-
 (defn leaderboard
   "Get the player leaderboard for `game-id` using the database `conn`."
   [^String game-id]
@@ -171,7 +167,7 @@
                   :where [?game :game/id ?game-id]]
                 @db-conn)
            :game/players
-           (sort-by :score descending-order)))
+           (sort-by :score util/descending-order)))
 
 (defn winner
   "Get the ID of the winning player."

@@ -3,6 +3,7 @@
 (def dictionary
   {:cs {:accept "Souhlasím"
         :and "a"
+        :answer "Odpověď"
         :close "Zavřít"
         :confirm-end-game "Opravdu chcete hru ukončit?"
         :consensus "Konsenzus"
@@ -22,9 +23,11 @@
                  :with "s"
                  :persistence "nerozumnou vytrvalostí"
                  :using "s použitím"}
+        :frequency "Četnost"
         :game-not-exists "Tato hra neexistuje!"
         :incorrect "Nesprávně"
         :join-game "Hrát"
+        :most-common-answers "Nejčetnější odpovědi"
         :next "Dále"
         :no-answer "Bez odpovědi"
         :no-js "Váš prohlížeč nepodporuje JavaScript!"
@@ -53,6 +56,7 @@
         :you-won "Vyhrál jsi!"}
    :en {:accept "Accept"
         :and "and"
+        :answer "Answer"
         :close "Close"
         :confirm-end-game "Do you want to end the game?"
         :consensus "Consensus"
@@ -72,9 +76,11 @@
                  :with "with"
                  :persistence "unreasonable persistence"
                  :using "using"}
+        :frequency "Frequency"
         :game-not-exists "This game does not exist!"
         :incorrect "Incorrect"
         :join-game "Join game"
+        :most-common-answers "Most common answers"
         :next "Next"
         :no-answer "No answer"
         :no-js "Your browser does not support JavaScript!"
