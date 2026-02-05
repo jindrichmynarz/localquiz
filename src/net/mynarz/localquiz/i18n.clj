@@ -17,6 +17,7 @@
         :end-game "Ukončit hru"
         :errors {:player-name {:length "Jméno hráče musí mít mezi 1 až 20 znaky."
                                :taken "Hráč tohoto jména už je ve hře."}
+                 :question-source-missing "Žádné otázky nebyly zadány!"
                  :time-out "Čas vypršel!"}
         :exit-game "Zavřít hru"
         :footer {:made-by "Vyrobil"
@@ -70,6 +71,7 @@
         :end-game "End game"
         :errors {:player-name {:length "Player name must have between 1 to 20 characters."
                                :taken "This name is already taken."}
+                 :question-source-missing "Question source missing!"
                  :time-out "Time's out!"}
         :exit-game "Exit game"
         :footer {:made-by "Made by"

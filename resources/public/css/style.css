@@ -78,21 +78,26 @@ section {
   justify-content: center;
 }
 
+table {
+  table-layout: fixed;
+  margin: 10px auto;
+  border-collapse: collapse;
+
+  caption {
+    margin: .5em 0;
+  }
+
+  td, th {
+    text-align: left;
+    padding: .25em 0;
+  }
+}
+
 #lobby {
   font-size: 1.3em;
-  table {
-    table-layout: fixed;
-    margin: 10px auto;
-    border-collapse: collapse;
 
-    tr {
-      animation: 1s ease-in fade-in;
-    }
-
-    td, th {
-      text-align: left;
-      padding: .25em 0;
-    }
+  table tr {
+    animation: 1s ease-in fade-in;
   }
 }
 
@@ -364,7 +369,7 @@ label {
 }
 
 i.material-icons {
-  vertical-align: bottom;
+  vertical-align: middle;
   padding: 0 .2em;
 }
 
@@ -384,11 +389,13 @@ i.material-icons.answer-mark {
   flex-direction: column;
   justify-content: space-between;
   gap: .75em;
-  text-align: left;
+  text-align: center;
   animation: 1s ease-in fade-in;
 
-  p {
-    margin: 0;
+  &.revealed {
+    background-color: var(--offwhite);
+    color: var(--darker);
+    box-shadow: 3px 3px 0 var(--dark);
   }
 
   .answer-frequency {
@@ -449,26 +456,21 @@ input[type="range"] {
   align-items: center;
 
   table {
-    table-layout: fixed;
-    margin: 10px auto;
-    border-collapse: collapse;
-
     background-color: var(--dark);
     border: solid 3px var(--darker);
 
-    caption {
-      margin: .5em 0;
+    th, td {
+      padding: .5ex 1ch;
     }
-    td, th {
-      padding: .5em;
-      text-align: left;
-    }
+
     tr td:last-child {
       text-align: right;
     }
+
     tbody tr:nth-child(odd) {
       background-color: rgb(from var(--darker) r g b / 50%);
     }
+
     .score-bar {
       display: inline-block;
       background-color: var(--orange);
@@ -625,8 +627,6 @@ p.waiting-icon {
 .tabs {
   display: flex;
   flex-flow: row wrap;
-  width: 50%;
-  min-width: 30em;
   max-width: 60em;
 
   input[type="radio"] + label {
@@ -822,5 +822,21 @@ pre.error {
   font-size: .8em;
   progress {
     margin-left: .5rem;
+  }
+}
+
+#open-answers {
+  background-color: var(--dark);
+  border: solid 3px var(--darker);
+
+  caption {
+    text-transform: uppercase;
+    font-size: .7em;
+    color: var(--orange);
+  }
+
+  td, th {
+    text-align: left;
+    padding: .5ex 1ch;
   }
 }

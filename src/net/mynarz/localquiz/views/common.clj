@@ -73,27 +73,27 @@
    [:div.buttons
     [:button.btn.btn-primary
      {:data-on:click "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
-     (tr [:accept])]
-    [:button.btn
-     {:data-on:click "window.close()"}
-     (tr [:exit-game])]]])
+     (tr [:accept])]]])
 
 (def material-icons
   "https://fonts.googleapis.com/icon?family=Material+Icons")
 
 (defn morph-body
   ([request]
-   (morph-body request {}))
-  ([{:tempura/keys [tr]} {:keys [header main]}]
-   [:div#morph
-    [:header
-     [:h1 "Localquiz"]
-     [:div#top-menu
-      header
-      (lang-switch tr)]]
-    [:main main]
-    (footer tr)
-    (cookie-warning tr)]))
+   (morph-body identity request))
+  ([handler
+    {:tempura/keys [tr]
+     :as request}]
+   (let [{:keys [header main]} (handler request)]
+     [:div#morph
+      [:header
+       [:h1 "Localquiz"]
+       [:div#top-menu
+        header
+        (lang-switch tr)]]
+      [:main main]
+      (footer tr)
+      (cookie-warning tr)])))
 
 (defn shim-page
   "A basic HTML page with Datastar setup."
@@ -132,21 +132,20 @@
      (morph-body request)]]])
 
 (defn view
-  [handler request]
-  (let [response (handler request)]
-    (if (some? response)
-      (let [body (h/html response)]
-        {:status 200
-         :headers (merge headers/default-headers
-                         {"Content-Encoding" "br"
-                          "ETag" (crypto/digest body)})
-         :body (brotli/compress body :quality 11)})
-      {:headers {"Strict-Transport-Security" headers/strict-transport
-                 "Cache-Control" "no-store"}
-       :status 204})))
+  [response]
+  (if (vector? response) ; FIXME: This should be more precise and applied only to Hiccup responses.
+    (let [body (h/html response)]
+       {:status 200
+        :headers (merge headers/default-headers
+                        {"Content-Encoding" "br"
+                         "ETag" (crypto/digest body)})
+        :body (brotli/compress body :quality 11)})
+    {:headers {"Strict-Transport-Security" headers/strict-transport
+               "Cache-Control" "no-store"}
+     :status 204}))
 
 (def shim-view
-  (partial view shim-page))
+  (comp view shim-page))
 
 (defn ->session-role
   "Get the session role based on path parameters.
@@ -164,8 +163,7 @@
   (->> {:session-role (if game-id :player :moderator)
         :state (game/get-game-state (or game-id session-id))}
        (assoc request :game)
-       game-view
-       (morph-body request)))
+       (morph-body game-view)))
 
 (defn post
   ([^String endpoint]
@@ -233,13 +231,9 @@
    {:keys [answer-count
            answer-frequencies
            answer-revealed?]}]
-  (when answer-revealed?
+  (when (and answer-revealed? (pos? answer-count))
     [:table#open-answers
      [:caption (tr [:most-common-answers])]
-     [:thead
-      [:tr
-       [:th (tr [:answer])]
-       [:th (tr [:frequency])]]]
      [:tbody
       (for [[answer frequency] (->> answer-frequencies
                                     (sort-by val util/descending-order)
@@ -371,11 +365,14 @@
       [:input
        {:autofocus true
         :data-on:keydown submit-by-enter
+        :minlength 1
+        :maxlength 20
         :name "answer"
         :type "text"}]
       (submit-button tr game-id)])
    (when answer-revealed?
-      [:p.answer answer])
+     [:div.answer.revealed
+      [:p answer [:i.material-icons "check"]]])
    (open-answers tr answers)
    (note-view answer-revealed? note)])
 

@@ -16,19 +16,20 @@
    ["/" {:get views/shim-view}]
    ["/sse" {:get morph-view}]
    ["/create"
-    ["" {:post {:handler (partial views/view moderator-actions/create-game!)
+    ; FIXME: Avoid the duplication combining views/morph-body with views/views.
+    ["" {:post {:handler (comp views/view (partial views/morph-body moderator-actions/create-game!))
                 :parameters {:form {:number-of-questions ::s/number-of-questions}
                              :multipart {:question-file multipart/temp-file-part}}}}]
-    ["/validate" {:post {:handler (partial views/view moderator-actions/validate-questions)
+    ["/validate" {:post {:handler (comp views/view (partial views/morph-body moderator-actions/validate-questions))
                          :parameters {:multipart {:question-file multipart/temp-file-part}}}}]]
-   ["/question" {:post (partial views/view moderator-actions/next-question!)}]
-   ["/leaderboard" {:post (partial views/view moderator-actions/leaderboard!)}]
-   ["/end" {:post (partial views/view moderator-actions/end-game!)}]
+   ["/question" {:post (comp views/view moderator-actions/next-question!)}]
+   ["/leaderboard" {:post (comp views/view moderator-actions/leaderboard!)}]
+   ["/end" {:post (comp views/view moderator-actions/end-game!)}]
 
    ; Players' routes
    ["/play/:game-id" {:get views/shim-view}]
    ["/sse/:game-id" {:get morph-view}]
    ["/join/:game-id"
-    ["" {:post (partial views/view player-actions/join-game!)}]
-    ["/validate" {:post (partial views/view player-actions/validate-player-name)}]]
-   ["/answer/:game-id" {:post (partial views/view player-actions/answer-question!)}]])
+    ["" {:post (comp views/view player-actions/join-game!)}]
+    ["/validate" {:post (comp views/view player-actions/validate-player-name)}]]
+   ["/answer/:game-id" {:post (comp views/view player-actions/answer-question!)}]])

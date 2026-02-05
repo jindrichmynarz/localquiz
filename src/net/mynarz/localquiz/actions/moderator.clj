@@ -37,6 +37,7 @@
      question-source "question-source"
      :or {number-of-questions 20}} :form-params
     {{question-file :tempfile} "question-file"} :multipart-params
+    :tempura/keys [tr]
     game-id :sid
     :as request}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
@@ -45,7 +46,8 @@
                                    question-source (->> question-source
                                                         (get question-sources)
                                                         edn/read-once
-                                                        (hash-map :success)))]
+                                                        (hash-map :success))
+                                   :else {:error (tr [:errors/question-source-missing])})]
     (if error
       (-> request
           (assoc :error error)

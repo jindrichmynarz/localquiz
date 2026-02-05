@@ -2,8 +2,11 @@
   (:require [net.mynarz.localquiz.db :as db]
             [net.mynarz.localquiz.actions.moderator :as moderator]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
+            [clojure.java.io :as io]
             [clojure.test :refer [deftest is use-fixtures]]
-            [datahike.api :as d]))
+            [datahike.api :as d]
+            [ring.mock.request :as mock]
+            [taoensso.timbre :as log]))
 
 (use-fixtures :each fixtures/test-db)
 
@@ -26,6 +29,15 @@
             @db/db-conn)
        seq
        not))
+
+;; (deftest validate-questions
+;;   (with-open [questions (-> "questions/empty.edn" io/resource io/input-stream)]
+;;      (is (-> (mock/request :post "/create/validate")
+;;              (mock/multipart-body {"question-file" {:value questions}})
+;;              (assoc :tempura/tr fixtures/tr)
+;;              moderator/validate-questions
+;;              log/spy
+;;              :error))))
 
 (deftest end-game!
   (moderator/end-game! {:sid fixtures/game-id})

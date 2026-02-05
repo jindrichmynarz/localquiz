@@ -54,7 +54,7 @@
 (defn player-name-valid-length?
   "Test if `player-name` is between 1 and 20 characters."
   [^String player-name]
-  (< 1 (count player-name) 20))
+  (<= 1 (count player-name) 20))
 
 (defn validate-player-name
   [^String game-id
@@ -251,6 +251,17 @@
        @db-conn
        game-id))
 
+(defn schedule-timeout
+  "Schedule a timeout for the game identified by `game-id`."
+  [^String game-id]
+  (swap! timeouts
+         assoc
+         game-id
+         (future
+           (Thread/sleep ^int (* 1000 (:question-time-out config)))
+           (log/infof "Time-out in game %s!" game-id)
+           (evaluate-answers! game-id))))
+
 (defn next-question!
   "Get the next question for `game-id`.
   Removes the question from the game and sets it as the current question.
@@ -269,13 +280,7 @@
                 [:db/add [:game/id game-id] :game/current-question question]
                 [:db/retract [:game/id game-id] :game/questions question]])
          (d/transact db-conn))
-    (swap! timeouts
-           assoc
-           game-id
-           (future
-             (Thread/sleep ^int (* 1000 (:question-time-out config)))
-             (log/infof "Time-out in game %s for question %s!" game-id question)
-             (evaluate-answers! game-id)))))
+    (schedule-timeout game-id)))
 
 (defn answer-question!
   "Answer the current question in game with `game-id`

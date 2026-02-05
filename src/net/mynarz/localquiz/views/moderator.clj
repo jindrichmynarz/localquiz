@@ -5,7 +5,8 @@
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.util :refer [decimal-format svg]]
             [net.mynarz.localquiz.views.common :as views]
-            [charred.api :as charred]))
+            [charred.api :as charred]
+            [taoensso.timbre :as log]))
 
 (defn answer-progress
   [tr

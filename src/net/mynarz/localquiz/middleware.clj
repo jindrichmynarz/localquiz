@@ -6,7 +6,8 @@
             [clojure.math :as math]
             [reitit.ring.middleware.multipart :as multipart]
             [ring.middleware.reload :as reload]
-            [starfederation.datastar.clojure.consts :as consts]))
+            [starfederation.datastar.clojure.consts :as consts]
+            [taoensso.timbre :as log]))
 
 (defn reloading-ring-handler
   "Reload Ring handler on each request."
@@ -24,7 +25,7 @@
   [handler]
   (fn [request]
     (cond
-      ;; If you don't support Brotli (bots), you get nothing.
+      ; If you don't support Brotli (bots), you get nothing.
       (not (some->> ((:headers request) "accept-encoding")
                     (re-find #"(?:^| )br(?:$|,)")))
       {:status 406}
@@ -83,7 +84,7 @@
                 (assoc :sid new-sid)
                 handler
                 (assoc-in [:headers "Set-Cookie"]
-                          ; These cookies won't be set on local host on chrome/safari
+                          ; These cookies won't be set on localhost on Chrome/Safari
                           ; as it's using secure needs to be true and local host
                           ; does not have HTTPS. SameSite is set to lax as it
                           ; allows the same cookie session to be used following a

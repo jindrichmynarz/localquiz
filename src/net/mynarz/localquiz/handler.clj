@@ -6,7 +6,15 @@
             [reitit.ring.coercion :as ring-coercion]
             [reitit.ring.middleware.exception :as exception]
             [reitit.ring.middleware.parameters :as parameters]
-            [taoensso.tempura :as tempura]))
+            [taoensso.tempura :as tempura]
+            [taoensso.timbre :as log]))
+
+(def exception-middleware
+  (exception/create-exception-middleware
+    (merge exception/default-handlers
+           {::exception/wrap (fn [handler exception request]
+                               (log/error exception)
+                               (handler exception request))})))
 
 (defn ->handler
   []
@@ -22,7 +30,7 @@
                          middleware/wrap-language
                          [tempura/wrap-ring-request {:tr-opts {:dict i18n/dictionary}}]
                          middleware/wrap-session
-                         exception/exception-middleware]}})
+                         exception-middleware]}})
    (ring/routes
     (ring/create-resource-handler {:path "/"})
     (ring/create-default-handler))))
