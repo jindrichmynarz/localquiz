@@ -3,10 +3,8 @@
             [net.mynarz.localquiz.actions.moderator :as moderator]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
             [clojure.java.io :as io]
-            [clojure.test :refer [deftest is use-fixtures]]
-            [datahike.api :as d]
-            [ring.mock.request :as mock]
-            [taoensso.timbre :as log]))
+            [clojure.test :refer [are deftest is use-fixtures]]
+            [datahike.api :as d]))
 
 (use-fixtures :each fixtures/test-db)
 
@@ -30,14 +28,11 @@
        seq
        not))
 
-;; (deftest validate-questions
-;;   (with-open [questions (-> "questions/empty.edn" io/resource io/input-stream)]
-;;      (is (-> (mock/request :post "/create/validate")
-;;              (mock/multipart-body {"question-file" {:value questions}})
-;;              (assoc :tempura/tr fixtures/tr)
-;;              moderator/validate-questions
-;;              log/spy
-;;              :error))))
+(deftest parse-questions
+  (are [questions-file key?] (with-open [questions (-> questions-file io/resource io/input-stream)]
+                               (is (key? (moderator/parse-questions questions))))
+       "questions/empty.edn" :error
+       "questions/questions.edn" :success))
 
 (deftest end-game!
   (moderator/end-game! {:sid fixtures/game-id})

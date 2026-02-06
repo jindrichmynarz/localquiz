@@ -45,8 +45,6 @@
    [:span "EN"]])
 
 (defn footer
-  ; FIXME: This is not translated to Czech.
-  ;        Because it is outside of #morph?
   [tr]
   [:footer
    [:p
@@ -85,15 +83,16 @@
     {:tempura/keys [tr]
      :as request}]
    (let [{:keys [header main]} (handler request)]
-     [:div#morph
-      [:header
-       [:h1 "Localquiz"]
-       [:div#top-menu
-        header
-        (lang-switch tr)]]
-      [:main main]
-      (footer tr)
-      (cookie-warning tr)])))
+     (when (or header main)
+       [:div#morph
+        [:header
+         [:h1 "Localquiz"]
+         [:div#top-menu
+          header
+          (lang-switch tr)]]
+        [:main main]
+        (footer tr)
+        (cookie-warning tr)]))))
 
 (defn shim-page
   "A basic HTML page with Datastar setup."
@@ -132,6 +131,7 @@
      (morph-body request)]]])
 
 (defn view
+  "Convert Hiccup `response` to a Ring HTTP response."
   [response]
   (if (vector? response) ; FIXME: This should be more precise and applied only to Hiccup responses.
     (let [body (h/html response)]

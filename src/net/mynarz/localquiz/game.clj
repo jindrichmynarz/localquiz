@@ -60,6 +60,7 @@
   [^String game-id
    ^String player-name]
   (cond
+    (nil? player-name) :errors.player-name/no-name
     (player-name-in-game? game-id player-name) :errors.player-name/taken
     (not (player-name-valid-length? player-name)) :errors.player-name/length))
 

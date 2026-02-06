@@ -16,6 +16,7 @@
         :create-game "Vytvořit hru"
         :end-game "Ukončit hru"
         :errors {:player-name {:length "Jméno hráče musí mít mezi 1 až 20 znaky."
+                               :no-name "Hráč musí mít jméno."
                                :taken "Hráč tohoto jména už je ve hře."}
                  :question-source-missing "Žádné otázky nebyly zadány!"
                  :time-out "Čas vypršel!"}
@@ -70,6 +71,7 @@
         :create-game "Create a game"
         :end-game "End game"
         :errors {:player-name {:length "Player name must have between 1 to 20 characters."
+                               :no-name "The player must have a name."
                                :taken "This name is already taken."}
                  :question-source-missing "Question source missing!"
                  :time-out "Time's out!"}

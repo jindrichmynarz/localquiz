@@ -145,6 +145,21 @@ select {
   font: inherit;
 }
 
+@supports (appearance: base-select) {
+  select, ::picker(select) {
+    appearance: base-select;
+  }
+
+  /*
+  select::picker-icon {
+  }
+  option::checkmark {
+  }
+  ::picker(select) {
+  }
+  */
+}
+
 .btn {
   color: var(--offwhite);
   background-color: var(--dark);
