@@ -78,21 +78,20 @@
 
 (defn morph-body
   ([request]
-   (morph-body identity request))
-  ([handler
-    {:tempura/keys [tr]
-     :as request}]
-   (let [{:keys [header main]} (handler request)]
-     (when (or header main)
-       [:div#morph
-        [:header
-         [:h1 "Localquiz"]
-         [:div#top-menu
-          header
-          (lang-switch tr)]]
-        [:main main]
-        (footer tr)
-        (cookie-warning tr)]))))
+   (morph-body request nil nil))
+  ([request main]
+   (morph-body request nil main))
+  ([{:tempura/keys [tr]} header main]
+   ; TODO: Don't render if the handler doesn't return Hiccup or {:header ... :main ...}
+   [:div#morph
+    [:header
+     [:h1 "Localquiz"]
+     [:div#top-menu
+      header
+      (lang-switch tr)]]
+    [:main main]
+    (footer tr)
+    (cookie-warning tr)]))
 
 (defn shim-page
   "A basic HTML page with Datastar setup."
@@ -123,9 +122,9 @@
     [:body {:data-signals:csrf session/csrf-cookie-js
             :data-signals:language "localStorage.getItem('language') || navigator.language.slice(0, 2)"
             :data-init (on-load-js game-id)
-            ;; Reconnect when the user comes online after
-            ;; being offline. Closes any existing connection
-            ;; from this div.
+            ; Reconnect when the user comes online after
+            ; being offline. Closes any existing connection
+            ; from this element.
             :data-on:online__window (on-load-js game-id)}
      [:noscript (tr [:no-js])]
      (morph-body request)]]])
@@ -133,13 +132,15 @@
 (defn view
   "Convert Hiccup `response` to a Ring HTTP response."
   [response]
-  (if (vector? response) ; FIXME: This should be more precise and applied only to Hiccup responses.
+  (if (vector? response)
+    ; Hiccup content
     (let [body (h/html response)]
        {:status 200
         :headers (merge headers/default-headers
                         {"Content-Encoding" "br"
                          "ETag" (crypto/digest body)})
         :body (brotli/compress body :quality 11)})
+    ; No content
     {:headers {"Strict-Transport-Security" headers/strict-transport
                "Cache-Control" "no-store"}
      :status 204}))
@@ -163,7 +164,7 @@
   (->> {:session-role (if game-id :player :moderator)
         :state (game/get-game-state (or game-id session-id))}
        (assoc request :game)
-       (morph-body game-view)))
+       game-view))
 
 (defn post
   ([^String endpoint]

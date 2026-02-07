@@ -8,19 +8,16 @@
             [net.mynarz.localquiz.views.player] ; Required to load the player-specific methods of view/view.
             [reitit.ring.middleware.multipart :as multipart]))
 
-(def morph-view
-  (partial sse/handler views/morph-view))
-
 (def routes
   [; Moderator's routes
    ["/" {:get views/shim-view}]
-   ["/sse" {:get morph-view}]
+   ["/sse" {:get sse/handler}]
    ["/create"
-    ; FIXME: Avoid the duplication combining views/morph-body with views/views.
-    ["" {:post {:handler (comp views/view (partial views/morph-body moderator-actions/create-game!))
+    ; FIXME: Avoid the duplication combining views/morph-body with view/views.
+    ["" {:post {:handler (comp views/view moderator-actions/create-game!)
                 :parameters {:form {:number-of-questions ::s/number-of-questions}
                              :multipart {:question-file multipart/temp-file-part}}}}]
-    ["/validate" {:post {:handler (comp views/view (partial views/morph-body moderator-actions/validate-questions))
+    ["/validate" {:post {:handler (comp views/view moderator-actions/validate-questions)
                          :parameters {:multipart {:question-file multipart/temp-file-part}}}}]]
    ["/question" {:post (comp views/view moderator-actions/next-question!)}]
    ["/leaderboard" {:post (comp views/view moderator-actions/leaderboard!)}]
@@ -28,7 +25,7 @@
 
    ; Players' routes
    ["/play/:game-id" {:get views/shim-view}]
-   ["/sse/:game-id" {:get morph-view}]
+   ["/sse/:game-id" {:get sse/handler}]
    ["/join/:game-id"
     ["" {:post (comp views/view player-actions/join-game!)}]
     ["/validate" {:post (comp views/view player-actions/validate-player-name)}]]

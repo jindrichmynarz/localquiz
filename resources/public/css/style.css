@@ -150,14 +150,23 @@ select {
     appearance: base-select;
   }
 
-  /*
-  select::picker-icon {
+  option {
+    padding: .5em;
+    background-color: var(--dark);
+    color: var(--offwhite);
+
+    &:hover {
+      background-color: var(--darker);
+    }
+
+    &::checkmark {
+      content: "‣";
+    }
   }
-  option::checkmark {
-  }
+
   ::picker(select) {
+    box-shadow: 0 3px 0 var(--darker);
   }
-  */
 }
 
 .btn {

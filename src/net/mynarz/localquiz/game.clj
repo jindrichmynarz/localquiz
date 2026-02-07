@@ -59,6 +59,7 @@
 (defn validate-player-name
   [^String game-id
    ^String player-name]
+  (log/infof "Validating player name '%s'." player-name)
   (cond
     (nil? player-name) :errors.player-name/no-name
     (player-name-in-game? game-id player-name) :errors.player-name/taken
@@ -292,7 +293,7 @@
   (cond (not (@timeouts game-id))
         {:error :errors/time-out}
 
-        (some? answer)
+        (and (some? answer) (not (player-answered? player-id)))
         (do
           (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
           (d/transact db-conn [{:game/id game-id

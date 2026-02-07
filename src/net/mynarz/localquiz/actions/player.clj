@@ -6,22 +6,26 @@
             [taoensso.timbre :as log]))
 
 (defn validate-player-name
+  "Test if `player-name` is valid."
   [{{player-name "player-name"} :form-params
     {:keys [game-id]} :path-params
     :as request}]
-  (log/infof "Validating player name '%s'." player-name)
-  (if-let [validation-error (game/validate-player-name game-id player-name)]
-    (views/player-name-input request validation-error)
-    (views/player-name-input request)))
+  (let [validation-error (game/validate-player-name game-id player-name)]
+    (views/player-name-input
+      (cond-> request
+        validation-error (assoc :error validation-error)))))
 
 (defn join-game!
-  "Add `player` to the game identified by `game-id`."
+  "Add a player with `player-name` to the game identified by `game-id`."
   [{{player-name "player-name"} :form-params
     {:keys [game-id]} :path-params
     player-id :sid
     :as request}]
+  ; TODO: Avoid duplicating `validate-player-name`.
   (if-let [validation-error (game/validate-player-name game-id player-name)]
-    (views/player-name-input request validation-error)
+    (-> request
+        (assoc :error validation-error)
+        views/player-name-input)
     (do
       (log/infof "Player %s is joining game %s as '%s'." player-id game-id player-name)
       (d/transact db-conn [{:db/id [:game/id game-id]
@@ -34,6 +38,7 @@
     player-id :sid
     :tempura/keys [tr]}]
   (log/infof "Player %s answers %s." player-id answer)
-  (when-let [{:keys [error]} (game/answer-question! game-id player-id answer)]
-    [:section#content
-      [:h2.error (tr [error])]]))
+  (let [{:keys [error]} (game/answer-question! game-id player-id answer)]
+    (when error
+      [:section#content
+       [:h2.error (tr [error])]])))
