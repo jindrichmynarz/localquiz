@@ -279,8 +279,7 @@
     :as request}]
   (views/morph-body
     request
-    [:div
-     (replay-audio tr)
+    [(replay-audio tr)
      (end-game tr)]
     (let [answers (-> game-id
                       get-answers
@@ -296,7 +295,7 @@
     (end-game tr)
     [:section#content
      (leaderboard tr game-id)
-     (if (game/all-players-answered? game-id)
+     (if (game/all-questions-answered? game-id)
        [:p
         [:button.btn.btn-primary
          {:data-on:click end-game-cmd
