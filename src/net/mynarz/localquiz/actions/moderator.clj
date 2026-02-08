@@ -33,8 +33,8 @@
 
 (defn create-game!
   "Create a game identified by `game-id`."
-  [{{:keys [number-of-questions]
-     question-source "question-source"
+  [{{question-source "question-source"
+     number-of-questions "number-of-questions"
      :or {number-of-questions 20}} :form-params
     {{question-file :tempfile} "question-file"} :multipart-params
     :tempura/keys [tr]
