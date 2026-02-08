@@ -55,7 +55,7 @@
         :wait-for-game-start "Počkej prosím na zahájení hry."
         :wait-for-players "Čekáme alespoň na dva hráče..."
         :you-lost "Prohrál jste, saláte."
-        :you-won "Vyhrál jsi!"}
+        :you-won "Vítězství je tvé!"}
    :en {:accept "Accept"
         :and "and"
         :answer "Answer"
