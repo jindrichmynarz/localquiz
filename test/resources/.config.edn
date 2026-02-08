@@ -1,3 +1,5 @@
-{:csrf-secret "abcdef"
+{:db-store {:backend :memory
+            :id #uuid "65100426-f83c-4ad6-9a1e-bd0962d692e5"}
+ :csrf-secret "abcdef"
  :question-time-out 1
  :port 8081}

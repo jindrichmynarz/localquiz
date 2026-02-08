@@ -1,7 +1,9 @@
 (ns net.mynarz.localquiz.db
-  (:require [net.mynarz.localquiz.question-spec :as qs]
+  (:require [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.spec :as s]
             [datahike.api :as d]
+            [datahike-lmdb.core]
             [fast-edn.core :as edn]
             [mount.core :refer [defstate]]))
 
@@ -96,15 +98,14 @@
     :db.entity/attrs [:player/id
                       :player/name]}])
 
-(def config
+(def db-config
   {:initial-tx schema
    :keep-history? true
    :schema-flexibility :write
-   :store {:backend :memory
-           :id #uuid "7adb6a99-2421-4864-988e-dce218c2cbec"}})
+   :store (:db-store config)})
 
 (defstate ^{:on-reload :noop} db-conn
-  :start (do (d/create-database config)
-             (d/connect config))
+  :start (do (d/create-database db-config)
+             (d/connect db-config))
   :stop (do (d/release db-conn)
-            (d/delete-database config)))
+            (d/delete-database db-config)))
