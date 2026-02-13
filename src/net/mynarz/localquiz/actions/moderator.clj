@@ -8,6 +8,7 @@
             [net.mynarz.localquiz.views.common :refer [game-view]]
             [datahike.api :as d]
             [fast-edn.core :as edn]
+            [spec-tools.core :as st]
             [taoensso.timbre :as log])
   (:import (java.io File)))
 
@@ -33,15 +34,15 @@
 
 (defn create-game!
   "Create a game identified by `game-id`."
-  [{{question-source "question-source"
-     number-of-questions "number-of-questions"
-     :or {number-of-questions 20}} :form-params
+  [{{number-of-questions "number-of-questions"
+     question-source "question-source"} :form-params
     {{question-file :tempfile} "question-file"} :multipart-params
     :tempura/keys [tr]
     game-id :sid
     :as request}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
-  (let [{:keys [error success]} (cond
+  (let [number-of-questions (or (st/coerce ::s/number-of-questions number-of-questions st/string-transformer) 20)
+        {:keys [error success]} (cond
                                    question-file (parse-questions question-file)
                                    question-source (->> question-source
                                                         (get question-sources)
