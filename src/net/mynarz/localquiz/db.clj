@@ -98,11 +98,11 @@
     :db.entity/attrs [:player/id
                       :player/name]}])
 
-(def db-config
-  {:initial-tx schema
-   :keep-history? true
-   :schema-flexibility :write
-   :store (:db-store config)})
+(defstate db-config
+  :start {:initial-tx schema
+          :keep-history? true
+          :schema-flexibility :write
+          :store (:db-store config)})
 
 (defstate ^{:on-reload :noop} db-conn
   :start (do (d/create-database db-config)
