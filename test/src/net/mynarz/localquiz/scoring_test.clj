@@ -6,13 +6,23 @@
   (are [question answers scores] (= (map :score (scoring/score-answers question answers)) scores)
        {:type :multiple
         :choices [{:correct? true} {} {} {}]}
-       [{:answer 0} {:answer 3} {:answer 0}]
+       [{:answer 0}
+        {:answer 3}
+        {:answer 0}]
        [1.0 0.0 1.0]
 
        {:type :yesno
         :correct? false}
-       [{:answer false} {:answer true} {:answer false}]
-       [1.0 0.0 1.0]))
+       [{:answer false}
+        {:answer true}
+        {:answer false}]
+       [1.0 0.0 1.0]
+
+       {:type :sort
+        :items [{:sort-value 3} {:sort-value 1} {:sort-value 4} {:sort-value 2}]}
+       [{:answer [1 3 0 2]}
+        {:answer [0 1 2 3]}]
+       [1.0 0.0]))
 
 (deftest consensus-scoring
   (are [answers scores] (= (map :score (scoring/score-answers {:scoring :consensus} answers)) scores)
