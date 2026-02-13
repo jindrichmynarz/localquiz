@@ -11,6 +11,11 @@
   --font-size: 24px;
 }
 
+::selection {
+  background: var(--orange);
+  color: var(--darker);
+}
+
 body {
   margin: 0;
   font-family: Avenir, Montserrat, Corbel, "URW Gothic", source-sans-pro, sans-serif;
@@ -177,8 +182,8 @@ select {
   border-radius: 5px;
   padding: .5lh 2ch;
   position: relative;
-  /* top: -5px; */
-  /* left: -5px; */
+  top: -5px;
+  left: -5px;
   z-index: 1;
   cursor: pointer;
   transition: opacity 1s ease-in;
@@ -250,7 +255,7 @@ input[type="text"], input[type="number"] {
   border-color: var(--darker);
   padding: .5em;
   position: relative;
-  /* top: -5px; */
+  top: -5px;
   font-size: --var(font-size);
 
   &:focus {
@@ -327,10 +332,6 @@ label {
   #question-menu {
     align-self: flex-end;
 
-    #replay-audio {
-      cursor: pointer;
-    }
-
     #scoring-icon {
       text-shadow: 1px 2px 0px var(--darker);
     }
@@ -345,6 +346,10 @@ label {
       max-height: 50vh;
     }
   }
+}
+
+#replay-audio {
+  cursor: pointer;
 }
 
 #answers {
@@ -508,7 +513,6 @@ input[type="range"] {
 
 #sortableList {
   margin: 0;
-  margin-bottom: 2em;
   padding-left: 0;
 
   li {
@@ -519,7 +523,7 @@ input[type="range"] {
     padding: .5em 1em;
     margin-block-end: .4em;
     cursor: grab;
-    box-shadow: 0 .25em 0 -.25em var(--darker);
+    box-shadow: 0 3px 1px var(--darker);
 
     .sort-value {
       padding-left: 1em;
@@ -539,6 +543,8 @@ input[type="range"] {
 
 progress {
   background: none;
+  border: none;
+  background-color: var(--offwhite);
   text-align: left;
   height: 8px;
   vertical-align: middle;
@@ -547,7 +553,15 @@ progress {
     background-color: var(--offwhite);
   }
 
+  &::-moz-progress-bar {
+    background-color: var(--offwhite);
+  }
+
   &::-webkit-progress-value {
+    background: var(--orange);
+  }
+
+  &::-moz-progress-bar {
     background: var(--orange);
   }
 }
@@ -844,6 +858,7 @@ pre.error {
 
 #answer-progress {
   font-size: .8em;
+
   progress {
     margin-left: .5rem;
   }
