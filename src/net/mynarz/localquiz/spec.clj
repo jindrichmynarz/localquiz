@@ -14,6 +14,9 @@
                                (edn/read-string value)
                                value))}))
 
+(s/def ::number-of-questions
+  (s/and int? pos?))
+
 (s/def ::player-answer
   (s/or :boolean boolean?
         :int int?
