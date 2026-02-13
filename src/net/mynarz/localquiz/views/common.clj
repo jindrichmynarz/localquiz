@@ -109,12 +109,19 @@
       {:href material-icons
        :rel "stylesheet"}]
      [:link#css
-      {:rel "stylesheet"
-       :type "text/css"
-       :href "/css/style.css"}]
+      {:href "/css/style.css"
+       :rel "stylesheet"
+       :type "text/css"}]
+     [:link
+      {:as "script"
+       :href "/js/sortable.js"
+       :rel "modulepreload"}]
      [:script
       {:defer true
        :src CDN-url
+       :type "module"}]
+     [:script
+      {:src "/js/sortable.js"
        :type "module"}]
      ; Enables responsiveness on mobile devices
      [:meta {:name "viewport"
@@ -346,8 +353,7 @@
                          (take 5)
                          (map str))]
           [:option {:value value}])]]
-      [:p
-       (submit-button tr game-id)]])
+      [:p (submit-button tr game-id)]])
    (when answer-revealed?
      [:p (format "%s %%" (util/decimal-format percentage))])
    (note-view answer-revealed? note)])
@@ -384,31 +390,30 @@
    ^String game-id
    ^Boolean mark-correct?
    {:keys [items note]}]
-  [:form#answers
-   [:ul#sortableList
-    {:class (when disabled? "disabled")
-     :data-signals:_answer (->> items
-                                count
-                                range
-                                charred/write-json-str)
-     :data-on:reordered "$_answer = evt.detail"}
-    (if mark-correct?
-      (for [{:keys [sort-value text]} items]
-        [:li
-         [:span text]
-         [:span.sort-value sort-value]])
-      (for [{:keys [index text]} (->> items add-index util/deterministic-shuffle)]
-        [:li
-         {:data-index index}
-         [:span text]]))
-    [:input
-     {:data-attr:value "$_answer"
-      :name "answer"
-      :type "hidden"}]]
-   (when-not disabled?
-     [:p
-      [:script
-       {:src "/js/sortable.js"
-        :type "module"}]
-      (submit-button tr game-id)])
-   (note-view answer-revealed? note)])
+  (let [shuffled-items (->> items
+                            add-index
+                            util/deterministic-shuffle)]
+    [:form#answers
+     [:ul#sortableList
+      {:class (when disabled? "disabled")
+       :data-init (when-not disabled? "createSortableList(el)")
+       :data-signals:_answer (->> shuffled-items
+                                  (map :index)
+                                  charred/write-json-str)
+       :data-on:reordered "$_answer = evt.detail"}
+      (if mark-correct?
+        (for [{:keys [sort-value text]} (sort-by :sort-value items)]
+          [:li
+           [:span text]
+           [:span.sort-value sort-value]])
+        (for [{:keys [index text]} shuffled-items]
+          [:li
+           {:data-index index}
+           [:span text]]))
+      [:input
+       {:data-attr:value "$_answer"
+        :name "answer"
+        :type "hidden"}]]
+     (when-not disabled?
+       [:p (submit-button tr game-id)])
+     (note-view answer-revealed? note)]))
