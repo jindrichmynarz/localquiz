@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.test-fixtures
-  (:require [net.mynarz.localquiz.crypto :as crypto]
+  (:require [net.mynarz.localquiz.config]
+            [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.db :as db]
             [net.mynarz.localquiz.i18n :as i18n]
             [datahike.api :as d]
@@ -26,6 +27,12 @@
                     :player/score 0.0
                     :db/ensure :player}]
     :db/ensure :game}])
+
+(defn test-config
+  [f]
+  (mount/start #'net.mynarz.localquiz.config/config)
+  (f)
+  (mount/stop))
 
 (defn test-db
   [f]

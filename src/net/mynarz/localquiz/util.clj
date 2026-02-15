@@ -65,10 +65,11 @@
 (defmacro svg
   "Load SVG `resource`."
   [^String resource]
-  (-> resource
-      io/resource
-      slurp
-      h/raw))
+  (->> resource
+       (str "img/svg/")
+       io/resource
+       slurp
+       h/raw))
 
 (defmacro thread
   "Starts a virtual thread. Conveys bindings."

@@ -95,6 +95,7 @@
   (if-let [answer-times (when-let [correct-times (->> scores
                                                       (filter (comp pos? :score))
                                                       (map :answer-time)
+                                                      distinct
                                                       seq)]
                           (when (next correct-times) ; Don't scale if there's only 1 correct answer.
                             correct-times))]

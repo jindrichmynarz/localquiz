@@ -1,6 +1,9 @@
 (ns net.mynarz.localquiz.scoring-test
   (:require [net.mynarz.localquiz.scoring :as scoring]
-            [clojure.test :refer [are deftest]]))
+            [net.mynarz.localquiz.test-fixtures :as fixtures]
+            [clojure.test :refer [are deftest use-fixtures]]))
+
+(use-fixtures :once fixtures/test-config)
 
 (deftest score-answers
   (are [question answers scores] (= (map :score (scoring/score-answers question answers)) scores)
@@ -22,7 +25,14 @@
         :items [{:sort-value 3} {:sort-value 1} {:sort-value 4} {:sort-value 2}]}
        [{:answer [1 3 0 2]}
         {:answer [0 1 2 3]}]
-       [1.0 0.0]))
+       [1.0 0.0]
+
+       {:type :open
+        :answer "Jako doma"}
+       [{:answer "Jako doma"}
+        {:answer "JAKO DOMA"}
+        {:answer "Jákô dóma"}]
+       [1.0 1.0 1.0]))
 
 (deftest consensus-scoring
   (are [answers scores] (= (map :score (scoring/score-answers {:scoring :consensus} answers)) scores)

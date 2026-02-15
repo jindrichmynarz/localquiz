@@ -57,9 +57,7 @@
    [:button
     {:data-on:click "$_endGameDialog.showModal()"
      :title (tr [:end-game])}
-    [:i.material-icons.md-light
-     {:aria-hidden "true"}
-     "cancel"]]])
+    [:i.material-icons (svg "cancel.svg")]]])
 
 (defn get-answers
   [^String game-id]
@@ -108,9 +106,7 @@
    {:data-on:click next-action
     :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
    (tr [:next])
-   [:i.material-icons
-    {:aria-hidden "true"}
-    "arrow_circle_right"]])
+   [:i.material-icons (svg "arrow_circle_right.svg")]])
 
 (defn number-of-questions
   [tr]
@@ -130,9 +126,7 @@
    {:data-show "$_audio"
     :data-on:click "$_audio.currentTime = 0; $_audio.play()"}
    (tr [:replay-audio])
-   [:i.material-icons.md-36
-    {:aria-hidden "true"}
-    "replay"]])
+   [:i.material-icons (svg "replay.svg")]])
 
 (defmethod views/game-view [:moderator nil]
   [{:keys [error]
@@ -193,24 +187,23 @@
           has-enough-players? (game/has-enough-players? game-id)]
       [:div#sections
        [:section#content
-        [:div
-         [:div#qrcode (url->qrcode-svg play-game-url)]
-         [:p#game-url
-          [:input
-           {:readonly true
-            :type "text"
-            :value play-game-url}]
-          (copy-button tr play-game-url)]
-         (if has-enough-players?
-           [:p
-            [:button.btn.btn-primary
-             {:data-on:click "@post('/question')"
-              :disabled (not has-enough-players?)
-              :type "submit"}
-             (tr [:start-game])]]
-           [:p#waiting-for-players
-            [:img {:src "img/wifi_exercise_animated.svg"}]
-            (tr [:wait-for-players])])]]
+        [:div#qrcode (url->qrcode-svg play-game-url)]
+        [:p#game-url
+         [:input
+          {:readonly true
+           :type "text"
+           :value play-game-url}]
+         (copy-button tr play-game-url)]
+        (if has-enough-players?
+          [:p
+           [:button.btn.btn-primary
+            {:data-on:click "@post('/question')"
+             :disabled (not has-enough-players?)
+             :type "submit"}
+            (tr [:start-game])]]
+          [:p#waiting-for-players
+            (svg "wifi_exercise_animated.svg")
+            (tr [:wait-for-players])])]
        (when (seq lobby)
          [:section#lobby
           [:table
@@ -238,12 +231,11 @@
    (let [{:keys [scoring] :as question} (game/current-question game-id)
          scoring-icon (if (= scoring :consensus)
                          [:span#venn-conversation
-                          (svg "public/img/venn_conversation_animated.svg")]
-                         [:i.material-icons.md-36#scoring-icon
-                          {:aria-hidden "true"
-                           :aria-label (tr [:correctness])
+                          (svg "venn_conversation_animated.svg")]
+                         [:i.material-icons#scoring-icon
+                          {:aria-label (tr [:correctness])
                            :title (tr [:correctness])}
-                          "task_alt"])
+                          (svg "task_alt.svg")])
          mark-correct? (and answer-revealed? (not= scoring :consensus))]
       [:section#content
        (timer answer-revealed?)
@@ -303,7 +295,5 @@
          {:data-on:click end-game-cmd
           :data-on:keydown__window (format "evt.key === 'Enter' && %s" end-game-cmd)}
          (tr [:end-game])
-         [:i.material-icons.md-light.md-36
-          {:aria-hidden "true"}
-          "cancel"]]]
+         [:i.material-icons (svg "cancel.svg")]]]
        [:p (next-button tr "@post('/question')")])]))

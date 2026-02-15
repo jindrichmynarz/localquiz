@@ -3,7 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
-            [net.mynarz.localquiz.util :as util]
+            [net.mynarz.localquiz.util :as util :refer [svg]]
             [charred.api :as charred]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
@@ -79,9 +79,6 @@
      {:data-on:click "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
      (tr [:accept])]]])
 
-(def material-icons
-  "https://fonts.googleapis.com/icon?family=Material+Icons")
-
 (defn morph-body
   ([request]
    (morph-body request nil nil))
@@ -110,9 +107,6 @@
      [:title "Localquiz"]
      [:meta
       {:charset "UTF-8"}]
-     [:link
-      {:href material-icons
-       :rel "stylesheet"}]
      [:link#css
       {:href "/css/style.css"
        :rel "stylesheet"
@@ -212,7 +206,7 @@
     [:i.material-icons
      {:aria-hidden "true"
       :aria-label (tr [:correct])}
-     "check"]))
+     (svg "check.svg")]))
 
 (defn note-view
   [answers
@@ -220,9 +214,9 @@
   (when (and answers note)
     [:div.note
      [:div
-      [:i.material-icons.md-light.md-24
+      [:i.material-icons
        {:aria-hidden "true"}
-       "info"]]
+       (svg "info.svg")]]
      [:div note]]))
 
 (defn add-index
@@ -384,7 +378,7 @@
       (submit-button tr game-id)])
    (when answer-revealed?
      [:div.answer.revealed
-      [:p answer [:i.material-icons "check"]]])
+      [:p answer [:i.material-icons (svg "check.svg")]]])
    (open-answers tr answers)
    (note-view answer-revealed? note)])
 
