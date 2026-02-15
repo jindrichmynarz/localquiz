@@ -33,13 +33,16 @@
       :else (handler request))))
 
 (defn wrap-language
-  "Ring middleware adding the $language signal for Tempura."
+  "Ring middleware adding the $language signal or 'language' form or multipart parameter for Tempura."
   [handler]
-  (fn [{{:keys [language]} :signals
+  (fn [{:keys [form-params multipart-params signals]
         :as request}]
-    (-> request
-       (cond-> language (assoc :tempura/locales [(keyword language)]))
-       handler)))
+    (let [language (or (:language signals)
+                       (get form-params "language")
+                       (get multipart-params "language"))]
+      (-> request
+         (cond-> language (assoc :tempura/locales [(keyword language)]))
+         handler))))
 
 (def wrap-multipart
   "Allows uploading files up to 1 MB in size."
