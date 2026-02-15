@@ -28,11 +28,11 @@
 (defn lang-switch-input
   []
   [:input.offscreen#lang-toggle
-    {:data-attr:checked "$language == 'en'"
-     :data-on:change "$language = {'cs': 'en', 'en': 'cs'}[$language];
-                      localStorage.setItem('language', $language);
-                      location.reload()"
-     :type "checkbox"}])
+   {:data-attr:checked "$language == 'en'"
+    :data-on:change "$language = {'cs': 'en', 'en': 'cs'}[$language];
+                     localStorage.setItem('language', $language);
+                     location.reload()"
+    :type "checkbox"}])
 
 (defn lang-switch
   [tr]
@@ -43,6 +43,12 @@
     {:for "lang-toggle"
      :title (tr [:switch-lang])}]
    [:span "EN"]])
+
+(def lang-input
+  [:input
+   {:data-attr:value "$language"
+    :name "language"
+    :type "hidden"}])
 
 (defn footer
   [tr]
@@ -82,7 +88,6 @@
   ([request main]
    (morph-body request nil main))
   ([{:tempura/keys [tr]} header main]
-   ; TODO: Don't render if the handler doesn't return Hiccup or {:header ... :main ...}
    [:div#morph
     [:header
      [:h1 "Localquiz"]

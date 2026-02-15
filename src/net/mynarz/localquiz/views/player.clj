@@ -39,6 +39,7 @@
         :name "player-name"
         :required true
         :type "text"}]
+      views/lang-input
       [:button.btn#submit
        {:aria-disabled disabled?
         :disabled disabled?

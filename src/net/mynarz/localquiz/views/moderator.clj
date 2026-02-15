@@ -158,6 +158,7 @@
            [:option
             {:value question-source}
             question-source])]]
+       views/lang-input
        (number-of-questions tr)
        (create-button tr)]
       [:input#upload-questions-checkbox
@@ -174,6 +175,7 @@
           :data-on:change (views/post "/create/validate")
           :name "question-file"
           :type "file"}]]
+       views/lang-input
        (number-of-questions tr)
        (if error
          [:pre.error error]
