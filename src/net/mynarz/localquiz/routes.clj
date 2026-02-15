@@ -13,7 +13,6 @@
    ["/" {:get views/shim-view}]
    ["/sse" {:get sse/handler}]
    ["/create"
-    ; FIXME: Avoid the duplication combining views/morph-body with view/views.
     ["" {:post {:handler (comp views/view moderator-actions/create-game!)
                 :parameters {:form {:number-of-questions ::s/number-of-questions}
                              :multipart {:question-file multipart/temp-file-part}}}}]
