@@ -106,7 +106,7 @@
    {:data-on:click next-action
     :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
    (tr [:next])
-   [:i.material-icons (svg "arrow_circle_right.svg")]])
+   [:i.material-icons.md-large (svg "arrow_circle_right.svg")]])
 
 (defn number-of-questions
   [tr]
@@ -295,5 +295,5 @@
          {:data-on:click end-game-cmd
           :data-on:keydown__window (format "evt.key === 'Enter' && %s" end-game-cmd)}
          (tr [:end-game])
-         [:i.material-icons (svg "cancel.svg")]]]
+         [:i.material-icons.md-dark (svg "cancel.svg")]]]
        [:p (next-button tr "@post('/question')")])]))
