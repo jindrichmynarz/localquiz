@@ -1,0 +1,4 @@
+{:question-time-out 45 ; In seconds
+ :similarity-threshold 0.94 ; For Jaro-Winkler comparisons
+ :max-refresh-ms 100
+ :port 8080}
