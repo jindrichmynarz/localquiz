@@ -37,7 +37,6 @@
     {:keys [game-id]} :path-params
     player-id :sid
     :tempura/keys [tr]}]
-  (log/infof "Player %s answers %s." player-id answer)
   (let [{:keys [error]} (game/answer-question! game-id player-id answer)]
     (when error
       [:section#content
