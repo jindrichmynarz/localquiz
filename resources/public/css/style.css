@@ -275,7 +275,11 @@ label {
   display: flex;
   border: solid 3px var(--dark);
   margin: 0;
-  width: 25dvw;
+
+  svg {
+    height: 20dvw;
+    width: 20dvw;
+  }
 }
 
 #cookie-warning {
@@ -426,8 +430,12 @@ i.material-icons.answer-mark svg {
 
   &.revealed {
     background-color: var(--offwhite);
-    color: var(--darker);
+    color: var(--dark);
     box-shadow: 3px 3px 0 var(--dark);
+
+    svg {
+      fill: var(--dark);
+    }
   }
 
   .answer-frequency {
@@ -884,5 +892,21 @@ pre.error {
   td, th {
     text-align: left;
     padding: .5ex 1ch;
+  }
+}
+
+i.material-icons {
+  svg {
+    width: 1em;
+    height: 1em;
+  }
+
+  &.md-large svg {
+    width: inherit;
+    height: inherit;
+  }
+
+  &.md-dark svg {
+    fill: var(--dark);
   }
 }
