@@ -129,7 +129,7 @@
    [:i.material-icons (svg "replay.svg")]])
 
 (defmethod views/game-view [:moderator nil]
-  [{:keys [error]
+  [{:keys [error success]
     :tempura/keys [tr]
     :as request}]
   (views/morph-body
@@ -171,9 +171,9 @@
           :type "file"}]]
        views/lang-input
        (number-of-questions tr)
-       (if error
-         [:pre.error error]
-         (create-button tr))]]]))
+       (cond
+         error [:pre.error error]
+         success (create-button tr))]]]))
 
 (defmethod views/game-view [:moderator :new]
   [{:tempura/keys [tr]

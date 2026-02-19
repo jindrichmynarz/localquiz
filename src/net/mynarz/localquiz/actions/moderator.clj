@@ -29,8 +29,9 @@
     :as request}]
   (let [{:keys [error]} (parse-questions question-file)]
     (game-view
-      (cond-> request
-        error (assoc :error error)))))
+      (if error
+        (assoc request :error error)
+        (assoc request :success true)))))
 
 (defn create-game!
   "Create a game identified by `game-id`."
