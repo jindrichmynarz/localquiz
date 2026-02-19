@@ -28,7 +28,6 @@
         :autofocus true
         :aria-errormessage "name-error"
         :aria-invalid disabled?
-        :data-on:keydown views/submit-by-enter
         :data-on:keydown__debounce.500ms validate-js
         :minlength 1
         :maxlength 20

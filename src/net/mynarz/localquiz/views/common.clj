@@ -22,9 +22,6 @@
                     game-id (str "/" game-id))]
     (format "@get('%s', {retryMaxCount: Infinity})" endpoint)))
 
-(def submit-by-enter
-   "evt.key === 'Enter' && document.getElementById('submit').click()")
-
 (defn lang-switch-input
   []
   [:input.offscreen#lang-toggle
@@ -370,7 +367,6 @@
      [:p
       [:input
        {:autofocus true
-        :data-on:keydown submit-by-enter
         :minlength 1
         :maxlength 20
         :name "answer"
