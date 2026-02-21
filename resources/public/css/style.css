@@ -349,8 +349,7 @@ label {
 
     img {
       border: solid 3px var(--dark);
-      max-width: 500px;
-      max-height: 50vh;
+      max-height: 40vh;
     }
   }
 }
@@ -559,21 +558,20 @@ progress {
   text-align: left;
   height: 8px;
   vertical-align: middle;
+  container-type: inline-size;
 
   &::-webkit-progress-bar {
     background-color: var(--offwhite);
   }
 
-  &::-moz-progress-bar {
-    background-color: var(--offwhite);
-  }
-
   &::-webkit-progress-value {
-    background: var(--orange);
+    background: linear-gradient(90deg, var(--orange), var(--red));
+    background-size: 100cqi;
   }
 
   &::-moz-progress-bar {
-    background: var(--orange);
+    background: linear-gradient(90deg, var(--orange), var(--red));
+    background-size: 100cqi;
   }
 }
 
