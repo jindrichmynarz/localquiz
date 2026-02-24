@@ -1,4 +1,19 @@
+.PHONY: repl test
+
 repl:
 	clj \
-		-M:repl:dev \
-		--main nrepl.cmdline
+		-M:repl:dev
+
+test:
+	clj \
+		-X:dev:test
+
+retest:
+	clj \
+		-M:dev:test-refresh
+
+build:
+	clj \
+		-Srepro \
+		-T:build \
+		uber

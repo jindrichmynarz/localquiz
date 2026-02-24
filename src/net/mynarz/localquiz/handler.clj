@@ -1,0 +1,33 @@
+(ns net.mynarz.localquiz.handler
+  (:require [net.mynarz.localquiz.i18n :as i18n]
+            [net.mynarz.localquiz.middleware :as middleware]
+            [net.mynarz.localquiz.routes :refer [routes]]
+            [reitit.ring :as ring]
+            [reitit.ring.middleware.exception :as exception]
+            [reitit.ring.middleware.parameters :as parameters]
+            [taoensso.tempura :as tempura]
+            [taoensso.timbre :as log]))
+
+(def exception-middleware
+  (exception/create-exception-middleware
+    (merge exception/default-handlers
+           {::exception/wrap (fn [handler exception request]
+                               (log/error exception)
+                               (handler exception request))})))
+
+(defn ->handler
+  []
+  (ring/ring-handler
+   (ring/router
+    routes
+    {:data {:middleware [middleware/wrap-blocker
+                         parameters/parameters-middleware
+                         middleware/wrap-multipart
+                         middleware/wrap-parse-signals
+                         middleware/wrap-language
+                         [tempura/wrap-ring-request {:tr-opts {:dict i18n/dictionary}}]
+                         middleware/wrap-session
+                         exception-middleware]}})
+   (ring/routes
+    (ring/create-resource-handler {:path "/"})
+    (ring/create-default-handler))))

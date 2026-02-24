@@ -1,0 +1,5 @@
+{:creators #{{:name "Jindřich Mynarz"
+              :url "https://mynarz.net/#jindrich"}}
+ :questions #{{:type :yesno
+               :text "Is this test successful?"
+               :correct? true}}}

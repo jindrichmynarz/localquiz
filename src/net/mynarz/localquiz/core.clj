@@ -1,42 +1,38 @@
 (ns net.mynarz.localquiz.core
   (:gen-class)
-  (:require [net.mynarz.localquiz.db :refer [initial-db]]
-            [net.mynarz.localquiz.views] ; Must be loaded to register routes.
-            [hyperlith.core :as h :refer [defaction defview]]))
+  (:require [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.db-listener]
+            [net.mynarz.localquiz.server]
+            [clojure.java.browse :refer [browse-url]]
+            [mount.core :as mount]
+            [taoensso.timbre :as log]
+            [taoensso.timbre.appenders.core :as appenders])
+  (:import (java.util.concurrent Executors)))
 
-(defn ctx-start
-  []
-  (let [db (atom initial-db)]
-    {:db db}))
+;; Make futures use virtual threads
+(set-agent-send-executor!
+ (Executors/newVirtualThreadPerTaskExecutor))
 
-(defn ctx-stop
-  [ctx])
-
-(defonce app
-  (atom nil))
+(set-agent-send-off-executor!
+ (Executors/newVirtualThreadPerTaskExecutor))
 
 (defn -main
-  [& args]
-  (reset! app
-    (h/start-app
-      {:ctx-start ctx-start
-       :ctx-stop ctx-stop
-       :csrf-secret (h/env :csrf-secret)
-       :max-refresh-ms 100
-       :port (h/env :port)})))
+  [& _]
+  ; Initialize logging to standard error stream
+  (log/merge-config! {:appenders {:println (appenders/println-appender {:stream :std-err})}
+                      ; Filter Datahike's verbose logging
+                      :min-level [[#{"datahike.*" "konserve.*"} :warn]]})
+  (.addShutdownHook (Runtime/getRuntime)
+                    (Thread. (fn []
+                               (mount/stop)
+                               (shutdown-agents))))
+  (mount/start))
 
 (comment
   ; Start the application
   (-main)
 
-  ; Open the application
-  (clojure.java.browse/browse-url (format "http://localhost:%d/" (h/env :port)))
+  ; Open the application in the browser
+  (browse-url (:url config))
 
-  ; Stop the application
-  ((@app :stop))
-
-  ; Get the application's database
-  (def db
-    (-> @app
-        :ctx
-        :db)))
+  (mount/stop))
