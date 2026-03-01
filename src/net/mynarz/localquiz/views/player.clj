@@ -38,9 +38,9 @@
       [:button.btn#submit
        {:aria-disabled disabled?
         :disabled disabled?
-        :data-on:pointerdown (long-str "$_controller.abort();"
-                                       "$_submitted = true;"
-                                       (views/post (str "/join/" game-id)))}
+        :data-on:click (long-str "$_controller.abort();"
+                                 "$_submitted = true;"
+                                 (views/post (str "/join/" game-id)))}
        [:i.material-icons (svg "play_circle.svg")]
        (tr [:join-game])]]
      (when error

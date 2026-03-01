@@ -35,7 +35,7 @@
 (defn create-button
   [tr]
   [:button.btn.btn-primary
-   {:data-on:pointerdown (views/post "/create")}
+   {:data-on:click (views/post "/create")}
    (tr [:create-game])])
 
 (def end-game-cmd
@@ -49,13 +49,13 @@
     [:p (tr [:confirm-end-game])]
     [:p
      [:button.btn
-      {:data-on:pointerdown end-game-cmd}
+      {:data-on:click end-game-cmd}
       (tr [:question.yesno/yes])]
      [:button.btn
-      {:data-on:pointerdown "$_endGameDialog.close()"}
+      {:data-on:click "$_endGameDialog.close()"}
       (tr [:question.yesno/no])]]]
    [:button
-    {:data-on:pointerdown "$_endGameDialog.showModal()"
+    {:data-on:click "$_endGameDialog.showModal()"
      :title (tr [:end-game])}
     [:i.material-icons (svg "cancel.svg")]]])
 
@@ -103,7 +103,7 @@
   [tr
    ^String next-action]
   [:button.btn.btn-primary
-   {:data-on:pointerdown next-action
+   {:data-on:click next-action
     :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
    (tr [:next])
    [:i.material-icons.md-large (svg "arrow_circle_right.svg")]])
@@ -124,7 +124,7 @@
   [tr]
   [:a#replay-audio
    {:data-show "$_audio"
-    :data-on:pointerdown "$_audio.currentTime = 0; $_audio.play()"}
+    :data-on:click "$_audio.currentTime = 0; $_audio.play()"}
    (tr [:replay-audio])
    [:i.material-icons (svg "replay.svg")]])
 
@@ -197,7 +197,7 @@
         (if has-enough-players?
           [:p
            [:button.btn.btn-primary
-            {:data-on:pointerdown "@post('/question')"
+            {:data-on:click "@post('/question')"
              :disabled (not has-enough-players?)
              :type "submit"}
             (tr [:start-game])]]
@@ -292,7 +292,7 @@
      (if (game/all-questions-answered? game-id)
        [:p
         [:button.btn.btn-primary
-         {:data-on:pointerdown end-game-cmd
+         {:data-on:click end-game-cmd
           :data-on:keydown__window (format "evt.key === 'Enter' && %s" end-game-cmd)}
          (tr [:end-game])
          [:i.material-icons.md-dark (svg "cancel.svg")]]]

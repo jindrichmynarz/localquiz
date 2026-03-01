@@ -73,7 +73,7 @@
    [:p (tr [:cookie-warning])]
    [:div.buttons
     [:button.btn.btn-primary
-     {:data-on:pointerdown "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
+     {:data-on:click "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
      (tr [:accept])]]])
 
 (defn morph-body
@@ -186,13 +186,13 @@
   [^Boolean disabled?
    ^String game-id]
   (when-not disabled?
-    {:data-on:pointerdown (str "evt.target.tagName == 'INPUT' &&" (answer-handler game-id))}))
+    {:data-on:click (str "evt.target.tagName == 'INPUT' &&" (answer-handler game-id))}))
 
 (defn submit-button
   [tr
    ^String game-id]
   [:button.btn#submit
-   {:data-on:pointerdown (answer-handler game-id)}
+   {:data-on:click (answer-handler game-id)}
    (tr [:submit])])
 
 (defn mark-answer
@@ -327,13 +327,13 @@
       [:p
        {:data-signals "{_answer: 50}"}
        [:button.btn
-        {:data-on:pointerdown__prevent "$_answer--"}
+        {:data-on:click__prevent "$_answer--"}
         "-"]
        [:label.percentage
         {:data-text "$_answer + ' %'"
          :for "answer"}]
        [:button.btn
-        {:data-on:pointerdown__prevent "$_answer++"}
+        {:data-on:click__prevent "$_answer++"}
         "+"]]
       [:p.range-input
        [:input
