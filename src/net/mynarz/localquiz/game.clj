@@ -233,11 +233,12 @@
   ; FIXME: Is it possible that this is evaluated more than once for the same question?
   ;        Shall we store a "lock" indicating if the question was already evaluated? Don't evaluate answers if they were evaluated before.
   (log/infof "Evaluating answers for game %s." game-id)
-  (let [question (current-question game-id)
-        scores (->> game-id
-                    get-answers
-                    (scoring/score-answers question)
-                    scoring/scale-scores-by-answer-times)]
+  (let [{:keys [scoring]
+         :as question} (current-question game-id)
+        scores (cond-> (->> game-id
+                            get-answers
+                            (scoring/score-answers question))
+                  (not= scoring :consensus) scoring/scale-scores-by-answer-times)]
     (->> [(store-scores scores)
           (add-scores scores)
           [[:db/add [:game/id game-id] :game/state :show-answers]]]
