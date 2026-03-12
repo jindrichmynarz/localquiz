@@ -368,7 +368,7 @@
       [:input
        {:autofocus true
         :minlength 1
-        :maxlength 20
+        :maxlength 100
         :name "answer"
         :type "text"}]
       (submit-button tr game-id)])
