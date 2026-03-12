@@ -109,7 +109,7 @@
    [:i.material-icons.md-large (svg "arrow_circle_right.svg")]])
 
 (defn number-of-questions
-  [tr]
+  [tr success]
   [:p.form-group
    [:label
     {:for "number-of-questions"}
@@ -118,7 +118,7 @@
     {:min 1
      :name "number-of-questions"
      :type "number"
-     :value 20}]])
+     :value (:number-of-questions success)}]])
 
 (defn replay-audio
   [tr]
@@ -146,15 +146,20 @@
       [:form
        [:p
         [:select#question-picker
-         {:name "question-source"
-          :placeholder (tr [:pick-questions])}
+         {:data-on:change (views/post "/create/validate")
+          :name "question-source"}
+         [:option
+          {:disabled true
+           :selected true}
+          (tr [:pick-questions])]
          (for [question-source (keys question-sources)]
            [:option
             {:value question-source}
             question-source])]]
        views/lang-input
-       (number-of-questions tr)
-       (create-button tr)]
+       (when success
+         [(number-of-questions tr success)
+          (create-button tr)])]
       [:input#upload-questions-checkbox
        {:name "tab-picker"
         :type "radio"}]
@@ -170,10 +175,10 @@
           :name "question-file"
           :type "file"}]]
        views/lang-input
-       (number-of-questions tr)
        (cond
          error [:pre.error error]
-         success (create-button tr))]]]))
+         success [(number-of-questions tr success)
+                  (create-button tr)])]]]))
 
 (defmethod views/game-view [:moderator :new]
   [{:tempura/keys [tr]
