@@ -12,7 +12,7 @@
             [taoensso.timbre :as log])
   (:import (java.io File)))
 
-(defn parse-questions
+(defn parse-questions-file
   "Parse quiz questions from `questions-file`."
   [^File questions-file]
   (try
@@ -23,33 +23,41 @@
     (catch Exception ex
       {:error (.getMessage ex)})))
 
+(defn parse-questions
+  "Parse questions either from a selected question source or an uploaded question file."
+  [{{question-source "question-source"} :form-params
+    {{question-file :tempfile} "question-file"} :multipart-params
+    :tempura/keys [tr]}]
+  (cond
+     question-source (->> question-source
+                          (get question-sources)
+                          edn/read-once
+                          (hash-map :success))
+     question-file (parse-questions-file question-file)
+     :else {:error (tr [:errors/question-source-missing])}))
+
 (defn validate-questions
   "Validate the uploaded questions according to their spec."
-  [{{{question-file :tempfile} "question-file"} :multipart-params
-    :as request}]
-  (let [{:keys [error]} (parse-questions question-file)]
+  [request]
+  (let [{:keys [error]
+         {:keys [questions]} :success} (parse-questions request)]
     (game-view
       (if error
         (assoc request :error error)
-        (assoc request :success true)))))
+        (assoc request :success {:number-of-questions (count questions)})))))
 
 (defn create-game!
   "Create a game identified by `game-id`."
-  [{{number-of-questions "number-of-questions"
-     question-source "question-source"} :form-params
-    {{question-file :tempfile} "question-file"} :multipart-params
-    :tempura/keys [tr]
-    game-id :sid
+  [{game-id :sid
+    :keys [form-params multipart-params]
     :as request}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
-  (let [number-of-questions (or (st/coerce ::s/number-of-questions number-of-questions st/string-transformer) 20)
-        {:keys [error success]} (cond
-                                   question-file (parse-questions question-file)
-                                   question-source (->> question-source
-                                                        (get question-sources)
-                                                        edn/read-once
-                                                        (hash-map :success))
-                                   :else {:error (tr [:errors/question-source-missing])})]
+  (let [number-of-questions (or (st/coerce ::s/number-of-questions
+                                           (or (get form-params "number-of-questions")
+                                               (get multipart-params "number-of-questions"))
+                                           st/string-transformer)
+                                20)
+        {:keys [error success]} (parse-questions request)]
     (if error
       (-> request
           (assoc :error error)
