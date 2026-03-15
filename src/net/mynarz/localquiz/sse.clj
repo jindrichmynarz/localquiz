@@ -7,11 +7,19 @@
             [net.mynarz.localquiz.util :as util]
             [net.mynarz.localquiz.views.common :as views]
             [clojure.core.async :as a]
+            [clojure.string :as string]
             [dev.onionpancakes.chassis.core :as h]
-            [starfederation.datastar.clojure.adapter.http-kit :as hk-gen]
+            [starfederation.datastar.clojure.adapter.http-kit2 :as hk-adapter]
             [starfederation.datastar.clojure.api :as d*]
             [starfederation.datastar.clojure.brotli :as brotli]
             [taoensso.timbre :as log]))
+
+(defn select-write-profile
+  [{{accepts "accept-encoding"} :headers}]
+  (cond
+    (string/includes? accepts "br")   (brotli/->brotli-profile)
+    (string/includes? accepts "gzip") hk-adapter/gzip-profile
+    :else                             hk-adapter/basic-profile))
 
 (defn handler
   "Server-sent events handler that runs for each game update."
@@ -24,12 +32,11 @@
         <throttled-ch (throttle (:max-refresh-ms config) <ch)
         ; Poison pill for work cancelling
         <cancel (a/chan)]
-    (hk-gen/->sse-response
+    (hk-adapter/->sse-response
       request
-      {hk-gen/write-profile
-       (brotli/->brotli-profile)
+      {hk-adapter/write-profile (select-write-profile request)
 
-       hk-gen/on-open
+       hk-adapter/on-open
        (fn [sse-gen]
          (log/infof "Opening a connection to game %s." game-id)
          ; Ensures at least one render on connect
@@ -62,7 +69,7 @@
                ; We want work cancelling to have higher priority.
                :priority true))))
 
-       hk-gen/on-close
+       hk-adapter/on-close
        (fn [sse-gen status]
          (log/infof "Closing the session %s to game %s with status %s." session-id game-id status)
          (a/>!! <cancel :cancel)
