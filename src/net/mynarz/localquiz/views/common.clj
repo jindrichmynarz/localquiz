@@ -387,7 +387,8 @@
    {:keys [items note]}]
   (let [shuffled-items (->> items
                             add-index
-                            util/deterministic-shuffle)]
+                            util/deterministic-shuffle)
+        drag-indicator [:i.material-icons (svg "drag_indicator.svg")]]
     [:form#answers
      [:ul#sortableList
       {:class (when disabled? "disabled")
@@ -404,7 +405,9 @@
         (for [{:keys [index text]} shuffled-items]
           [:li
            {:data-index index}
-           [:span text]]))
+           [:span text]
+           (when-not disabled?
+             drag-indicator)]))
       [:input
        {:data-attr:value "$_answer"
         :name "answer"
