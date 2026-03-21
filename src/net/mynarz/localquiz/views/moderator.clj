@@ -75,7 +75,8 @@
         leaderboard-data (game/leaderboard game-id)
         max-score (->> leaderboard-data
                        (map :score)
-                       (apply max))]
+                       (apply max))
+        final-leaderboard? (= questions-answered questions-total)]
     [:div#leaderboard
      [:table
       [:caption
@@ -89,13 +90,19 @@
         [:th (tr [:score])]
         [:th]]]
       [:tbody
-       (for [{:keys [player-name score]} leaderboard-data
+       (for [{:keys [player-name score winner?]} (map-indexed (fn [index data]
+                                                                (if (zero? index)
+                                                                 (assoc data :winner? true)
+                                                                 data))
+                                                              leaderboard-data)
              :let [score-decimal (decimal-format score)
                    score-style (->> (if (zero? score) score (/ score max-score))
                                     decimal-format
                                     (format "--score: %s;"))]]
          [:tr
-          [:td player-name]
+          [:td player-name
+           (when (and final-leaderboard? winner?)
+             [:i.material-icons (svg "emoji_events.svg")])]
           [:td [:span.score-bar {:style score-style}]]
           [:td score-decimal]])]]]))
 
