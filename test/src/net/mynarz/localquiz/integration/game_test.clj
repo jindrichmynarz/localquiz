@@ -42,7 +42,7 @@
   (is (= (set (game/lobby fixtures/game-id))
          #{"Jane" "Bob"}))
   (let [player-name "Latecomer"]
-    (player/join-game! {:form-params {"player-name" player-name}
+    (player/join-game! {:parameters {:form {:player-name player-name}}
                         :path-params {:game-id fixtures/game-id}
                         :sid (crypto/random-unguessable-uid)})
     (is (= (last (game/lobby fixtures/game-id)) player-name))))

@@ -9,24 +9,28 @@
   "Test if `player-name` is valid."
   [{{{:keys [player-name]} :form} :parameters
     {:keys [game-id]} :path-params
-    player-id :sid}]
-  (refresh-signals! game-id player-id {:error (game/validate-player-name game-id player-name)}))
+    player-id :sid
+    :tempura/keys [tr]}]
+  (let [validation-error (game/validate-player-name game-id player-name)
+        signals (if validation-error
+                  {:error (tr [validation-error])}
+                  {:error false})]
+    (refresh-signals! game-id player-id signals)))
 
 (defn join-game!
   "Add a player with `player-name` to the game identified by `game-id`."
-  [{{player-name "player-name"} :form-params
+  [{{{:keys [player-name]} :form} :parameters
     {:keys [game-id]} :path-params
-    player-id :sid}]
-  (if-let [validation-error (game/validate-player-name game-id player-name)]
-    (refresh-signals! game-id player-id {:error validation-error})
-    (do
-      (log/infof "Player %s is joining game %s as '%s'." player-id game-id player-name)
-      (d/transact db-conn [{:db/id [:game/id game-id]
-                            :game/players [{:player/id player-id
-                                            :player/name player-name}]}]))))
+    player-id :sid
+    :as request}]
+  (and (validate-player-name! request)
+       (do (log/infof "Player %s is joining game %s as '%s'." player-id game-id player-name)
+           (d/transact db-conn [{:db/id [:game/id game-id]
+                                 :game/players [{:player/id player-id
+                                                 :player/name player-name}]}]))))
 
 (defn answer-question!
-  [{{{:keys [answer]} :form} :parameters
+  [{{answer "answer"} :form-params
     {:keys [game-id]} :path-params
     player-id :sid
     :tempura/keys [tr]}]

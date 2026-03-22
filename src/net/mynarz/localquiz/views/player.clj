@@ -10,10 +10,8 @@
 
 (defn player-name-input
   [{{:keys [game-id]} :path-params
-    :tempura/keys [tr]
-    :keys [error]}]
-  (let [disabled? (some? error)
-        validate-js (long-str "!$_submitted &&"
+    :tempura/keys [tr]}]
+  (let [validate-js (long-str "!$_submitted &&"
                               (views/post (str "/join/" game-id "/validate")
                                           "requestCancellation: $_controller"))]
     [:section#content
@@ -27,8 +25,8 @@
        {:aria-live "polite"
         :autofocus true
         :aria-errormessage "name-error"
-        :aria-invalid disabled?
         :data-on:keydown__debounce.500ms validate-js
+        :data-attr:aria-invalid "!!$error"
         :minlength 1
         :maxlength 20
         :name "player-name"
@@ -36,16 +34,17 @@
         :type "text"}]
       views/lang-input
       [:button.btn#submit
-       {:aria-disabled disabled?
-        :disabled disabled?
+       {:data-attr:aria-disabled "!!$error"
+        :data-attr:disabled "!!$error"
         :data-on:click (long-str "$_controller.abort();"
                                  "$_submitted = true;"
                                  (views/post (str "/join/" game-id)))}
        [:i.material-icons (svg "play_circle.svg")]
        (tr [:join-game])]]
-     (when error
-       [:p#name-error.error
-        (tr [error])])]))
+     [:div.error
+      {:data-show "$error"}
+      [:p#name-error
+       {:data-text "$error"}]]]))
 
 (defmethod views/game-view [:player nil]
   [{:tempura/keys [tr]

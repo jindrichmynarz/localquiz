@@ -9,7 +9,7 @@
 
 (defn player-params
   [^String player-name]
-  {:form-params {"player-name" player-name}
+  {:parameters {:form {:player-name player-name}}
    :path-params {:game-id fixtures/game-id}
    :sid (crypto/random-unguessable-uid)
    :tempura/tr fixtures/tr})

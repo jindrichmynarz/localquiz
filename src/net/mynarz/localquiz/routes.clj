@@ -26,10 +26,11 @@
 
    ; Players' routes
    ["/play/:game-id" {:get views/shim-view}]
-   ["/sse/:game-id" {:get sse/handler}]
+   ["/sse/:game-id" {:get sse/handler
+                     :middleware [hk-adapter/start-responding-middleware]}]
    ["/join/:game-id"
     ["" {:post {:handler (comp views/view player-actions/join-game!)
                 :parameters {:form ::spec/player-params}}}]
-    ["/validate" {:post {:handler player-actions/validate-player-name!
+    ["/validate" {:post {:handler (comp views/view player-actions/validate-player-name!)
                          :parameters {:form ::spec/player-params}}}]]
    ["/answer/:game-id" (comp views/view player-actions/answer-question!)]])
