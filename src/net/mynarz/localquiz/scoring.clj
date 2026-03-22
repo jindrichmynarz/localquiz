@@ -37,7 +37,7 @@
   [question answers]
   (let [expected (-> question :answer normalize-answer)]
     (for [answer answers
-          :let [actual (-> answer :answer normalize-answer)
+          :let [actual (-> answer :answer str normalize-answer)
                 correct? (> (jaro-winkler actual expected)
                             (:similarity-threshold config))]]
       (assoc answer :correct? correct?
