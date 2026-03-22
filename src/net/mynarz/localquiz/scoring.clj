@@ -69,7 +69,10 @@
   "Build a map of answers to their scores based on consensus.
   No consensus gets the score of 0, complete consensus the score of 1."
   [answers]
-  (let [increment (double (/ 1 (dec (count answers))))]
+  (let [answer-count (count answers)
+        increment (if (> answer-count 1)
+                    (double (/ 1 (dec answer-count)))
+                    0)]
     (->> answers
         (reduce (fn [scores answer]
                   (let [answer-score (get scores answer)]
