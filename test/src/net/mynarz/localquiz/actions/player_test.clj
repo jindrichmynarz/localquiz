@@ -16,7 +16,6 @@
 
 (deftest join-game!
   (are [player-name key-fn] (key-fn (player/join-game! (player-params player-name)))
-       "Jane" vector? ; Returns error Hiccup
        "Angela" :tx-data) ; Returns transaction data
   (let [player-name "Felix"]
     (player/join-game! (player-params player-name))

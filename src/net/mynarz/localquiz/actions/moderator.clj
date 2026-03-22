@@ -1,14 +1,14 @@
 (ns net.mynarz.localquiz.actions.moderator
-  (:require [net.mynarz.localquiz.db :refer [db-conn]]
+  (:require [net.mynarz.localquiz.actions.common :refer [refresh-signals!]]
+            [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.spec :as s]
             [net.mynarz.localquiz.util :as util]
-            [net.mynarz.localquiz.views.common :refer [game-view]]
             [datahike.api :as d]
             [fast-edn.core :as edn]
-            [spec-tools.core :as st]
             [taoensso.timbre :as log])
   (:import (java.io File)))
 
@@ -25,8 +25,8 @@
 
 (defn parse-questions
   "Parse questions either from a selected question source or an uploaded question file."
-  [{{question-source "question-source"} :form-params
-    {{question-file :tempfile} "question-file"} :multipart-params
+  [{{{:keys [question-source]} :form
+     {{question-file :tempfile} :question-file} :multipart} :parameters
     :tempura/keys [tr]}]
   (cond
      question-source (->> question-source
@@ -36,36 +36,31 @@
      question-file (parse-questions-file question-file)
      :else {:error (tr [:errors/question-source-missing])}))
 
-(defn validate-questions
+(defn validate-questions!
   "Validate the uploaded questions according to their spec."
-  [request]
+  [{game-id :sid
+    :as request}]
   (let [{:keys [error]
-         {:keys [questions]} :success} (parse-questions request)]
-    (game-view
-      (if error
-        (assoc request :error error)
-        (assoc request :success {:number-of-questions (count questions)})))))
+         {:keys [questions]} :success} (parse-questions request)
+        signals (if error
+                  {:error error}
+                  {:error false
+                   :numberOfQuestions (count questions)})]
+    (refresh-signals! game-id game-id signals)))
 
 (defn create-game!
   "Create a game identified by `game-id`."
-  [{game-id :sid
-    :keys [form-params multipart-params]
+  [{{{:keys [number-of-questions]} :form} :parameters
+    game-id :sid
     :as request}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
-  (let [number-of-questions (or (st/coerce ::s/number-of-questions
-                                           (or (get form-params "number-of-questions")
-                                               (get multipart-params "number-of-questions"))
-                                           st/string-transformer)
-                                20)
-        {:keys [error success]} (parse-questions request)]
+  (let [{:keys [error success]} (parse-questions request)]
     (if error
-      (-> request
-          (assoc :error error)
-          game-view)
+      (refresh-signals! game-id game-id {:error error})
       (let [questions (->> success
                            :questions
                            shuffle
-                           (take number-of-questions)
+                           (take (or number-of-questions (:default-number-of-questions config)))
                            (map (comp pr-str util/replace-react-fragments)))
             questions-total (-> questions
                                 count

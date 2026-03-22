@@ -2,8 +2,9 @@
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.scoring :as scoring]
-            [net.mynarz.localquiz.spec :as s]
+            [net.mynarz.localquiz.spec :as spec]
             [net.mynarz.localquiz.util :as util]
+            [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [datahike.api :as d]
             [fast-edn.core :as edn]
@@ -51,19 +52,17 @@
          seq
          some?)))
 
-(defn player-name-valid-length?
-  "Test if `player-name` is between 1 and 20 characters."
+(defn player-name-valid?
   [^String player-name]
-  (<= 1 (count player-name) 20))
+  (s/valid? ::spec/player-name player-name))
 
 (defn validate-player-name
   [^String game-id
    ^String player-name]
   (log/infof "Validating player name '%s'." player-name)
   (cond
-    (nil? player-name) :errors.player-name/no-name
-    (player-name-in-game? game-id player-name) :errors.player-name/taken
-    (not (player-name-valid-length? player-name)) :errors.player-name/length))
+    (not (player-name-valid? player-name)) :errors.player-name/length
+    (player-name-in-game? game-id player-name) :errors.player-name/taken))
 
 (defn lobby
   "Get the players waiting in the lobby for the game identified by `game-id`.
@@ -95,7 +94,7 @@
 (defn parse-answer
   "Parse `answer` to Clojure data types."
   [^String answer]
-  (st/coerce ::s/player-answer answer st/string-transformer))
+  (st/coerce ::spec/player-answer answer st/string-transformer))
 
 (defn player-answered?
   "Test if a player with `player-id` has already answered

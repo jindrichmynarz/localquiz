@@ -5,8 +5,7 @@
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.util :refer [decimal-format svg]]
             [net.mynarz.localquiz.views.common :as views]
-            [charred.api :as charred]
-            [taoensso.timbre :as log]))
+            [charred.api :as charred]))
 
 (defn answer-progress
   [tr
@@ -116,16 +115,17 @@
    [:i.material-icons.md-large (svg "arrow_circle_right.svg")]])
 
 (defn number-of-questions
-  [tr success]
+  [tr]
   [:p.form-group
+   {:data-signals:number-of-questions__ifmissing (:default-number-of-questions config)}
    [:label
     {:for "number-of-questions"}
     (tr [:number-of-questions])]
    [:input#number-of-questions
-    {:min 1
+    {:data-bind "numberOfQuestions"
+     :min 1
      :name "number-of-questions"
-     :type "number"
-     :value (:number-of-questions success)}]])
+     :type "number"}]])
 
 (defn replay-audio
   [tr]
@@ -135,18 +135,38 @@
    (tr [:replay-audio])
    [:i.material-icons (svg "replay.svg")]])
 
+(defn create-game-form-fields
+  [tr]
+  [views/lang-input
+   [:div.error
+    {:data-show "$error"}
+    [:h2 (tr [:errors/errors])]
+    [:pre {:data-text "$error"}]]
+   [:div
+    {:data-show "!$error"}
+    [(number-of-questions tr)
+     (create-button tr)]]])
+
+(defn tab-checkbox
+  ([^String id]
+   (tab-checkbox id false))
+  ([^String id
+    ^Boolean checked]
+   [:input
+    {:checked checked
+     :data-on:change (format "$error = false; $numberOfQuestions = %d" (:default-number-of-questions config))
+     :id id
+     :name "tab-picker"
+     :type "radio"}]))
+
 (defmethod views/game-view [:moderator nil]
-  [{:keys [error success]
-    :tempura/keys [tr]
+  [{:tempura/keys [tr]
     :as request}]
   (views/morph-body
     request
     [:section#content
      [:div.tabs
-      [:input#select-questions-checkbox
-       {:checked true
-        :name "tab-picker"
-        :type "radio"}]
+      (tab-checkbox "select-questions-checkbox" true)
       [:label
        {:for "select-questions-checkbox"}
        (tr [:pick-questions])]
@@ -163,13 +183,8 @@
            [:option
             {:value question-source}
             question-source])]]
-       views/lang-input
-       (when success
-         [(number-of-questions tr success)
-          (create-button tr)])]
-      [:input#upload-questions-checkbox
-       {:name "tab-picker"
-        :type "radio"}]
+       (create-game-form-fields tr)]
+      (tab-checkbox "upload-questions-checkbox")
       [:label
        {:for "upload-questions-checkbox"}
        (tr [:upload-questions])]
@@ -181,11 +196,7 @@
           :data-on:change (views/post "/create/validate")
           :name "question-file"
           :type "file"}]]
-       views/lang-input
-       (cond
-         error [:pre.error error]
-         success [(number-of-questions tr success)
-                  (create-button tr)])]]]))
+       (create-game-form-fields tr)]]]))
 
 (defmethod views/game-view [:moderator :new]
   [{:tempura/keys [tr]

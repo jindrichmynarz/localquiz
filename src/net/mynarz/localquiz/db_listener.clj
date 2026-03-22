@@ -27,7 +27,7 @@
                        (remove last) ; Retracted datoms have `false` as their last value.
                        (map first)
                        distinct)]
-    (or (and added (d/q updated-game-query db-after added)) ; Most transactions are additions, so check them first.
+    (or (and added (d/q updated-game-query db-after added))
         (and retracted (d/q updated-game-query db-before retracted)))))
 
 (defn refresh-game
@@ -35,7 +35,7 @@
   [tx-report]
   (when-let [updated-game (find-updated-game tx-report)]
     (log/infof "The game %s was updated." updated-game)
-    (a/>!! refresh-channel updated-game)))
+    (a/>!! refresh-channel {:game-id updated-game})))
 
 (defstate db-listener
   :start (d/listen db-conn :refresh-game refresh-game)

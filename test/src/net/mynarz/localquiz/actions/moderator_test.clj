@@ -29,8 +29,8 @@
        not))
 
 (deftest parse-questions
-  (are [questions-file key?] (with-open [questions (-> questions-file io/resource io/input-stream)]
-                               (is (key? (moderator/parse-questions questions))))
+  (are [questions-file key?] (let [questions (-> questions-file io/resource io/as-file)]
+                               (is (key? (moderator/parse-questions-file questions))))
        "questions/empty.edn" :error
        "questions/questions.edn" :success))
 

@@ -6,6 +6,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :as util]
             [net.mynarz.localquiz.views.common :as views]
+            [charred.api :as charred]
             [clojure.core.async :as a]
             [clojure.string :as string]
             [dev.onionpancakes.chassis.core :as h]
@@ -13,6 +14,13 @@
             [starfederation.datastar.clojure.api :as d*]
             [starfederation.datastar.clojure.brotli :as brotli]
             [taoensso.timbre :as log]))
+
+(defn patch-signals!
+  "Patch Datastar `signals` using SSE generator `sse-gen`."
+  [sse-gen signals]
+  (->> signals
+       charred/write-json-str
+       (d*/patch-signals! sse-gen)))
 
 (defn select-write-profile
   [{{accepts "accept-encoding"} :headers}]
@@ -49,22 +57,26 @@
                  (a/close! ch))
 
                [<throttled-ch]
-               ([_]
-                (some-> ; Stop in case of error
-                 (on-cpu-pool ; CPU work on real threads
-                  ; Stop in case of error
-                  (when-some [new-view (error/try-on-error (views/morph-view request))]
-                    (let [new-view-str (h/html new-view)
-                          ; This is a very fast hash
-                          new-view-hash (Integer/toHexString (hash new-view-str))]
-                      ; Only send an event if the view has changed
-                      (when-not (= last-view-hash new-view-hash)
-                        (log/infof "Rendering game %s for session %s." game-id session-id)
-                        (d*/patch-elements! sse-gen
-                                            new-view-str
-                                            {:use-view-transition true}))
-                      new-view-hash)))
-                 recur))
+               ([{:keys [signals]}]
+                (if-let [session-signals (get signals session-id)]
+                  (do (log/infof "Sending signals: %s" session-signals)
+                      (patch-signals! sse-gen session-signals)
+                      (recur last-view-hash))
+                  (some-> ; Stop in case of error
+                   (on-cpu-pool ; CPU work on real threads
+                    ; Stop in case of error
+                    (when-some [new-view (error/try-on-error (views/morph-view request))]
+                      (let [new-view-str (h/html new-view)
+                            ; This is a very fast hash
+                            new-view-hash (Integer/toHexString (hash new-view-str))]
+                        ; Only send an event if the view has changed
+                        (when-not (= last-view-hash new-view-hash)
+                          (log/infof "Rendering game %s for session %s." game-id session-id)
+                          (d*/patch-elements! sse-gen
+                                              new-view-str
+                                              {:use-view-transition true}))
+                        new-view-hash)))
+                   recur)))
 
                ; We want work cancelling to have higher priority.
                :priority true))))

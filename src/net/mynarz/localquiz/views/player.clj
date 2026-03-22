@@ -78,6 +78,9 @@
   (views/morph-body
     request
     [:section#content
+     [:h2.error
+      {:data-show "$error"
+       :data-text "$error"}]
      (if (game/player-answered? player-id)
        [waiting-icon
         [:h2 (tr [:wait-for-answers])]]

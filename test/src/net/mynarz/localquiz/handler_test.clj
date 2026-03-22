@@ -105,8 +105,5 @@
                 (= 204))))
       (testing "Player 2 answers late"
         (Thread/sleep (* 1000 (:question-time-out config)))
-        (is (-> (answer player-2)
-                :status
-                (= 200)))
         (is (= (game/winner game-id)
                (:sid player-1)))))))

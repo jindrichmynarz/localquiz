@@ -6,8 +6,8 @@
   (let [characters (repeat "x")]
     (are [length predicate] (->> characters
                                  (take length)
-                                 (apply concat)
-                                 game/player-name-valid-length?
+                                 (apply str)
+                                 game/player-name-valid?
                                  predicate)
          5 true?
          50 false?)))
