@@ -59,8 +59,7 @@
                [<throttled-ch]
                ([{:keys [signals]}]
                 (if-let [session-signals (get signals session-id)]
-                  (do (log/infof "Sending signals: %s" session-signals)
-                      (patch-signals! sse-gen session-signals)
+                  (do (patch-signals! sse-gen session-signals)
                       (recur last-view-hash))
                   (some-> ; Stop in case of error
                    (on-cpu-pool ; CPU work on real threads
