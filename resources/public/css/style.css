@@ -812,11 +812,13 @@ body:has(.winner) {
   }
 }
 
-pre.error {
-  text-align: left;
-  margin: .5em;
-  padding: .5em;
-  white-space: pre-wrap;
+div.error {
+  pre {
+    text-align: left;
+    margin: .5em;
+    padding: .5em;
+    white-space: pre-wrap;
+  }
 }
 
 #end-game {
