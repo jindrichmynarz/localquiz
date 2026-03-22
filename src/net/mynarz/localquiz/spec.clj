@@ -3,6 +3,7 @@
             [clojure.string :as string]
             [expound.alpha :as e]
             [fast-edn.core :as edn]
+            [reitit.ring.middleware.multipart :as multipart]
             [spec-tools.core :as st]))
 
 (s/def ::list
@@ -23,6 +24,25 @@
         :double double?
         :list ::list
         :string string?))
+
+(s/def ::question-file
+   multipart/temp-file-part)
+
+(s/def ::question-source string?)
+
+(s/def ::question-file-params
+  (s/keys :opt-un [::number-of-questions
+                   ::question-file]))
+
+(s/def ::question-form-params
+  (s/keys :opt-un [::number-of-questions
+                   ::question-source]))
+
+(s/def ::player-name
+  (s/and string? #(<= 1 (count %) 20)))
+
+(s/def ::player-params
+  (s/keys :req-un [::player-name]))
 
 (defn validate
   "Validate `data` according to a Clojure `spec`.
