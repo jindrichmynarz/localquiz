@@ -83,6 +83,7 @@
    (morph-body request nil main))
   ([{:tempura/keys [tr]} header main]
    [:div#morph
+    {:data-signals:error__ifmissing ""}
     [:header
      [:h1 "Localquiz"]
      [:div#top-menu
