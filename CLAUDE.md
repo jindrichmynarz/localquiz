@@ -67,3 +67,7 @@ Question sets are EDN files in `resources/questions/`. Each file contains a vect
 ## Testing
 
 Tests use cognitect test-runner. `test_fixtures.clj` provides a Datahike in-memory database. Handler tests use ring-mock. Integration tests live in `test/src/.../integration/`.
+
+## Constraints
+
+- A game has one moderator and at least two players.
