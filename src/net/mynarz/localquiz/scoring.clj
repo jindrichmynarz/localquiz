@@ -102,11 +102,13 @@
                                                       seq)]
                           (when (next correct-times) ; Don't scale if there's only 1 correct answer.
                             correct-times))]
-    (for [{:keys [answer-time]
-           :as score} scores
-          :let [min-answer-time (apply min answer-times)
-                max-answer-time (apply max answer-times)
-                time-range (- max-answer-time min-answer-time)
-                time-coefficient (+ 0.5 (* 0.5 (- 1 (/ (- answer-time min-answer-time) time-range))))]]
-        (update score :score * time-coefficient))
+    (let [min-answer-time (apply min answer-times)
+          max-answer-time (apply max answer-times)
+          time-range (- max-answer-time min-answer-time)]
+      (if (pos? time-range)
+        (for [{:keys [answer-time]
+               :as score} scores
+              :let [time-coefficient (+ 0.5 (* 0.5 (- 1 (/ (- answer-time min-answer-time) time-range))))]]
+          (update score :score * time-coefficient))
+        scores))
     scores))
