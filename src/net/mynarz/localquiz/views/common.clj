@@ -14,7 +14,7 @@
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
 
-(defn on-load-js
+(defn init-js
   ;; Retry Infinity means we always try to reconnect. The other defaults
   ;; mean that this will at most take 30s (default max backoff).
   [^String game-id]
@@ -125,11 +125,11 @@
              :content "width=device-width, initial-scale=1.0"}]]
     [:body {:data-signals:csrf session/csrf-cookie-js
             :data-signals:language "localStorage.getItem('language') || navigator.language.slice(0, 2)"
-            :data-init (on-load-js game-id)
+            :data-init (init-js game-id)
             ; Reconnect when the user comes online after
             ; being offline. Closes any existing connection
             ; from this element.
-            :data-on:online__window (on-load-js game-id)}
+            :data-on:online__window (init-js game-id)}
      [:noscript (tr [:no-js])]
      (morph-body request)]]])
 
