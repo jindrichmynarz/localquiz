@@ -49,3 +49,10 @@
 (defn secret-key->hmac-sha256-keyspec
   [secret-key]
   (SecretKeySpec/new (String/.getBytes secret-key) "HmacSha256"))
+
+(def ^:private csrf-window-ms (* 60 60 1000))
+
+(defn current-csrf-epoch
+  "Returns the current 1-hour time window as a long. Used to bound CSRF token validity."
+  []
+  (quot (System/currentTimeMillis) csrf-window-ms))

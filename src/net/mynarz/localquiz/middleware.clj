@@ -66,14 +66,18 @@
   "Ring middleware wrapping sessions"
   [handler]
   (let [csrf-keyspec (crypto/secret-key->hmac-sha256-keyspec (:csrf-secret config))
-        sid->csrf (fn [sid] (crypto/hmac-sha256 csrf-keyspec sid))]
+        sid->csrf   (fn [sid epoch] (crypto/hmac-sha256 csrf-keyspec (str sid ":" epoch)))
+        valid-csrf? (fn [sid csrf]
+                      (let [epoch (crypto/current-csrf-epoch)]
+                        (or (= csrf (sid->csrf sid epoch))
+                            (= csrf (sid->csrf sid (dec epoch))))))]
     (fn [{:keys [headers request-method signals]
           :as request}]
       (let [csrf (or (get headers "x-csrf-token") (:csrf signals))
             sid (session/get-sid headers)]
         (cond
           ; If user has a sid and csrf, handle the request.
-          (and sid (= csrf (sid->csrf sid)))
+          (and sid (valid-csrf? sid csrf))
           (-> request
               (assoc :sid sid)
               handler)
@@ -81,8 +85,8 @@
           ; GET request and user does not have session we create one
           ; if they do not have a csrf cookie we give them one
           (= request-method :get)
-          (let [new-sid (or sid (crypto/random-unguessable-uid))
-                new-csrf (sid->csrf new-sid)]
+          (let [new-sid  (or sid (crypto/random-unguessable-uid))
+                new-csrf (sid->csrf new-sid (crypto/current-csrf-epoch))]
             (-> request
                 (assoc :sid new-sid)
                 handler
