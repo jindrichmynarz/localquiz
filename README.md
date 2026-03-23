@@ -1,6 +1,6 @@
 # localquiz
 
-An engine for quizzes with local multiplayer.
+An engine for [data-driven quizzes](https://github.com/jindrichmynarz/dataquiz?tab=readme-ov-file#questions) with local multiplayer.
 
 Much of the ideas and code in this application is taken from Anders Murphy's [hyperlith](https://github.com/andersmurphy/hyperlith).
 
