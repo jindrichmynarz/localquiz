@@ -1,10 +1,7 @@
 (ns net.mynarz.localquiz.db
   (:require [net.mynarz.localquiz.config :refer [config]]
-            [net.mynarz.localquiz.question-spec :as qs]
-            [net.mynarz.localquiz.spec :as s]
             [datahike.api :as d]
             [datahike-lmdb.core]
-            [fast-edn.core :as edn]
             [mount.core :refer [defstate]]))
 
 (def game-states
@@ -19,13 +16,6 @@
        (d/entity db)
        :game/state
        game-states))
-
-(defn valid-questions?
-  [db eid]
-  (->> eid
-       (d/entity db)
-       :game/questions
-       (every? (comp (partial s/validate ::qs/question) edn/read-string))))
 
 (def schema
   [{:db/ident :game/id
@@ -92,8 +82,7 @@
     :db/cardinality :db.cardinality/one}
    {:db/ident :game
     :db.entity/attrs [:game/id :game/state :game/questions]
-    :db.entity/preds ['net.mynarz.localquiz.db/valid-questions?
-                      'net.mynarz.localquiz.db/valid-game-state?]}
+    :db.entity/preds ['net.mynarz.localquiz.db/valid-game-state?]}
    {:db/ident :player
     :db.entity/attrs [:player/id
                       :player/name]}])
