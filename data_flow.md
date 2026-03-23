@@ -28,7 +28,7 @@ sequenceDiagram
     B->>B: Open SSE connection to /sse or /sse/:game-id
 ```
 
-The shim page contains no game content — just the Datastar runtime and a `data-on:load` attribute that immediately opens the SSE connection. All content arrives via SSE.
+The shim page contains no game content — just the Datastar runtime and a `data-on:init` attribute that immediately opens the SSE connection. All content arrives via SSE.
 
 ---
 
