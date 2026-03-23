@@ -66,7 +66,7 @@
   "Ring middleware wrapping sessions"
   [handler]
   (let [csrf-keyspec (crypto/secret-key->hmac-sha256-keyspec (:csrf-secret config))
-        sid->csrf (fn [sid] (crypto/hmac-md5 csrf-keyspec sid))]
+        sid->csrf (fn [sid] (crypto/hmac-sha256 csrf-keyspec sid))]
     (fn [{:keys [headers request-method signals]
           :as request}]
       (let [csrf (or (get headers "x-csrf-token") (:csrf signals))

@@ -28,7 +28,7 @@
         bytes->base64
         (subs 10))))
 
-(defn hmac-md5
+(defn hmac-sha256
   "Used for a quick stateless CSRF token generation."
   [^SecretKeySpec key-spec
    ^String data]
