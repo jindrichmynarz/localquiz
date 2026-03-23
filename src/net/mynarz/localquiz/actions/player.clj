@@ -23,11 +23,11 @@
     {:keys [game-id]} :path-params
     player-id :sid
     :as request}]
-  (and (validate-player-name! request)
-       (do (log/infof "Player %s is joining game %s as '%s'." player-id game-id player-name)
-           (d/transact db-conn [{:db/id [:game/id game-id]
-                                 :game/players [{:player/id player-id
-                                                 :player/name player-name}]}]))))
+  (when (validate-player-name! request)
+    (log/infof "Player %s is joining game %s as '%s'." player-id game-id player-name)
+    (d/transact db-conn [{:db/id [:game/id game-id]
+                          :game/players [{:player/id player-id
+                                          :player/name player-name}]}])))
 
 (defn answer-question!
   [{{answer "answer"} :form-params
