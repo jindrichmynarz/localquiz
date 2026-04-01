@@ -85,22 +85,22 @@
          :value questions-answered}]]
       [:thead
        [:tr
+        [:th]
         [:th (tr [:player])]
         [:th (tr [:score])]
         [:th]]]
       [:tbody
-       (for [{:keys [player-name score winner?]} (map-indexed (fn [index data]
-                                                                (if (zero? index)
-                                                                 (assoc data :winner? true)
-                                                                 data))
-                                                              leaderboard-data)
+       (for [{:keys [player-name score index]} (map-indexed (fn [index data]
+                                                              (assoc data :index (inc index)))
+                                                            leaderboard-data)
              :let [score-decimal (decimal-format score)
                    score-style (->> (if (zero? score) score (/ score max-score))
                                     decimal-format
                                     (format "--score: %s;"))]]
          [:tr
+          [:td index]
           [:td player-name
-           (when (and final-leaderboard? winner?)
+           (when (and final-leaderboard? (= index 1))
              [:i.material-icons (svg "emoji_events.svg")])]
           [:td [:span.score-bar {:style score-style}]]
           [:td score-decimal]])]]]))
