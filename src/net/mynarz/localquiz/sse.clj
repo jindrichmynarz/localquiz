@@ -8,7 +8,6 @@
             [net.mynarz.localquiz.views.common :as views]
             [charred.api :as charred]
             [clojure.core.async :as a]
-            [clojure.string :as string]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.adapter.http-kit2 :as hk-adapter]
             [starfederation.datastar.clojure.api :as d*]
@@ -21,13 +20,6 @@
   (->> signals
        charred/write-json-str
        (d*/patch-signals! sse-gen)))
-
-(defn select-write-profile
-  [{{accepts "accept-encoding"} :headers}]
-  (cond
-    (string/includes? accepts "br")   (brotli/->brotli-profile)
-    (string/includes? accepts "gzip") hk-adapter/gzip-profile
-    :else                             hk-adapter/basic-profile))
 
 (defn handler
   "Server-sent events handler that runs for each game update."
@@ -42,7 +34,7 @@
         <cancel (a/chan)]
     (hk-adapter/->sse-response
       request
-      {hk-adapter/write-profile (select-write-profile request)
+      {hk-adapter/write-profile (brotli/->brotli-profile)
 
        hk-adapter/on-open
        (fn [sse-gen]
