@@ -27,7 +27,7 @@
                        [(identity ?game) ?e]
                        [?game :game/players ?e]
                        [?game :game/answers ?e])
-                     [?e _ _ ?tx]
+                     [?e _ _ ?tx true]
                      [?tx :db/txInstant ?inst]]
             (d/history @db-conn))
        first))
