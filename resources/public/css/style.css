@@ -22,7 +22,7 @@ body {
   color: var(--offwhite);
   background: var(--darker);
   background-image: linear-gradient(180deg, rgba(251, 253, 227, 0.10) 1%, rgba(252, 131, 20, 0.08) 51%, rgba(236, 88, 9, 0.07) 100%),
-                    radial-gradient(circle, rgba(18, 18, 36, 1) 50%, rgba(8, 8, 22, 1) 100%);
+                    radial-gradient(circle, rgba(27, 27, 50, 1) 50%, rgba(6, 6, 24, 1) 100%);
 }
 
 
