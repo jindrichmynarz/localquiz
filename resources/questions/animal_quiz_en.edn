@@ -1,0 +1,481 @@
+{:creators #{{:name "Jindřich Mynarz"
+              :url "https://mynarz.net/#jindrich"}}
+ :questions #{{:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/49/49140_8043-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐝 Bee" :correct? true}
+                         {:text "🐜 Ant"}
+                         {:text "🦗 Cricket"}
+                         {:text "🦋 Butterfly"}]
+               :note [:small [:a {:href "https://freesound.org/s/49140/"} "20080226.bee.rbd.03.wav by dobroide"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/18/18756_22241-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐸 Frog" :correct? true}
+                         {:text "🦖 Tyrannosaurus rex"}
+                         {:text "🐟 Fish"}
+                         {:text "🐢 Turtle"}]
+               :note [:small [:a {:href "https://freesound.org/s/18756/"} "frogs02.wav by WIM"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/404/404148_6181234-lq.mp3"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐬 Dolphin" :correct? true}
+                         {:text "🐳 Whale"}
+                         {:text "🐟 Fish"}
+                         {:text "🪼 Jellyfish"}]
+               :note [:small [:a {:href "https://freesound.org/s/404148/"} "Pacific white-sided dolphins by MBARI_MARS"]
+                      " - License: Attribution NonCommercial 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/521/521129_8956746-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦗 Cricket" :correct? true}
+                         {:text "🦟 Mosquito"}
+                         {:text "🪰 Fly"}
+                         {:text "🕷️ Spider"}]
+               :note [:small [:a {:href "https://freesound.org/s/521129/"} "crickets_chirping.wav by C-V"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://xeno-canto.org/sounds/uploaded/DMQLDFORTG/XC909526-Strtur_240511_Ouarzazate.mp3"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🕊 Pigeon" :correct? true}
+                         {:text "🦤 Dodo"}
+                         {:text "🦜 Parrot"}
+                         {:text "🐓 Rooster"}]
+               :note [:small [:a {:href "https://www.xeno-canto.org/909526"} "Pere Josa, XC909526"]
+                      " - License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/655/655380_12156778-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦉 Owl" :correct? true}
+                         {:text "🦆 Duck"}
+                         {:text "🦅 Eagle"}
+                         {:text "🐓 Rooster"}]
+               :note [:small [:a {:href "https://freesound.org/s/655380/"} "Tawny Owl by faxfaxfax"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/700/700379_13818935-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐄 Cow" :correct? true}
+                         {:text "🐗 Wild boar"}
+                         {:text "🐘 Elephant"}
+                         {:text "🐑 Sheep"}]
+               :note [:small [:a {:href "https://freesound.org/s/700379/"} "Moo 2 - Moo Moo the Cow by manofham"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/139/139901_2535085-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐺 Wolf" :correct? true}
+                         {:text "🐴 Horse"}
+                         {:text "🐩 Poodle"}
+                         {:text "🐅 Tiger"}]
+               :note [:small [:a {:href "https://freesound.org/s/139901/"} "33.wav by y89312"]
+                      " - License: Attribution 3.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/57/57181_118241-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐪 Camel" :correct? true}
+                         {:text "🐏 Ram"}
+                         {:text "🦍 Gorilla"}
+                         {:text "🦏 Rhinoceros"}]
+               :note [:small [:a {:href "https://freesound.org/s/57181/"} "camel.flac by Erdie"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/56/56551_215874-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦏 Rhinoceros" :correct? true}
+                         {:text "🦆 Duck"}
+                         {:text "🐬 Dolphin"}
+                         {:text "🦬 Bison"}]
+               :note [:small [:a {:href "https://freesound.org/s/56551/"} "Rhinoceros Hornbill 4.wav by ERH"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/104/104581_8043-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦌 Deer" :correct? true}
+                         {:text "🦓 Zebra"}
+                         {:text "🦒 Giraffe"}
+                         {:text "🫎 Moose"}]
+               :note [:small [:a {:href "https://freesound.org/s/104581/"} "201009.deer.roar.02.wav by dobroide"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/744/744596_205108-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐿️ Squirrel" :correct? true}
+                         {:text "🐁 Mouse"}
+                         {:text "🐇 Rabbit"}
+                         {:text "🦝 Raccoon"}]
+               :note [:small [:a {:href "https://freesound.org/s/744596/"} "Squirrel, Grey alarm calls by genghisattenborough"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/67/67354_706955-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦩 Flamingo" :correct? true}
+                         {:text "🦃 Turkey"}
+                         {:text "🦢 Swan"}
+                         {:text "🪿 Goose"}]
+               :note [:small [:a {:href "https://freesound.org/s/67354/"} "Flamingo.mp3 by Bidone"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/763/763026_1764719-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐻 Bear" :correct? true}
+                         {:text "🦡 Badger"}
+                         {:text "🐗 Wild boar"}
+                         {:text "🦘 Kangaroo"}]
+               :note [:small [:a {:href "https://freesound.org/s/763026/"} "Bear Angry Growl by celldroid"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/67/67361_706955-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐒 Monkey" :correct? true}
+                         {:text "🦥 Sloth"}
+                         {:text "🦁 Lion"}
+                         {:text "🦭 Seal"}]
+               :note [:small [:a {:href "https://freesound.org/s/67361/"} "Affen schreit.mp3 by Bidone"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/97/97380_1578278-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦁 Lion" :correct? true}
+                         {:text "🐗 Wild boar"}
+                         {:text "🦬 Bison"}
+                         {:text "🐻 Bear"}]
+               :note [:small [:a {:href "https://freesound.org/s/97380/"} "african_lion.wav by soundbytez"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/677/677220_14166079-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐐 Goat" :correct? true}
+                         {:text "🐏 Ram"}
+                         {:text "🫏 Donkey"}
+                         {:text "🦘 Kangaroo"}]
+               :note [:small [:a {:href "https://freesound.org/s/677220/"} "Nigerian Dwarf Buck Goat by satoristudios3"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/9/93/European_Badger_%28Meles_meles%29_%28W1CDR0001490_BD4%29.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦡 Badger" :correct? true}
+                         {:text "🦨 Skunk"}
+                         {:text "🦫 Beaver"}
+                         {:text "🐻 Bear"}]
+               :note [:small [:a {:href "https://commons.wikimedia.org/wiki/File:European_Badger_(Meles_meles)_(W1CDR0001490_BD4).ogg"} "A European Badger calling, recorded at Chobham Place, Surrey, England"]
+                      " - License: Creative Commons Attribution-Share Alike 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/582/582938_1486333-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐹 Mouse" :correct? true}
+                         {:text "🦦 Otter"}
+                         {:text "🐿️ Squirrel"}
+                         {:text "🐼 Panda"}]
+               :note [:small [:a {:href "https://freesound.org/s/582938/"} "Hamster_ranting_001.wav by Martina_Leitschuh"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/244/244329_1149179-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦆 Duck" :correct? true}
+                         {:text "🐧 Penguin"}
+                         {:text "🦢 Swan"}
+                         {:text "🦩 Flamingo"}]
+               :note [:small [:a {:href "https://freesound.org/s/244329/"} "ducks1.wav by squashy555"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/503/503682_9619518-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦭 Seal" :correct? true}
+                         {:text "🐧 Penguin"}
+                         {:text "🦦 Otter"}
+                         {:text "🦚 Peacock"}]
+               :note [:small [:a {:href "https://freesound.org/s/503682/"} "Aquarium - Seal Vocalizations by RavenWolfProds"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/59/59186_8043-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦚 Peacock" :correct? true}
+                         {:text "🦩 Flamingo"}
+                         {:text "🦤 Dodo"}
+                         {:text "🦢 Swan"}]
+               :note [:small [:a {:href "https://freesound.org/s/59186/"} "20080728.peacock.wav by dobroide"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/64/64401_37876-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦢 Swan" :correct? true}
+                         {:text "🦩 Flamingo"}
+                         {:text "🐧 Penguin"}
+                         {:text "🦆 Duck"}]
+               :note [:small [:a {:href "https://freesound.org/s/64401/"} "SwansFlyBy.wav by acclivity"]
+                      " - License: Attribution NonCommercial 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/759/759892_14889307-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🫏 Donkey" :correct? true}
+                         {:text "🦙 Llama"}
+                         {:text "🦬 Bison"}
+                         {:text "🦧 Orangutan"}]
+               :note [:small [:a {:href "https://freesound.org/s/759892/"} "Donkey Braying in mountain (DMS) by Sacha.Julien"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/0/0e/Brent_Goose_%28Branta_bernicla%29_%28W_BRANTA_BERNICLA_R1_C11%29.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🪿 Goose" :correct? true}
+                         {:text "🦅 Eagle"}
+                         {:text "🐧 Penguin"}
+                         {:text "🐔 Hen"}]
+               :note [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Brent_Goose_(Branta_bernicla)_(W_BRANTA_BERNICLA_R1_C11).ogg"} "Brent Goose calls, recorded in West Sussex, England"]
+                      " - License: Creative Commons Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/111/111079_1578278-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐧 Penguin" :correct? true}
+                         {:text "🦆 Duck"}
+                         {:text "🪿 Goose"}
+                         {:text "🦩 Flamingo"}]
+               :note [:small [:a {:href "https://freesound.org/s/111079/"} "magellanic_penguin.wav by soundbytez"]
+                      " - License: Attribution 3.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/24/24967_32482-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐔 Hen" :correct? true}
+                         {:text "🦆 Duck"}
+                         {:text "🦃 Turkey"}
+                         {:text "🦩 Flamingo"}]
+               :note [:small [:a {:href "https://freesound.org/s/24967/"} "ChickenLayingAnEgg_01.wav by www.bonson.ca"]
+                      " - License: Attribution 3.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/563/563748_1648170-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦃 Turkey" :correct? true}
+                         {:text "🦆 Duck"}
+                         {:text "🕊️ Pigeon"}
+                         {:text "🦩 Flamingo"}]
+               :note [:small [:a {:href "https://freesound.org/s/563748/"} "turkey gobble 02.wav by klankbeeld"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/165/165128_2930071-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐓 Rooster" :correct? true}
+                         {:text "🦃 Turkey"}
+                         {:text "🕊️ Pigeon"}
+                         {:text "🦜 Parrot"}]
+               :note [:small [:a {:href "https://freesound.org/s/165128/"} "Kuk-kurri-kuuu by cocoricosound"]
+                      " - License: Attribution NonCommercial 3.0"]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/6/65/Green_Wood_Hoopoe_%28Phoeniculus_purpureus%29_%28022A-WA03044X0020-0009M0%29.ogg"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Green_Wood_Hoopoe%2C_Phoeniculus_purpureus%2C_at_Mapungubwe_National_Park%2C_Limpopo%2C_South_Africa_%2829896946270%29.jpg/640px-Green_Wood_Hoopoe%2C_Phoeniculus_purpureus%2C_at_Mapungubwe_National_Park%2C_Limpopo%2C_South_Africa_%2829896946270%29.jpg"}]
+                      [:p "Is the maker of this sound in the photo?"]]
+               :correct? true
+               :note [:p "It is a green wood hoopoe."]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/2/26/Black_Cuckoo_%28Cuculus_clamosus%29_%28022A-WA03044X0014-0013M0%29.ogg"}]
+                      [:p "Is this the common blackbird singing?"]]
+               :correct? false
+               :note [:p "It is a black cuckoo."]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://xeno-canto.org/sounds/uploaded/UVCHPWXJBN/XC-CUCCAN1.mp3"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cuculus_canorus_vogelartinfo_chris_romeiks_CHR0791_cropped.jpg/640px-Cuculus_canorus_vogelartinfo_chris_romeiks_CHR0791_cropped.jpg"}]
+                      [:p "Is the maker of this sound in the photo?"]]
+               :correct? true
+               :note [:p "It is a common cuckoo."]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://xeno-canto.org/sounds/uploaded/JCPKCBKKAQ/XC949836-PELPUN_090501_Luzancy_GO02B.mp3"}]
+                      [:p "Do we hear a penguin?"]]
+               :correct? false
+               :note [:div
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Pelodytes_punctatus_side.jpg/596px-Pelodytes_punctatus_side.jpg"}]
+                      [:p "It is a parsley frog."]]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/450/450344_6605732-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐴 Horse" :correct? true}
+                         {:text "🐖 Pig"}
+                         {:text "🐑 Sheep"}
+                         {:text "🦒 Giraffe"}]
+               :note [:small [:a {:href "https://freesound.org/s/450344/"} "Canadian Horse Snort.wav by vero.marengere"]
+                      " - License: Attribution NonCommercial 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/467/467573_8031303-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐷 Pig" :correct? true}
+                         {:text "🦕 Diplodocus"}
+                         {:text "🐊 Crocodile"}
+                         {:text "🐮 Cow"}]
+               :note [:small [:a {:href "https://freesound.org/s/467573/"} "PIGS - 4 by SamuelGremaud"]
+                      " - License: Creative Commons 0"]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/403/403470_2462-lq.ogg"}]
+                      [:p "Do we hear a hedgehog?"]]
+               :correct? true
+               :note [:small [:a {:href "https://freesound.org/s/403470/"} "Shout of the hedgehog. by urupin"]
+                      " - License: Attribution NonCommercial 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/56/56552_215874-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦜 Parrot" :correct? true}
+                         {:text "🦅 Eagle"}
+                         {:text "🐣 Chick"}
+                         {:text "🕊️ Pigeon"}]
+               :note [:small [:a {:href "https://freesound.org/s/56552/"} "fr0608bg Grey Parrot 2.wav by ERH"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/104/104911_1050515-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦅 Eagle" :correct? true}
+                         {:text "🦃 Turkey"}
+                         {:text "🦉 Owl"}
+                         {:text "🕊️ Pigeon"}]
+               :note [:small [:a {:href "https://freesound.org/s/104911/"} "Eagle - Abruzzo by daniele-salvati"]
+                      " - License: Attribution NonCommercial 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/527/527301_2061858-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🪰 Fly" :correct? true}
+                         {:text "🐞 Ladybug"}
+                         {:text "🐝 Bee"}
+                         {:text "🦟 Mosquito"}]
+               :note [:small [:a {:href "https://freesound.org/s/527301/"} "fly at the window by Garuda1982"]
+                      " - License: Creative Commons 0"]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/233/233099_4056007-lq.ogg"}]
+                      [:p "Do we hear a duck?"]]
+               :correct? false
+               :note [:div
+                      [:p "It is a goose. "]
+                      [:a {:href "https://freesound.org/s/233099/"} "Goose - Horn 1 - 96kHz.wav by JarredGibb"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/233/233110_4056007-lq.ogg"}]
+                      [:p "Who is chomping away?"]]
+               :choices [{:text "🐖 Pig" :correct? true}
+                         {:text "🫏 Donkey"}
+                         {:text "🦛 Hippo"}
+                         {:text "🐴 Horse"}]
+               :note [:small [:a {:href "https://freesound.org/s/233110/"} "Pig - Chewing 1 - 96kHz.wav by JarredGibb"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/233/233131_4056007-lq.ogg"}]
+                      [:p "Who is snorting?"]]
+               :choices [{:text "🫏 Donkey" :correct? true}
+                         {:text "🦫 Beaver"}
+                         {:text "🦁 Lion"}
+                         {:text "🐴 Horse"}]
+               :note [:small [:a {:href "https://freesound.org/s/233131/"} "Donkey - Sneeze 1 - 96kHz.wav by JarredGibb"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/160/160474_1038806-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐕 Dog" :correct? true}
+                         {:text "🦊 Fox"}
+                         {:text "🦝 Raccoon"}
+                         {:text "🐯 Lion"}]
+               :note [:small [:a {:href "https://freesound.org/s/160474/"} "Dog's Yelping 5 by unfa"]
+                      " - License: Creative Commons 0"]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/233/233112_4056007-lq.ogg"}]
+                      [:p "Is that a little pig chomping?"]]
+               :correct? false
+               :note [:div
+                      [:p "It is a horse. "]
+                      [:small [:a {:href "https://freesound.org/s/233112/"} "Horse - Chewing 1 - 96kHz.wav by JarredGibb"]
+                       " - License: Creative Commons 0"]]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/24/24966_32482-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐈 Cat" :correct? true}
+                         {:text "🦔 Hedgehog"}
+                         {:text "🦝 Raccoon"}
+                         {:text "🐯 Lion"}]
+               :note [:small [:a {:href "https://freesound.org/s/24966/"} "CatPurring_01.wav by www.bonson.ca"]
+                      " - License: Attribution 3.0"]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/554/554039_5576856-lq.ogg"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Bucephala-albeola-010.jpg/640px-Bucephala-albeola-010.jpg"}]
+                      [:p "Does the sound come from an animal in the photo?"]]
+               :correct? false
+               :note [:div
+                      [:p "We hear a goose. "]
+                      [:small [:a {:href "https://freesound.org/s/554039/"} "Geese Honking by Navadaux"]
+                       " - License: Creative Commons 0"]]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/8/8a/Bamboo_Rat_%28Dactylomys_dactylinus%29_%28W_DACTYLOMYS_DACTYLINUS_R1_C1%29.ogg"}]
+                      [:p "Do we hear a rat?"]]
+               :correct? true
+               :note [:div
+                      [:p "It is an Amazon bamboo rat."]
+                      [:p [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Bamboo_Rat_(Dactylomys_dactylinus)_(W_DACTYLOMYS_DACTYLINUS_R1_C1).ogg"} "Bamboo Rat calls, recorded in Tambopata Wildlife Reserve, Madre de Dios, Peru"]]
+                       " - License: Creative Commons Attribution 4.0"]]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/f/f5/Lizard_Buzzard_%28Kaupifalco_monogrammicus%29_%28022A-WA03044X0016-0021M0%29.ogg"}]
+                      [:p "Do we hear a bird of prey?"]]
+               :correct? true
+               :note [:div
+                      [:p "It is a lizard buzzard."]
+                      [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Lizard_Buzzard_(Kaupifalco_monogrammicus)_(022A-WA03044X0016-0021M0).ogg"} "Lizard Buzzard calls, recorded in Kitale, Kenya"]
+                       " - License: Creative Commons Attribution 4.0"]]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/0/07/Spotted_Hyaena_%28Crocuta_crocuta%29_%28W1CDR0000381_BD12%29.ogg"}]
+                      [:p "Do we hear a wolf?"]]
+               :correct? false
+               :note [:div
+                      [:p "It is a spotted hyena."]
+                      [:p [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Spotted_Hyaena_(Crocuta_crocuta)_(W1CDR0000381_BD12).ogg"} "Spotted Hyaena whoop, recorded in Hluhluwe–Imfolozi Park, South Africa"]]
+                       " - License: Creative Commons Attribution 4.0"]]}
+              {:type :yesno
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/c/cf/Golden_Eagle_%28Aquila_chrysaetos%29_%28W1CDR0001387_BD6%29.ogg"}]
+                      [:p "Do we hear a bird of prey?"]]
+               :correct? true
+               :note [:div
+                      [:p "It is a golden eagle."]
+                      [:p [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Golden_Eagle_(Aquila_chrysaetos)_(W1CDR0001387_BD6).ogg"} "The call of a Golden Eagle, recorded at Kinlochewe, Scotland"]]
+                       " - License: Creative Commons Attribution 4.0"]]}}}
