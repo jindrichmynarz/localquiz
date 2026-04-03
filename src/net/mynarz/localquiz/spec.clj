@@ -11,7 +11,8 @@
                              :kind vector?
                              :distinct true)
             :decode/string (fn [_ value]
-                             (if (string/starts-with? value "[") ; TODO: This is awkward, but allows matching strings as strings.
+                             ; TODO: This is awkward, but allows matching strings as strings.
+                             (if (string/starts-with? value "[")
                                (edn/read-string value)
                                value))}))
 
