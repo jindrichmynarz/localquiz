@@ -44,7 +44,8 @@
          (d/transact db-conn))))
 
 (defstate ^ScheduledExecutorService game-sweeper
-  :start (doto (Executors/newSingleThreadScheduledExecutor)
-               (.scheduleAtFixedRate delete-idle-games! 0 (:game-idle-time config) TimeUnit/HOURS))
+  :start (let [game-idle-time (:game-idle-time config)]
+           (doto (Executors/newSingleThreadScheduledExecutor)
+                 (.scheduleAtFixedRate delete-idle-games! game-idle-time game-idle-time TimeUnit/HOURS)))
   :stop (do (.shutdown game-sweeper)
             (.awaitTermination game-sweeper 5 TimeUnit/SECONDS)))
