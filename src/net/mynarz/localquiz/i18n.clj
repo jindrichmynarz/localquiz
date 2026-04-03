@@ -20,6 +20,7 @@
                  :player-name {:length "Jméno hráče musí mít mezi 1 až 20 znaky."
                                :no-name "Hráč musí mít jméno."
                                :taken "Hráč tohoto jména už je ve hře."}
+                 :game-not-joinable "Hra již začala."
                  :question-source-missing "Žádné otázky nebyly zadány!"
                  :time-out "Čas vypršel!"}
         :exit-game "Zavřít hru"
@@ -77,6 +78,7 @@
                  :player-name {:length "Player name must have between 1 to 20 characters."
                                :no-name "The player must have a name."
                                :taken "This name is already taken."}
+                 :game-not-joinable "The game has already started."
                  :question-source-missing "Question source missing!"
                  :time-out "Time's out!"}
         :exit-game "Exit game"

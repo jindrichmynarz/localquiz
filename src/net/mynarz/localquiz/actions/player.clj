@@ -20,10 +20,15 @@
   [{{{:keys [player-name]} :form} :parameters
     {:keys [game-id]} :path-params
     player-id :sid
+    :tempura/keys [tr]
     :as request}]
   (when (validate-player-name! request)
     (log/infof "Player %s is joining game %s as '%s'." player-id game-id player-name)
-    (game/join-game! game-id player-id player-name)))
+    (try
+      (game/join-game! game-id player-id player-name)
+      (catch Exception e
+        (when (= (:error (ex-data e)) :game-already-started)
+          (refresh-signals! game-id player-id {:error (tr [:errors/game-not-joinable])}))))))
 
 (defn answer-question!
   [{{answer "answer"} :form-params

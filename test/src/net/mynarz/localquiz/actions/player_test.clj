@@ -23,4 +23,6 @@
 
 (deftest join-game!-requires-new-state
   (game/leaderboard! fixtures/game-id)
-  (is (thrown? Exception (player/join-game! (player-params "Angela")))))
+  (let [player-id (crypto/random-unguessable-uid)]
+    (player/join-game! (assoc (player-params "Angela") :sid player-id))
+    (is (not (game/player-in-game? fixtures/game-id player-id)))))

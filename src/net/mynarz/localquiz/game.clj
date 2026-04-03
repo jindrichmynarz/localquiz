@@ -332,7 +332,7 @@
    ^String player-name]
   (when-not (= :new (:game/state (d/entity db [:game/id game-id])))
     (throw (ex-info "Cannot join a game that is not in :new state."
-                    {:game-id game-id})))
+                    {:error :game-started})))
   [{:db/id [:game/id game-id]
     :game/players [{:player/id player-id
                     :player/name player-name}]}])
