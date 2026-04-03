@@ -5,8 +5,7 @@
             [net.mynarz.localquiz.util :refer [read-json]]
             [reitit.ring.middleware.multipart :as multipart]
             [ring.middleware.reload :as reload]
-            [starfederation.datastar.clojure.consts :as consts]
-            [taoensso.timbre :as log]))
+            [starfederation.datastar.clojure.consts :as consts]))
 
 (defn reloading-ring-handler
   "Reload Ring handler on each request."
