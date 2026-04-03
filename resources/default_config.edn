@@ -1,4 +1,7 @@
-{:default-number-of-questions 20
+{:csrf-secret "Ke9Vy1G32Rtihk7CopCB7bwpslo"
+ :db-store {:backend :memory
+            :id #uuid "7adb6a99-2421-4864-988e-dce218c2cbec"}
+ :default-number-of-questions 20
  :game-idle-time 1 ; In hours
  :question-time-out 45 ; In seconds
  :max-refresh-ms 100

@@ -38,7 +38,7 @@
   [f]
   ; Filter Datahike's verbose logging
   (log/merge-config! {:min-level [[#{"datahike.*" "konserve.*"} :warn]]})
-  (mount/start)
+  (mount/start-with-args {})
   (d/transact db/db-conn initial-tx)
   (f)
   (mount/stop))
