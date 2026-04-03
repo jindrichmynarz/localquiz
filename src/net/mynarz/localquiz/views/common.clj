@@ -80,14 +80,14 @@
   [tr]
   [:div#error-dialog
    {:aria-live "assertive"
+    :data-on:keydown__window "evt.key === 'Escape' && ($error = '')"
     :data-show "$error"
     :role "dialog"}
    [:h2 (tr [:errors/errors])]
-   [:p {:data-text "$error"}]
-   [:div.buttons
-    [:button.btn
-     {:data-on:click "$error = ''"}
-     (tr [:close])]]])
+   [:pre {:data-text "$error"}]
+   [:button.btn.btn-primary
+    {:data-on:click "$error = ''"}
+    (tr [:close])]])
 
 (defn morph-body
   ([request]

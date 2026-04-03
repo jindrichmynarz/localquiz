@@ -296,6 +296,42 @@ label {
   z-index: 9999;
 }
 
+#error-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: fit-content;
+  height: fit-content;
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: .5em 1em;
+  color: var(--offwhite);
+  background-color: var(--dark);
+  border: solid 3px var(--darker);
+  box-shadow: 0 3px 0 var(--darker);
+  font-size: var(--font-size);
+  z-index: 9999;
+
+  &::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: hsl(from var(--darker) h s l / 0.5);
+    backdrop-filter: blur(2px);
+    z-index: -1;
+  }
+
+  pre {
+    text-align: left;
+    margin: .5em;
+    padding: .5em;
+    white-space: pre-wrap;
+  }
+}
+
 .copy-button-wrapper {
   margin-right: -5px;
 }
@@ -909,15 +945,6 @@ body:has(.winner) {
 
   input {
     user-select: all;
-  }
-}
-
-div.error {
-  pre {
-    text-align: left;
-    margin: .5em;
-    padding: .5em;
-    white-space: pre-wrap;
   }
 }
 
