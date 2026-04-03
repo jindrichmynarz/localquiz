@@ -40,11 +40,7 @@
                                  "$_submitted = true;"
                                  (views/post (str "/join/" game-id)))}
        [:i.material-icons (svg "play_circle.svg")]
-       (tr [:join-game])]]
-     [:div.error
-      {:data-show "$error"}
-      [:p#name-error
-       {:data-text "$error"}]]]))
+       (tr [:join-game])]]]))
 
 (defmethod views/game-view [:player nil]
   [{:tempura/keys [tr]

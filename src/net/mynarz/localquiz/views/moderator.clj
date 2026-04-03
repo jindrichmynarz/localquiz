@@ -139,14 +139,8 @@
 (defn create-game-form-fields
   [tr]
   [views/lang-input
-   [:div.error
-    {:data-show "$error"}
-    [:h2 (tr [:errors/errors])]
-    [:pre {:data-text "$error"}]]
-   [:div
-    {:data-show "!$error"}
-    [(number-of-questions tr)
-     (create-button tr)]]])
+   [(number-of-questions tr)
+    (create-button tr)]])
 
 (defn tab-checkbox
   ([^String id]

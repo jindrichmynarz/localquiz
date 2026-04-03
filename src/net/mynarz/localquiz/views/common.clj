@@ -76,6 +76,19 @@
      {:data-on:click "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
      (tr [:accept])]]])
 
+(defn error-dialog
+  [tr]
+  [:div#error-dialog
+   {:aria-live "assertive"
+    :data-show "$error"
+    :role "dialog"}
+   [:h2 (tr [:errors/errors])]
+   [:p {:data-text "$error"}]
+   [:div.buttons
+    [:button.btn
+     {:data-on:click "$error = ''"}
+     (tr [:close])]]])
+
 (defn morph-body
   ([request]
    (morph-body request nil nil))
@@ -91,7 +104,8 @@
       (lang-switch tr)]]
     [:main main]
     (footer tr)
-    (cookie-warning tr)]))
+    (cookie-warning tr)
+    (error-dialog tr)]))
 
 (defn shim-page
   "A basic HTML page with Datastar setup."
