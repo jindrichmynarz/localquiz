@@ -44,10 +44,12 @@
                     :score (boolean->score correct?)))))
 
 (defmethod score-answers [:percent-range nil]
-  [{:keys [percentage]} answers]
+  [{:keys [percentage threshold]
+    :or {threshold 5}}
+   answers]
   (for [answer answers
         :let [difference (Math/abs (- ^double (:answer answer) percentage))
-              correct? (<= difference 5)]] ; TODO: Allow to configure tolerated difference?
+              correct? (<= difference threshold)]]
     (assoc answer :correct? correct?
                   :score (if correct?
                            (- 1 (/ difference 100))
