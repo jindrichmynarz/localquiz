@@ -24,6 +24,26 @@
        @db/db-conn
        player-name))
 
+(defn db-empty?
+  "Test if the database is empty."
+  []
+  (->> @db/db-conn
+       (d/q '[:find ?e ?a ?v
+              :where [?e ?a ?v]
+              (not (or [?e :db/ident _] ; Exclude schema entities which all have :db/ident.
+                       [?e :db/txInstant _]))])
+       empty?))
+
+(defn game-deleted?
+  [^String game-id]
+  (->> game-id
+       (d/q '[:find (pull ?game [*])
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]]
+            @db/db-conn)
+       seq
+       not))
+
 (use-fixtures :once fixtures/test-db)
 
 (deftest get-game-state
@@ -86,3 +106,21 @@
 
 (deftest player-answered?
   (is (not (game/player-answered? (get-player-id "Jane")))))
+
+(deftest leaderboard!
+  (let [game-id (crypto/random-unguessable-uid)]
+    (game/create-game! game-id [(pr-str fixtures/question)])
+    (game/leaderboard! game-id)
+    (is (= (game/get-game-state game-id) :leaderboard))))
+
+(deftest create-game!
+  (let [game-id (crypto/random-unguessable-uid)]
+    (game/create-game! game-id [(pr-str fixtures/question)])
+    (is (= (game/get-game-state game-id) :new))))
+
+(deftest end-game!
+  (let [game-id (crypto/random-unguessable-uid)]
+    (game/create-game! game-id [(pr-str fixtures/question)])
+    (game/end-game! game-id)
+    (game-deleted? game-id)
+    (db-empty?)))

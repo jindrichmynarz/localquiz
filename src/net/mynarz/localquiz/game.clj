@@ -170,6 +170,11 @@
            :game/players
            (sort-by :score util/descending-order)))
 
+(defn leaderboard!
+  "Transition the game with `game-id` to the leaderboard state."
+  [^String game-id]
+  (d/transact db-conn [[:db/add [:game/id game-id] :game/state :leaderboard]]))
+
 (defn winner
   "Get the ID of the winning player."
   [^String game-id]
@@ -302,6 +307,21 @@
           (when (all-players-answered? game-id)
             (log/infof "All players in game %s have answered." game-id)
             (evaluate-answers! game-id)))))
+
+(defn create-game!
+  "Create a game with `game-id` from the given `questions`."
+  [^String game-id questions]
+  (log/infof "Creating a new game %s." game-id)
+  (d/transact db-conn [{:game/id           game-id
+                        :game/state        :new
+                        :game/questions    questions
+                        :game/questions-total (-> questions count long)}]))
+
+(defn end-game!
+  "End the game with `game-id`."
+  [^String game-id]
+  (log/infof "Ending the game %s." game-id)
+  (d/transact db-conn [[:db.purge/entity [:game/id game-id]]]))
 
 (defn disconnect-player!
   [^String player-id]
