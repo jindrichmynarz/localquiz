@@ -1,19 +1,19 @@
 .PHONY: repl test
 
 repl:
-	clj \
+	clojure \
 		-M:repl:dev
 
 test:
-	clj \
+	clojure \
 		-X:dev:test
 
 retest:
-	clj \
+	clojure \
 		-M:dev:test-refresh
 
 build:
-	clj \
+	clojure \
 		-Srepro \
 		-T:build \
 		uber
