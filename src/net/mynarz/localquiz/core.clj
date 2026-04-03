@@ -2,11 +2,10 @@
   (:gen-class)
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db-listener]
+            [net.mynarz.localquiz.logging]
             [net.mynarz.localquiz.server]
             [clojure.java.browse :refer [browse-url]]
-            [mount.core :as mount]
-            [taoensso.timbre :as log]
-            [taoensso.timbre.appenders.core :as appenders])
+            [mount.core :as mount])
   (:import (java.util.concurrent Executors)))
 
 ;; Make futures use virtual threads
@@ -19,9 +18,6 @@
 (defn -main
   [& _]
   ; Initialize logging to standard error stream
-  (log/merge-config! {:appenders {:println (appenders/println-appender {:stream :std-err})}
-                      ; Filter Datahike's verbose logging
-                      :min-level [[#{"datahike.*" "konserve.*"} :warn]]})
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. (fn []
                                (mount/stop)
