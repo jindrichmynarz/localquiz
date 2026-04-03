@@ -28,7 +28,7 @@
   (cond
      question-source (->> question-source
                           (get question-sources)
-                          edn/read-once
+                          (edn/read-once {:readers {}}) ; Disable readers
                           (hash-map :success))
      question-file (parse-questions-file question-file)
      :else {:error (tr [:errors/question-source-missing])}))
