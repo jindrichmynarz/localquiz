@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db-listener]
+            [net.mynarz.localquiz.game-sweeper]
             [net.mynarz.localquiz.logging]
             [net.mynarz.localquiz.server]
             [clojure.java.browse :refer [browse-url]]
