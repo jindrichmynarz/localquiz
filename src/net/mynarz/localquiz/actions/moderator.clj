@@ -82,4 +82,4 @@
 (defn end-game!
   [{game-id :sid}]
   (log/infof "Ending the game %s." game-id)
-  (d/transact db-conn [[:db/retractEntity [:game/id game-id]]]))
+  (d/transact db-conn [[:db/purgeEntity [:game/id game-id]]]))
