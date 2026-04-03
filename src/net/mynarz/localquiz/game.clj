@@ -323,6 +323,27 @@
   (log/infof "Ending the game %s." game-id)
   (d/transact db-conn [[:db.purge/entity [:game/id game-id]]]))
 
+(defn join-game
+  "Transaction function that adds `player-id` with `player-name` to the game with `game-id`.
+  Requires the game to be in :new state."
+  [db
+   ^String game-id
+   ^String player-id
+   ^String player-name]
+  (when-not (= :new (:game/state (d/entity db [:game/id game-id])))
+    (throw (ex-info "Cannot join a game that is not in :new state."
+                    {:game-id game-id})))
+  [{:db/id [:game/id game-id]
+    :game/players [{:player/id player-id
+                    :player/name player-name}]}])
+
+(defn join-game!
+  "Add a player with `player-id` and `player-name` to the game with `game-id`."
+  [^String game-id
+   ^String player-id
+   ^String player-name]
+  (d/transact db-conn [[:db.fn/call join-game game-id player-id player-name]]))
+
 (defn disconnect-player!
   [^String player-id]
   (log/infof "Disconnecting player %s." player-id)

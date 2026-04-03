@@ -62,9 +62,9 @@
   (is (= (set (game/lobby fixtures/game-id))
          #{"Jane" "Bob"}))
   (let [player-name "Latecomer"]
-    (player/join-game! {:parameters {:form {:player-name player-name}}
-                        :path-params {:game-id fixtures/game-id}
-                        :sid (crypto/random-unguessable-uid)})
+    (d/transact db/db-conn [{:db/id [:game/id fixtures/game-id]
+                              :game/players [{:player/id (crypto/random-unguessable-uid)
+                                              :player/name player-name}]}])
     (is (= (last (game/lobby fixtures/game-id)) player-name))))
 
 (deftest next-question!

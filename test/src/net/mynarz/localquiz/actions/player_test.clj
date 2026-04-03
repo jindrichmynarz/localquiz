@@ -20,3 +20,7 @@
   (let [player-name "Felix"]
     (player/join-game! (player-params player-name))
     (is ((set (game/lobby fixtures/game-id)) player-name))))
+
+(deftest join-game!-requires-new-state
+  (game/leaderboard! fixtures/game-id)
+  (is (thrown? Exception (player/join-game! (player-params "Angela")))))
