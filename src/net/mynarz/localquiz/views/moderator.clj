@@ -5,6 +5,7 @@
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.util :refer [decimal-format svg]]
             [net.mynarz.localquiz.views.common :as views]
+            [clojure.math :as math]
             [charred.api :as charred]))
 
 (defn answer-progress
@@ -159,6 +160,12 @@
      :name "tab-picker"
      :type "radio"}]))
 
+(defn max-upload-size
+  "The localized error message if the maximum upload size is exceeded."
+  [tr]
+  (tr [:errors/max-upload-size-exceeded]
+      [(decimal-format (/ (:max-upload-size config) (math/pow 10 6)))]))
+
 (defmethod views/game-view [:moderator nil]
   [{:tempura/keys [tr]
     :as request}]
@@ -193,7 +200,9 @@
        [:p
         [:input#questions-upload
          {:accept ".edn"
-          :data-on:change (views/post "/create/validate")
+          :data-on:change (str (format "evt.target.files[0]?.size < %d ? " (:max-upload-size config))
+                               (views/post "/create/validate")
+                               (format " : $error = '%s'" (max-upload-size tr)))
           :name "question-file"
           :type "file"}]]
        (create-game-form-fields tr)]]]))

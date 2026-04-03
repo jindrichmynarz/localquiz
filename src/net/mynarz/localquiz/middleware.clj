@@ -3,7 +3,6 @@
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :refer [read-json]]
-            [clojure.math :as math]
             [reitit.ring.middleware.multipart :as multipart]
             [ring.middleware.reload :as reload]
             [starfederation.datastar.clojure.consts :as consts]
@@ -45,8 +44,8 @@
          handler))))
 
 (def wrap-multipart
-  "Allows uploading files up to 1 MB in size."
-  (multipart/create-multipart-middleware {:max-file-size (math/pow 10 6)})) ; 1 MB
+  "Allows uploading files via multipart/form-data."
+  (multipart/create-multipart-middleware {:max-file-size (:max-upload-size config)}))
 
 (defn wrap-parse-signals
   "Ring middleware parsing Datastar signals in JSON."

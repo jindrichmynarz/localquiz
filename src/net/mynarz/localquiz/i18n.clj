@@ -16,6 +16,7 @@
         :create-game "Vytvořit hru"
         :end-game "Ukončit hru"
         :errors {:errors "Chyby"
+                 :max-upload-size-exceeded "Velikost nahraného souboru překračuje limit %1 MB."
                  :player-name {:length "Jméno hráče musí mít mezi 1 až 20 znaky."
                                :no-name "Hráč musí mít jméno."
                                :taken "Hráč tohoto jména už je ve hře."}
@@ -72,6 +73,7 @@
         :create-game "Create a game"
         :end-game "End game"
         :errors {:errors "Errors"
+                 :max-upload-size-exceeded "Size of the uploaded file exceeds the limit of %1 MB."
                  :player-name {:length "Player name must have between 1 to 20 characters."
                                :no-name "The player must have a name."
                                :taken "This name is already taken."}
