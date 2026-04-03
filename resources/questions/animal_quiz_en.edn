@@ -293,7 +293,7 @@
               {:type :yesno
                :text [:div
                       [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/6/65/Green_Wood_Hoopoe_%28Phoeniculus_purpureus%29_%28022A-WA03044X0020-0009M0%29.ogg"}]
-                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Green_Wood_Hoopoe%2C_Phoeniculus_purpureus%2C_at_Mapungubwe_National_Park%2C_Limpopo%2C_South_Africa_%2829896946270%29.jpg/640px-Green_Wood_Hoopoe%2C_Phoeniculus_purpureus%2C_at_Mapungubwe_National_Park%2C_Limpopo%2C_South_Africa_%2829896946270%29.jpg"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Green_wood-hoopoe_%28Phoeniculus_purpureus%29.jpg/960px-Green_wood-hoopoe_%28Phoeniculus_purpureus%29.jpg"}]
                       [:p "Is the maker of this sound in the photo?"]]
                :correct? true
                :note [:p "It is a green wood hoopoe."]}
@@ -306,7 +306,7 @@
               {:type :yesno
                :text [:div
                       [:audio {:src "https://xeno-canto.org/sounds/uploaded/UVCHPWXJBN/XC-CUCCAN1.mp3"}]
-                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cuculus_canorus_vogelartinfo_chris_romeiks_CHR0791_cropped.jpg/640px-Cuculus_canorus_vogelartinfo_chris_romeiks_CHR0791_cropped.jpg"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/8/87/Cuculus_canorus_%28cropped%29.jpg"}]
                       [:p "Is the maker of this sound in the photo?"]]
                :correct? true
                :note [:p "It is a common cuckoo."]}
@@ -316,7 +316,7 @@
                       [:p "Do we hear a penguin?"]]
                :correct? false
                :note [:div
-                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Pelodytes_punctatus_side.jpg/596px-Pelodytes_punctatus_side.jpg"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/8/8c/Pelodytes_punctatus_side.jpg"}]
                       [:p "It is a parsley frog."]]}
               {:type :multiple
                :text [:div
@@ -436,7 +436,7 @@
               {:type :yesno
                :text [:div
                       [:audio {:src "https://cdn.freesound.org/previews/554/554039_5576856-lq.ogg"}]
-                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Bucephala-albeola-010.jpg/640px-Bucephala-albeola-010.jpg"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Bucephala-albeola-010.jpg/960px-Bucephala-albeola-010.jpg"}]
                       [:p "Does the sound come from an animal in the photo?"]]
                :correct? false
                :note [:div

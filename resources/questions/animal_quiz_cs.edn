@@ -1,9 +1,8 @@
 {:creators #{{:name "Jindřich Mynarz"
               :url "https://mynarz.net/#jindrich"}}
  :questions #{{:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/49/49140_8043-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/49/49140_8043-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐝 Včela" :correct? true}
                          {:text "🐜 Mravenec"}
@@ -12,9 +11,8 @@
                :note [:small [:a {:href "https://freesound.org/s/49140/"} "20080226.bee.rbd.03.wav by dobroide"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/18/18756_22241-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/18/18756_22241-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐸 Žába" :correct? true}
                          {:text "🦖 Tyrannosaurus rex"}
@@ -23,9 +21,8 @@
                :note [:small [:a {:href "https://freesound.org/s/18756/"} "frogs02.wav by WIM"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/404/404148_6181234-lq.mp3"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/404/404148_6181234-lq.mp3"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐬 Delfín" :correct? true}
                          {:text "🐳 Velryba"}
@@ -34,9 +31,8 @@
                :note [:small [:a {:href "https://freesound.org/s/404148/"} "Pacific white-sided dolphins by MBARI_MARS"]
                       " - License: Attribution NonCommercial 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/521/521129_8956746-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/521/521129_8956746-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦗 Cvrček" :correct? true}
                          {:text "🦟 Komár"}
@@ -45,9 +41,8 @@
                :note [:small [:a {:href "https://freesound.org/s/521129/"} "crickets_chirping.wav by C-V"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://xeno-canto.org/sounds/uploaded/DMQLDFORTG/XC909526-Strtur_240511_Ouarzazate.mp3"}]
+               :text [:div
+                      [:audio {:src "https://xeno-canto.org/sounds/uploaded/DMQLDFORTG/XC909526-Strtur_240511_Ouarzazate.mp3"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🕊 Holub" :correct? true}
                          {:text "🦤 Dodo"}
@@ -56,9 +51,8 @@
                :note [:small [:a {:href "https://www.xeno-canto.org/909526"} "Pere Josa, XC909526"]
                       " - License: Creative Commons Attribution-NonCommercial-ShareAlike 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/655/655380_12156778-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/655/655380_12156778-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦉 Sova" :correct? true}
                          {:text "🦆 Kachna"}
@@ -67,9 +61,8 @@
                :note [:small [:a {:href "https://freesound.org/s/655380/"} "Tawny Owl by faxfaxfax"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/700/700379_13818935-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/700/700379_13818935-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐄 Kráva" :correct? true}
                          {:text "🐗 Divoké prase"}
@@ -78,9 +71,8 @@
                :note [:small [:a {:href "https://freesound.org/s/700379/"} "Moo 2 - Moo Moo the Cow by manofham"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/139/139901_2535085-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/139/139901_2535085-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐺 Vlk" :correct? true}
                          {:text "🐴 Kůň"}
@@ -89,9 +81,8 @@
                :note [:small [:a {:href "https://freesound.org/s/139901/"} "33.wav by y89312"]
                       " - License: Attribution 3.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/57/57181_118241-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/57/57181_118241-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐪 Velbloud" :correct? true}
                          {:text "🐏 Beran"}
@@ -100,9 +91,8 @@
                :note [:small [:a {:href "https://freesound.org/s/57181/"} "camel.flac by Erdie"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/56/56551_215874-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/56/56551_215874-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦏 Nosorožec" :correct? true}
                          {:text "🦆 Kachna"}
@@ -111,9 +101,8 @@
                :note [:small [:a {:href "https://freesound.org/s/56551/"} "Rhinoceros Hornbill 4.wav by ERH"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/104/104581_8043-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/104/104581_8043-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦌 Jelen" :correct? true}
                          {:text "🦓 Zebra"}
@@ -122,9 +111,8 @@
                :note [:small [:a {:href "https://freesound.org/s/104581/"} "201009.deer.roar.02.wav by dobroide"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/744/744596_205108-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/744/744596_205108-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐿️ Veverka" :correct? true}
                          {:text "🐁 Myš"}
@@ -133,8 +121,8 @@
                :note [:small [:a {:href "https://freesound.org/s/744596/"} "Squirrel, Grey alarm calls by genghisattenborough"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio { :src "https://cdn.freesound.org/previews/67/67354_706955-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/67/67354_706955-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦩 Plameňák" :correct? true}
                          {:text "🦃 Krocan"}
@@ -143,8 +131,8 @@
                :note [:small [:a {:href "https://freesound.org/s/67354/"} "Flamingo.mp3 by Bidone"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio { :src "https://cdn.freesound.org/previews/763/763026_1764719-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/763/763026_1764719-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐻 Medvěd" :correct? true}
                          {:text "🦡 Jezevec"}
@@ -153,9 +141,8 @@
                :note [:small [:a {:href "https://freesound.org/s/763026/"} "Bear Angry Growl by celldroid"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/67/67361_706955-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/67/67361_706955-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐒 Opice" :correct? true}
                          {:text "🦥 Lenochod"}
@@ -164,9 +151,8 @@
                :note [:small [:a {:href "https://freesound.org/s/67361/"} "Affen schreit.mp3 by Bidone"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/97/97380_1578278-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/97/97380_1578278-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦁 Lev" :correct? true}
                          {:text "🐗 Divoké prase"}
@@ -175,9 +161,8 @@
                :note [:small [:a {:href "https://freesound.org/s/97380/"} "african_lion.wav by soundbytez"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/677/677220_14166079-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/677/677220_14166079-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐐 Koza" :correct? true}
                          {:text "🐏 Beran"}
@@ -186,9 +171,8 @@
                :note [:small [:a {:href "https://freesound.org/s/677220/"} "Nigerian Dwarf Buck Goat by satoristudios3"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://upload.wikimedia.org/wikipedia/commons/9/93/European_Badger_%28Meles_meles%29_%28W1CDR0001490_BD4%29.ogg"}]
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/9/93/European_Badger_%28Meles_meles%29_%28W1CDR0001490_BD4%29.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦡 Jezevec" :correct? true}
                          {:text "🦨 Skunk"}
@@ -197,8 +181,8 @@
                :note [:small [:a {:href "https://commons.wikimedia.org/wiki/File:European_Badger_(Meles_meles)_(W1CDR0001490_BD4).ogg"} "A European Badger calling, recorded at Chobham Place, Surrey, England"]
                       " - License: Creative Commons Attribution-Share Alike 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio { :src "https://cdn.freesound.org/previews/582/582938_1486333-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/582/582938_1486333-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐹 Myš" :correct? true}
                          {:text "🦦 Vydra"}
@@ -207,8 +191,8 @@
                :note [:small [:a {:href "https://freesound.org/s/582938/"} "Hamster_ranting_001.wav by Martina_Leitschuh"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio { :src "https://cdn.freesound.org/previews/244/244329_1149179-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/244/244329_1149179-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦆 Kachna" :correct? true}
                          {:text "🐧 Tučňák"}
@@ -217,8 +201,8 @@
                :note [:small [:a {:href "https://freesound.org/s/244329/"} "ducks1.wav by squashy555"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio { :src "https://cdn.freesound.org/previews/503/503682_9619518-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/503/503682_9619518-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦭 Tuleň" :correct? true}
                          {:text "🐧 Tučňák"}
@@ -227,8 +211,8 @@
                :note [:small [:a {:href "https://freesound.org/s/503682/"} "Aquarium - Seal Vocalizations by RavenWolfProds"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio { :src "https://cdn.freesound.org/previews/59/59186_8043-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/59/59186_8043-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦚 Páv" :correct? true}
                          {:text "🦩 Plameňák"}
@@ -237,9 +221,8 @@
                :note [:small [:a {:href "https://freesound.org/s/59186/"} "20080728.peacock.wav by dobroide"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/64/64401_37876-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/64/64401_37876-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦢 Labuť" :correct? true}
                          {:text "🦩 Plameňák"}
@@ -248,9 +231,8 @@
                :note [:small [:a {:href "https://freesound.org/s/64401/"} "SwansFlyBy.wav by acclivity"]
                       " - License: Attribution NonCommercial 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/759/759892_14889307-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/759/759892_14889307-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🫏 Osel" :correct? true}
                          {:text "🦙 Lama"}
@@ -259,9 +241,8 @@
                :note [:small [:a {:href "https://freesound.org/s/759892/"} "Donkey Braying in mountain (DMS) by Sacha.Julien"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://upload.wikimedia.org/wikipedia/commons/0/0e/Brent_Goose_%28Branta_bernicla%29_%28W_BRANTA_BERNICLA_R1_C11%29.ogg"}]
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/0/0e/Brent_Goose_%28Branta_bernicla%29_%28W_BRANTA_BERNICLA_R1_C11%29.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🪿 Husa" :correct? true}
                          {:text "🦅 Orel"}
@@ -270,9 +251,8 @@
                :note [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Brent_Goose_(Branta_bernicla)_(W_BRANTA_BERNICLA_R1_C11).ogg"} "Brent Goose calls, recorded in West Sussex, England"]
                       " - License: Creative Commons Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/111/111079_1578278-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/111/111079_1578278-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐧 Tučňák" :correct? true}
                          {:text "🦆 Kachna"}
@@ -281,9 +261,8 @@
                :note [:small [:a {:href "https://freesound.org/s/111079/"} "magellanic_penguin.wav by soundbytez"]
                       " - License: Attribution 3.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/24/24967_32482-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/24/24967_32482-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐔 Slepice" :correct? true}
                          {:text "🦆 Kachna"}
@@ -292,9 +271,8 @@
                :note [:small [:a {:href "https://freesound.org/s/24967/"} "ChickenLayingAnEgg_01.wav by www.bonson.ca"]
                       " - License: Attribution 3.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/563/563748_1648170-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/563/563748_1648170-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦃 Krocan" :correct? true}
                          {:text "🦆 Kachna"}
@@ -303,9 +281,8 @@
                :note [:small [:a {:href "https://freesound.org/s/563748/"} "turkey gobble 02.wav by klankbeeld"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/165/165128_2930071-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/165/165128_2930071-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐓 Kohout" :correct? true}
                          {:text "🦃 Krocan"}
@@ -314,41 +291,36 @@
                :note [:small [:a {:href "https://freesound.org/s/165128/"} "Kuk-kurri-kuuu by cocoricosound"]
                       " - License: Attribution NonCommercial 3.0"]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://upload.wikimedia.org/wikipedia/commons/6/65/Green_Wood_Hoopoe_%28Phoeniculus_purpureus%29_%28022A-WA03044X0020-0009M0%29.ogg"}]
-                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Green_Wood_Hoopoe%2C_Phoeniculus_purpureus%2C_at_Mapungubwe_National_Park%2C_Limpopo%2C_South_Africa_%2829896946270%29.jpg/640px-Green_Wood_Hoopoe%2C_Phoeniculus_purpureus%2C_at_Mapungubwe_National_Park%2C_Limpopo%2C_South_Africa_%2829896946270%29.jpg"}]
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/6/65/Green_Wood_Hoopoe_%28Phoeniculus_purpureus%29_%28022A-WA03044X0020-0009M0%29.ogg"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Green_wood-hoopoe_%28Phoeniculus_purpureus%29.jpg/960px-Green_wood-hoopoe_%28Phoeniculus_purpureus%29.jpg"}]
                       [:p "Je na fotce autor zvuku?"]]
                :correct? true
                :note [:p "Je to dudkovec stromový."]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://upload.wikimedia.org/wikipedia/commons/2/26/Black_Cuckoo_%28Cuculus_clamosus%29_%28022A-WA03044X0014-0013M0%29.ogg"}]
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/2/26/Black_Cuckoo_%28Cuculus_clamosus%29_%28022A-WA03044X0014-0013M0%29.ogg"}]
                       [:p "Zpívá kos černý?"]]
                :correct? false
                :note [:p "Je to kukačka černá."]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://xeno-canto.org/sounds/uploaded/UVCHPWXJBN/XC-CUCCAN1.mp3"}]
-                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cuculus_canorus_vogelartinfo_chris_romeiks_CHR0791_cropped.jpg/640px-Cuculus_canorus_vogelartinfo_chris_romeiks_CHR0791_cropped.jpg"}]
+               :text [:div
+                      [:audio {:src "https://xeno-canto.org/sounds/uploaded/UVCHPWXJBN/XC-CUCCAN1.mp3"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/8/87/Cuculus_canorus_%28cropped%29.jpg"}]
                       [:p "Je na fotce autor zvuku?"]]
                :correct? true
                :note [:p "Je to kukačka obecná"]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://xeno-canto.org/sounds/uploaded/JCPKCBKKAQ/XC949836-PELPUN_090501_Luzancy_GO02B.mp3"}]
+               :text [:div
+                      [:audio {:src "https://xeno-canto.org/sounds/uploaded/JCPKCBKKAQ/XC949836-PELPUN_090501_Luzancy_GO02B.mp3"}]
                       [:p "Slyšíme tučňáka?"]]
                :correct? false
-               :note [:<>
-                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Pelodytes_punctatus_side.jpg/596px-Pelodytes_punctatus_side.jpg"}]
+               :note [:div
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/8/8c/Pelodytes_punctatus_side.jpg"}]
                       [:p "Je to blatnička západoevropská."]]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/450/450344_6605732-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/450/450344_6605732-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐴 Kůň" :correct? true}
                          {:text "🐖 Prase"}
@@ -357,9 +329,8 @@
                :note [:small [:a {:href "https://freesound.org/s/450344/"} "Canadian Horse Snort.wav by vero.marengere"]
                       " - License: Attribution NonCommercial 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/467/467573_8031303-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/467/467573_8031303-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐷 Prase" :correct? true}
                          {:text "🦕 Diplodocus"}
@@ -368,17 +339,15 @@
                :note [:small [:a {:href "https://freesound.org/s/467573/"} "PIGS - 4 by SamuelGremaud"]
                       " - License: Creative Commons 0"]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/403/403470_2462-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/403/403470_2462-lq.ogg"}]
                       [:p "Slyšíme ježka?"]]
                :correct? true
                :note [:small [:a {:href "https://freesound.org/s/403470/"} "Shout of the hedgehog. by urupin"]
                       " - License: Attribution NonCommercial 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/56/56552_215874-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/56/56552_215874-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦜 Papoušek" :correct? true}
                          {:text "🦅 Orel"}
@@ -387,9 +356,8 @@
                :note [:small [:a {:href "https://freesound.org/s/56552/"} "fr0608bg Grey Parrot 2.wav by ERH"]
                       " - License: Attribution 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/104/104911_1050515-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/104/104911_1050515-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🦅 Orel" :correct? true}
                          {:text "🦃 Krocan"}
@@ -398,9 +366,8 @@
                :note [:small [:a {:href "https://freesound.org/s/104911/"} "Eagle - Abruzzo by daniele-salvati"]
                       " - License: Attribution NonCommercial 4.0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/527/527301_2061858-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/527/527301_2061858-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🪰 Moucha" :correct? true}
                          {:text "🐞 Slunéčko sedmitečné"}
@@ -409,19 +376,17 @@
                :note [:small [:a {:href "https://freesound.org/s/527301/"} "fly at the window by Garuda1982"]
                       " - License: Creative Commons 0"]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/233/233099_4056007-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/233/233099_4056007-lq.ogg"}]
                       [:p "Slyšíme kachnu?"]]
                :correct? false
-               :note [:<>
+               :note [:div
                       [:p "Je to husa. "]
                       [:a {:href "https://freesound.org/s/233099/"} "Goose - Horn 1 - 96kHz.wav by JarredGibb"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/233/233110_4056007-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/233/233110_4056007-lq.ogg"}]
                       [:p "Kdo si to čvachtá?"]]
                :choices [{:text "🐖 Prase" :correct? true}
                          {:text "🫏 Osel"}
@@ -430,9 +395,8 @@
                :note [:small [:a {:href "https://freesound.org/s/233110/"} "Pig - Chewing 1 - 96kHz.wav by JarredGibb"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/233/233131_4056007-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/233/233131_4056007-lq.ogg"}]
                       [:p "Kdo se to ofrkuje?"]]
                :choices [{:text "🫏 Osel" :correct? true}
                          {:text "🦫 Bobr"}
@@ -441,9 +405,8 @@
                :note [:small [:a {:href "https://freesound.org/s/233131/"} "Donkey - Sneeze 1 - 96kHz.wav by JarredGibb"]
                       " - License: Creative Commons 0"]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/160/160474_1038806-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/160/160474_1038806-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐕 Pes" :correct? true}
                          {:text "🦊 Liška"}
@@ -452,19 +415,17 @@
                :note [:small [:a {:href "https://freesound.org/s/160474/"} "Dog's Yelping 5 by unfa"]
                       " - License: Creative Commons 0"]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/233/233112_4056007-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/233/233112_4056007-lq.ogg"}]
                       [:p "Čvachtá si tu prasátko?"]]
                :correct? false
-               :note [:<>
+               :note [:div
                       [:p "Je to kůň. "]
                       [:small [:a {:href "https://freesound.org/s/233112/"} "Horse - Chewing 1 - 96kHz.wav by JarredGibb"]
                        " - License: Creative Commons 0"]]}
               {:type :multiple
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/24/24966_32482-lq.ogg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/24/24966_32482-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
                :choices [{:text "🐈 Kočka" :correct? true}
                          {:text "🦔 Ježek"}
@@ -473,53 +434,48 @@
                :note [:small [:a {:href "https://freesound.org/s/24966/"} "CatPurring_01.wav by www.bonson.ca"]
                       " - License: Attribution 3.0"]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://cdn.freesound.org/previews/554/554039_5576856-lq.ogg"}]
-                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Bucephala-albeola-010.jpg/640px-Bucephala-albeola-010.jpg"}]
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/554/554039_5576856-lq.ogg"}]
+                      [:img {:src "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Bucephala-albeola-010.jpg/960px-Bucephala-albeola-010.jpg"}]
                       [:p "Je na fotce autor zvuku?"]]
                :correct? false
-               :note [:<>
+               :note [:div
                       [:p "Slyšíme husu. "]
                       [:small [:a {:href "https://freesound.org/s/554039/"} "Geese Honking by Navadaux"]
                        " - License: Creative Commons 0"]]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://upload.wikimedia.org/wikipedia/commons/8/8a/Bamboo_Rat_%28Dactylomys_dactylinus%29_%28W_DACTYLOMYS_DACTYLINUS_R1_C1%29.ogg"}]
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/8/8a/Bamboo_Rat_%28Dactylomys_dactylinus%29_%28W_DACTYLOMYS_DACTYLINUS_R1_C1%29.ogg"}]
                       [:p "Slyšíme krysu?"]]
                :correct? true
-               :note [:<>
+               :note [:div
                       [:p "Je to amazonská bambusová krysa."]
                       [:p [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Bamboo_Rat_(Dactylomys_dactylinus)_(W_DACTYLOMYS_DACTYLINUS_R1_C1).ogg"} "Bamboo Rat calls, recorded in Tambopata Wildlife Reserve, Madre de Dios, Peru"]]
                        " - License: Creative Commons Attribution 4.0"]]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://upload.wikimedia.org/wikipedia/commons/f/f5/Lizard_Buzzard_%28Kaupifalco_monogrammicus%29_%28022A-WA03044X0016-0021M0%29.ogg"}]
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/f/f5/Lizard_Buzzard_%28Kaupifalco_monogrammicus%29_%28022A-WA03044X0016-0021M0%29.ogg"}]
                       [:p "Je na záznamu dravec?"]]
                :correct? true
-               :note [:<>
+               :note [:div
                       [:p "Je to jestřábec pestrý."]
                       [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Lizard_Buzzard_(Kaupifalco_monogrammicus)_(022A-WA03044X0016-0021M0).ogg"} "Lizard Buzzard calls, recorded in Kitale, Kenya"]
                        " - License: Creative Commons Attribution 4.0"]]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://upload.wikimedia.org/wikipedia/commons/0/07/Spotted_Hyaena_%28Crocuta_crocuta%29_%28W1CDR0000381_BD12%29.ogg"}]
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/0/07/Spotted_Hyaena_%28Crocuta_crocuta%29_%28W1CDR0000381_BD12%29.ogg"}]
                       [:p "Slyšíme vlka?"]]
                :correct? false
-               :note [:<>
+               :note [:div
                       [:p "Je to hyena skvrnitá."]
                       [:p [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Spotted_Hyaena_(Crocuta_crocuta)_(W1CDR0000381_BD12).ogg"} "Spotted Hyaena whoop, recorded in Hluhluwe–Imfolozi Park, South Africa"]]
                        " - License: Creative Commons Attribution 4.0"]]}
               {:type :yesno
-               :text [:<>
-                      [:audio {
-                               :src "https://upload.wikimedia.org/wikipedia/commons/c/cf/Golden_Eagle_%28Aquila_chrysaetos%29_%28W1CDR0001387_BD6%29.ogg"}]
+               :text [:div
+                      [:audio {:src "https://upload.wikimedia.org/wikipedia/commons/c/cf/Golden_Eagle_%28Aquila_chrysaetos%29_%28W1CDR0001387_BD6%29.ogg"}]
                       [:p "Slyšíme dravce?"]]
                :correct? true
-               :note [:<>
+               :note [:div
                       [:p "Je to orel skalní."]
                       [:p [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Golden_Eagle_(Aquila_chrysaetos)_(W1CDR0001387_BD6).ogg"} "The call of a Golden Eagle, recorded at Kinlochewe, Scotland"]]
                        " - License: Creative Commons Attribution 4.0"]]}}}
