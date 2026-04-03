@@ -14,12 +14,12 @@
         io.nayuki/qrcodegen            {:mvn/version "1.8.0"}
         io.replikativ/datahike         {:mvn/version "0.7.1624"}
         io.replikativ/datahike-lmdb    {:git/url "https://github.com/replikativ/datahike-lmdb"
-                                        :git/sha "77e75b3c3e151984309e78a3f23db8fe20cb44fb"}
+                                        :git/sha "9136ec43fc7d4cfa59345072740c5f9af56fb889"}
         metosin/reitit                 {:mvn/version "0.10.1"}
-        mount/mount                    {:mvn/version "0.1.23"}}
+        mount/mount                    {:mvn/version "0.1.23"}
+        ring/ring-devel                {:mvn/version "1.15.0-beta1"}}
  :aliases {:dev {:extra-deps {com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.7.0"}
-                              criterium/criterium                      {:mvn/version "0.4.6"}
-                              ring/ring-devel                          {:mvn/version "1.15.0-beta1"}}
+                              criterium/criterium                      {:mvn/version "0.4.6"}}
                  :jvm-opts ["-Dapp.env=dev"
                             "--enable-native-access=ALL-UNNAMED"
                             "-Duser.timezone=UTC"
