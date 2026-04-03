@@ -312,16 +312,16 @@
   "Create a game with `game-id` from the given `questions`."
   [^String game-id questions]
   (log/infof "Creating a new game %s." game-id)
-  (d/transact db-conn [{:game/id           game-id
-                        :game/state        :new
-                        :game/questions    questions
+  (d/transact db-conn [{:game/id game-id
+                        :game/state :new
+                        :game/questions questions
                         :game/questions-total (-> questions count long)}]))
 
 (defn end-game!
   "End the game with `game-id`."
   [^String game-id]
   (log/infof "Ending the game %s." game-id)
-  (d/transact db-conn [[:db.purge/entity [:game/id game-id]]]))
+  (d/transact db-conn [[:db/retractEntity [:game/id game-id]]]))
 
 (defn join-game
   "Transaction function that adds `player-id` with `player-name` to the game with `game-id`.
