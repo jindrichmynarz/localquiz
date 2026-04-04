@@ -438,17 +438,6 @@ label {
   }
 }
 
-i.material-icons {
-  vertical-align: middle;
-  padding: 0 .2em;
-}
-
-i.material-icons.answer-mark svg {
-  width: 3em;
-  height: 3em;
-  filter: drop-shadow(0 3px 0 var(--darker));
-}
-
 #choices label {
   display: flex;
   padding: .75em;
@@ -1006,6 +995,9 @@ body:has(.winner) {
 }
 
 i.material-icons {
+  vertical-align: middle;
+  padding: 0 .2em;
+
   svg {
     width: 1em;
     height: 1em;
@@ -1018,5 +1010,11 @@ i.material-icons {
 
   &.md-dark svg {
     fill: var(--dark);
+  }
+
+  &.answer-mark svg {
+    width: 3em;
+    height: 3em;
+    filter: drop-shadow(0 3px 0 var(--darker));
   }
 }
