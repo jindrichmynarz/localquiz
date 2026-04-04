@@ -492,10 +492,6 @@ label {
   }
 }
 
-input[type="range"] {
-  color: var(--dark);
-}
-
 .percentage {
   padding: 0 .25em;
   display: inline-block;
