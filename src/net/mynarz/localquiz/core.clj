@@ -33,6 +33,12 @@
 (def ^:private info
   (partial exit 0))
 
+(defn- usage
+  [summary]
+  (long-str ["Run the localquiz server."
+             "Options:\n"
+             summary]))
+
 (def cli-options
   [["-c" "--config CONFIG" "Path to configuration file in EDN"
     :parse-fn (comp edn/read-once io/as-file)]
@@ -59,7 +65,7 @@
   [& args]
   (let [{{:keys [help]} :options
          :keys [errors options summary]} (parse-opts args cli-options)]
-    (cond help (info summary)
+    (cond help (info (usage summary))
           errors (die (error-msg errors))
           :else (main options))))
 
