@@ -43,9 +43,10 @@
          (mapv (comp (partial vector :db.purge/entity) :game))
          (d/transact db-conn))))
 
-(defstate ^ScheduledExecutorService game-sweeper
+(defstate game-sweeper
   :start (let [game-idle-time (:game-idle-time config)]
            (doto (Executors/newSingleThreadScheduledExecutor)
                  (.scheduleAtFixedRate delete-idle-games! game-idle-time game-idle-time TimeUnit/HOURS)))
-  :stop (do (.shutdown game-sweeper)
-            (.awaitTermination game-sweeper 5 TimeUnit/SECONDS)))
+  :stop (doto ^ScheduledExecutorService game-sweeper
+              (.shutdown)
+              (.awaitTermination 5 TimeUnit/SECONDS)))
