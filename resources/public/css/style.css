@@ -384,25 +384,11 @@ label {
 
   #question {
     text-align: center;
-    -webkit-mask-image: linear-gradient(90deg, #000, #000);
-    -webkit-mask-size: 0% 100%;
-    -webkit-mask-repeat: no-repeat;
-    mask-image: linear-gradient(90deg, #000, #000);
-    mask-size: 0% 100%;
-    mask-repeat: no-repeat;
-    animation: typing 2s steps(40, end) forwards;
 
     img {
       border: solid 3px var(--dark);
       max-height: 40vh;
     }
-  }
-}
-
-@keyframes typing {
-  to {
-    -webkit-mask-size: 100% 100%;
-    mask-size: 100% 100%;
   }
 }
 
