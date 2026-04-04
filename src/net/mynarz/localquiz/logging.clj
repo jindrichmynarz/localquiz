@@ -7,6 +7,6 @@
 (defstate logging
   :start (let [log-level (if (:is-dev? config) :info :warn)]
            (log/merge-config! {:appenders {:println (appenders/println-appender {:stream :std-err})}
-                               :min-level [[#{"*"} log-level]
-                                           ; Filter Datahike's verbose logging
-                                           [#{"datahike.*" "konserve.*"} :warn]]})))
+                               :min-level [; Filter Datahike's verbose logging
+                                           [#{"datahike.*" "konserve.*"} :warn]
+                                           [#{"*"} log-level]]})))
