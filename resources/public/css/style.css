@@ -187,7 +187,6 @@ select {
   left: -5px;
   z-index: 1;
   cursor: pointer;
-  transition: opacity 1s ease-in;
 
   &:hover:not(:disabled) {
     box-shadow: 0 .25em .75em var(--darker);
@@ -228,7 +227,7 @@ select {
 }
 
 .btn, .btn:before, .btn:after {
-  transition: all .2s;
+  transition: all 1s ease-in;
 }
 
 .btn-primary {
