@@ -2,10 +2,10 @@
   (:require [net.mynarz.localquiz.actions.common :refer [refresh-signals!]]
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.game :as game]
-            [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.spec :as s]
             [net.mynarz.localquiz.util :as util]
+            [clojure.java.io :as io]
             [fast-edn.core :as edn])
   (:import (java.io File)))
 
@@ -13,7 +13,8 @@
   "Parse quiz questions from `questions-file`."
   [^File questions-file]
   (try
-    (let [questions (edn/read-once questions-file)]
+    (let [questions (edn/read-once {:readers {}} ; Disable readers
+                                   questions-file)]
       (if-let [validation-report (s/validate ::qs/data questions)]
         {:error validation-report}
         {:success questions}))
@@ -26,10 +27,8 @@
      {{question-file :tempfile} :question-file} :multipart} :parameters
     :tempura/keys [tr]}]
   (cond
-     question-source (->> question-source
-                          (get question-sources)
-                          (edn/read-once {:readers {}}) ; Disable readers
-                          (hash-map :success))
+     question-source (with-open [input-stream (-> question-source io/resource io/input-stream)]
+                       {:success (edn/read-once input-stream)})
      question-file (parse-questions-file question-file)
      :else {:error (tr [:errors/question-source-missing])}))
 
