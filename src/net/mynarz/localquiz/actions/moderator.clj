@@ -2,6 +2,7 @@
   (:require [net.mynarz.localquiz.actions.common :refer [refresh-signals!]]
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.game :as game]
+            [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.spec :as s]
             [net.mynarz.localquiz.util :as util]
@@ -21,14 +22,25 @@
     (catch Exception ex
       {:error (.getMessage ex)})))
 
+(defn parse-questions-resource
+  "Parse questions resource from `resource-url`."
+  [tr
+   ^String resource-url]
+  (if (->> question-sources
+           vals
+           (apply concat)
+           (some (comp #{resource-url} :url)))
+    (with-open [input-stream (-> resource-url io/resource io/input-stream)]
+      {:success (edn/read-once input-stream)})
+    {:error (tr [:errors/unknown-question-source])}))
+
 (defn parse-questions
   "Parse questions either from a selected question source or an uploaded question file."
   [{{{:keys [question-source]} :form
      {{question-file :tempfile} :question-file} :multipart} :parameters
     :tempura/keys [tr]}]
   (cond
-     question-source (with-open [input-stream (-> question-source io/resource io/input-stream)]
-                       {:success (edn/read-once input-stream)})
+     question-source (parse-questions-resource tr question-source)
      question-file (parse-questions-file question-file)
      :else {:error (tr [:errors/question-source-missing])}))
 

@@ -22,7 +22,8 @@
                                :taken "Hráč tohoto jména už je ve hře."}
                  :game-not-joinable "Hra již začala."
                  :question-source-missing "Žádné otázky nebyly zadány!"
-                 :time-out "Čas vypršel!"}
+                 :time-out "Čas vypršel!"
+                 :unknown-question-source "Neznámý zdroj otázek!"}
         :exit-game "Zavřít hru"
         :footer {:made-by "Vyrobil"
                  :with "s"
@@ -80,7 +81,8 @@
                                :taken "This name is already taken."}
                  :game-not-joinable "The game has already started."
                  :question-source-missing "Question source missing!"
-                 :time-out "Time's out!"}
+                 :time-out "Time's out!"
+                 :unknown-question-source "Unknown question source!"}
         :exit-game "Exit game"
         :footer {:made-by "Made by"
                  :with "with"

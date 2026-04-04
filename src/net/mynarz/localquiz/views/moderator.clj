@@ -161,7 +161,8 @@
       [(decimal-format (/ (:max-upload-size config) (math/pow 10 6)))]))
 
 (defmethod views/game-view [:moderator nil]
-  [{:tempura/keys [tr]
+  [{[language & _] :tempura/locales
+    :tempura/keys [tr]
     :as request}]
   (views/morph-body
     request
@@ -180,10 +181,10 @@
           {:disabled true
            :selected true}
           (tr [:pick-questions])]
-         (for [question-source (keys question-sources)]
+         (for [{:keys [name url]} (question-sources (or language :en))]
            [:option
-            {:value question-source}
-            question-source])]]
+            {:value url}
+            name])]]
        (create-game-form-fields tr)]
       (tab-checkbox "upload-questions-checkbox")
       [:label
