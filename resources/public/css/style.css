@@ -360,7 +360,6 @@ label {
   display: flex;
   flex: 1;
   align-self: center;
-  justify-self: center;
   max-width: 800px;
   margin: .5em;
   position: relative;
