@@ -668,7 +668,6 @@ input[type="range"] {
 }
 
 progress {
-  background: none;
   border: none;
   background-color: var(--offwhite);
   text-align: left;
