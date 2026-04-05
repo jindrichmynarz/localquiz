@@ -24,7 +24,7 @@
                  :question-source-missing "Žádné otázky nebyly zadány!"
                  :time-out "Čas vypršel!"
                  :unknown-question-source "Neznámý zdroj otázek!"}
-        :exit-game "Zavřít hru"
+        :exit-game "Opustit hru"
         :footer {:made-by "Vyrobil"
                  :with "s"
                  :persistence "nerozumnou vytrvalostí"
