@@ -38,3 +38,7 @@
   (let [{:keys [error]} (game/answer-question! game-id player-id answer)]
     (when error
       (refresh-signals! game-id player-id {:error (tr [error])}))))
+
+(defn leave-game!
+  [{player-id :sid}]
+  (game/disconnect-player! player-id))
