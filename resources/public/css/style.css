@@ -478,7 +478,7 @@ label {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   gap: .75em;
   text-align: center;
   animation: 1s ease-in fade-in;
