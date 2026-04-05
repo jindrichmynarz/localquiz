@@ -364,20 +364,16 @@ label {
   text-align: center;
 }
 
+#scoring-icon svg {
+  height: 24px;
+  width: 24px;
+  filter: drop-shadow(1px 2px 0 var(--darker));
+}
+
 #question-container {
   display: flex;
   flex-direction: column;
   gap: .5rem;
-
-  #question-menu {
-    align-self: flex-end;
-
-    #scoring-icon svg {
-      height: 24px;
-      width: 24px;
-      filter: drop-shadow(1px 2px 0 var(--darker));
-    }
-  }
 
   #question {
     text-align: center;
@@ -389,9 +385,6 @@ label {
   }
 }
 
-#replay-audio {
-  cursor: pointer;
-}
 
 #answers {
   display: flex;
@@ -915,21 +908,6 @@ body:has(.winner) {
   }
 }
 
-#end-game {
-  padding: 1em;
-}
-
-#end-game > button {
-  background: inherit;
-  border: 0;
-  color: var(--offwhite);
-  cursor: pointer;
-
-  &:hover svg {
-    fill: var(--orange);
-    filter: drop-shadow(0 3px 0 var(--darker));
-  }
-}
 
 #end-game-dialog[open] {
   display: flex;

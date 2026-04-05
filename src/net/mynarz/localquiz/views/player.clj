@@ -8,6 +8,14 @@
    [:i.material-icons (svg "hourglass_empty.svg")]
    [:div.shadow]])
 
+(defn exit-game
+  [tr
+   ^String game-id]
+  [:button.btn
+   {:data-on:click (format "@post('/leave/%s')" game-id)}
+   [:i.material-icons (svg "cancel.svg")]
+   (tr [:exit-game])])
+
 (defn player-name-input
   [{{:keys [game-id]} :path-params
     :tempura/keys [tr]}]
@@ -57,12 +65,15 @@
     player-id :sid
     :tempura/keys [tr]
     :as request}]
-  (views/morph-body
-    request
-    (if (game/player-in-game? game-id player-id)
+  (if (game/player-in-game? game-id player-id)
+    (views/morph-body
+      request
+      (exit-game tr game-id)
       [:section#content
-       waiting-icon
-       [:h2 (tr [:wait-for-game-start])]]
+        waiting-icon
+        [:h2 (tr [:wait-for-game-start])]])
+    (views/morph-body
+      request
       (player-name-input request))))
 
 (defmethod views/game-view [:player :question]
@@ -72,6 +83,7 @@
     :as request}]
   (views/morph-body
     request
+    (exit-game tr game-id)
     [:section#content
      [:h2.error
       {:data-show "$error"
@@ -95,6 +107,7 @@
     :as request}]
   (views/morph-body
     request
+    (exit-game tr game-id)
     (let [{:answer/keys [consensus correct?] :as answer} (game/player-answer game-id player-id)]
       [:section#content
        [:h2
@@ -112,6 +125,7 @@
     :as request}]
   (views/morph-body
     request
+    (exit-game tr game-id)
     [:section#content
      (if (game/all-questions-answered? game-id)
        (if (= player-id (game/winner game-id))

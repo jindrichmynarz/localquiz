@@ -54,10 +54,10 @@
      [:button.btn
       {:data-on:click "$_endGameDialog.close()"}
       (tr [:question.yesno/no])]]]
-   [:button
-    {:data-on:click "$_endGameDialog.showModal()"
-     :title (tr [:end-game])}
-    [:i.material-icons (svg "cancel.svg")]]])
+   [:button.btn
+    {:data-on:click "$_endGameDialog.showModal()"}
+    [:i.material-icons (svg "cancel.svg")]
+    (tr [:end-game])]])
 
 (defn get-answers
   [^String game-id]
@@ -130,11 +130,11 @@
 
 (defn replay-audio
   [tr]
-  [:a#replay-audio
+  [:button.btn#replay-audio
    {:data-show "$_audio"
     :data-on:click "$_audio.currentTime = 0; $_audio.play()"}
-   (tr [:replay-audio])
-   [:i.material-icons (svg "replay.svg")]])
+   [:i.material-icons (svg "replay.svg")]
+   (tr [:replay-audio])])
 
 (defn create-game-form-fields
   [tr]
@@ -247,35 +247,39 @@
        {:data-style:--duration (format "'%ds'" duration)}
        [:div]])))
 
+(defn question-header
+  [tr
+   ^String game-id]
+  (let [scoring (-> game-id game/current-question :scoring)
+        scoring-icon (if (= scoring :consensus)
+                       [:span#venn-conversation
+                        (svg "venn_conversation_animated.svg")]
+                       [:i.material-icons#scoring-icon
+                        {:aria-label (tr [:correctness])
+                         :title (tr [:correctness])}
+                        (svg "task_alt.svg")])]
+    [(answer-progress tr game-id)
+     scoring-icon]))
+
 (defn question-view
   ([tr
     ^String game-id]
-   (question-view tr game-id []))
+   (question-view tr game-id {}))
   ([tr
     ^String game-id
     {:keys [answer-revealed?]
      :as answers}]
-   (let [{:keys [scoring] :as question} (game/current-question game-id)
-         scoring-icon (if (= scoring :consensus)
-                         [:span#venn-conversation
-                          (svg "venn_conversation_animated.svg")]
-                         [:i.material-icons#scoring-icon
-                          {:aria-label (tr [:correctness])
-                           :title (tr [:correctness])}
-                          (svg "task_alt.svg")])
+   (let [{:keys [scoring text] :as question} (game/current-question game-id)
          mark-correct? (and answer-revealed? (not= scoring :consensus))]
       [:section#content
        (timer answer-revealed?)
        [:div#question-container
-        [:div#question-menu
-         (answer-progress tr game-id)
-         scoring-icon]
         [:div#question
          {:data-signals:_audio "el.querySelector('audio')"
           :data-init (if answer-revealed?
                        "$_audio && $_audio.pause()"
                        "$_audio && $_audio.play()")} ; Play any audio if present in the question.
-         (:text question)]
+         text]
         (views/answers-view tr
                             true
                             answers
@@ -291,7 +295,8 @@
     :as request}]
   (views/morph-body
     request
-    (end-game tr)
+    [(question-header tr game-id)
+     (end-game tr)]
     (question-view tr game-id)))
 
 (defmethod views/game-view [:moderator :show-answers]
@@ -300,7 +305,8 @@
     :as request}]
   (views/morph-body
     request
-    [(replay-audio tr)
+    [(question-header tr game-id)
+     (replay-audio tr)
      (end-game tr)]
     (let [answers (-> game-id
                       get-answers
