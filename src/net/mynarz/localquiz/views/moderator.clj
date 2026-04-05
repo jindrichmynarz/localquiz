@@ -14,7 +14,7 @@
   (let [{:keys [total answered]} (game/answer-progress game-id)
         answer-progress-text (format "%d/%d" answered total)]
     [:label#answer-progress
-     (tr [:players-answered])
+     [:span.chip-label (tr [:players-answered])]
      [:progress
       {:max total
        :value answered}
@@ -251,15 +251,17 @@
   [tr
    ^String game-id]
   (let [scoring (-> game-id game/current-question :scoring)
-        scoring-icon (if (= scoring :consensus)
-                       [:span#venn-conversation
-                        (svg "venn_conversation_animated.svg")]
-                       [:i.material-icons#scoring-icon
-                        {:aria-label (tr [:correctness])
-                         :title (tr [:correctness])}
-                        (svg "task_alt.svg")])]
+        scoring-indicator (if (= scoring :consensus)
+                            [:span#venn-conversation
+                             [:span.chip-label (tr [:scoring])]
+                             (svg "venn_conversation_animated.svg")
+                             (tr [:consensus])]
+                            [:span#scoring-icon
+                             [:span.chip-label (tr [:scoring])]
+                             [:i.material-icons (svg "task_alt.svg")]
+                             (tr [:correctness])])]
     [(answer-progress tr game-id)
-     scoring-icon]))
+     scoring-indicator]))
 
 (defn question-view
   ([tr
@@ -295,8 +297,8 @@
     :as request}]
   (views/morph-body
     request
-    [(question-header tr game-id)
-     (end-game tr)]
+    (question-header tr game-id)
+    (end-game tr)
     (question-view tr game-id)))
 
 (defmethod views/game-view [:moderator :show-answers]
@@ -305,8 +307,8 @@
     :as request}]
   (views/morph-body
     request
-    [(question-header tr game-id)
-     (replay-audio tr)
+    (question-header tr game-id)
+    [(replay-audio tr)
      (end-game tr)]
     (let [answers (-> game-id
                       get-answers

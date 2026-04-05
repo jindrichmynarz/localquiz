@@ -34,14 +34,57 @@ body {
 }
 
 header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  position: relative;
+  padding: calc(10px + .5em) .5em .5em;
+}
+
+#header-center {
   display: flex;
-  justify-content: space-between;
-  padding: 0 .5em;
+  justify-content: center;
+  gap: .5em;
+
+  #answer-progress,
+  #scoring-icon,
+  #venn-conversation {
+    display: flex;
+    align-items: center;
+    gap: .25em;
+    padding: .25em 1ch;
+  }
+
+  .chip-label {
+    color: rgb(from var(--offwhite) r g b / 55%);
+  }
+}
+
+#top-menu {
+  justify-self: end;
 }
 
 #top-menu {
   display: flex;
-  align-items: center;
+  align-items: stretch;
+  gap: .5em;
+
+  #end-game {
+    display: flex;
+  }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    top: 0;
+    left: 0;
+    padding: .25em 1ch;
+    border-color: var(--darker);
+
+    &::before, &::after {
+      display: none;
+    }
+  }
 }
 
 main {
@@ -365,8 +408,8 @@ label {
 }
 
 #scoring-icon svg {
-  height: 24px;
-  width: 24px;
+  height: 1em;
+  width: 1em;
   filter: drop-shadow(1px 2px 0 var(--darker));
 }
 
@@ -419,15 +462,11 @@ label {
 }
 
 .note {
+  text-align: left;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: .5em;
-  animation: 1s ease-in fade-in;
-
-  div {
-    text-align: left;
-  }
+  padding: .5em .75em;
 }
 
 #choices label {
@@ -932,10 +971,10 @@ body:has(.winner) {
 }
 
 #venn-conversation {
-  display: inline-block;
-  width: 3em;
-  vertical-align: bottom;
-  line-height: 1;
+  svg {
+    height: 1em;
+    width: 1em;
+  }
 
   g {
     stroke: var(--darker);
@@ -943,12 +982,8 @@ body:has(.winner) {
   }
 }
 
-#answer-progress {
-  font-size: .8em;
-
-  progress {
-    margin-left: .5rem;
-  }
+#answer-progress progress {
+  margin-left: .5rem;
 }
 
 #open-answers {

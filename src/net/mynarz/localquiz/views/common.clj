@@ -91,14 +91,17 @@
 
 (defn morph-body
   ([request]
-   (morph-body request nil nil))
+   (morph-body request nil nil nil))
   ([request main]
-   (morph-body request nil main))
-  ([{:tempura/keys [tr]} header main]
+   (morph-body request nil nil main))
+  ([request header main]
+   (morph-body request nil header main))
+  ([{:tempura/keys [tr]} center header main]
    [:div#morph
     {:data-signals:error__ifmissing ""}
     [:header
      [:h1 "Localquiz"]
+     [:div#header-center center]
      [:div#top-menu
       header
       (lang-switch tr)]]

@@ -42,7 +42,7 @@
         :player "Hráč"
         :player-name "Jméno hráče"
         :players "Hráči"
-        :players-answered "Zodpověděli:"
+        :players-answered "Zodpověděli"
         :point "bod"
         :point-fraction "bodu"
         :points "bodů"
@@ -51,6 +51,7 @@
                            :no "Ne"}}
         :replay-audio "Přehrát znovu"
         :score "Skóre"
+        :scoring "Hodnocení"
         :start-game "Zahájit hru"
         :submit "Odeslat"
         :switch-lang "Přepni jazyk"
@@ -101,7 +102,7 @@
         :player "Player"
         :player-name "Player name"
         :players "Players"
-        :players-answered "Answered:"
+        :players-answered "Answered"
         :point "point"
         :point-fraction "points"
         :points "points"
@@ -110,6 +111,7 @@
                            :no "No"}}
         :replay-audio "Replay"
         :score "Score"
+        :scoring "Scoring"
         :start-game "Start the game"
         :submit "Submit"
         :switch-lang "Switch the language"
