@@ -168,20 +168,29 @@
                   :where [?game :game/id ?game-id]]
                 @db-conn)
            :game/players
-           (sort-by :score util/descending-order)))
+           (sort-by :score util/descending-order)
+           (partition-by :score)
+           (map-indexed (fn [index players]
+                          (map (fn [player]
+                                 (assoc player
+                                        :index (inc index)
+                                        :winner? (zero? index)))
+                               players)))
+           (apply concat)))
 
 (defn leaderboard!
   "Transition the game with `game-id` to the leaderboard state."
   [^String game-id]
   (d/transact db-conn [[:db/add [:game/id game-id] :game/state :leaderboard]]))
 
-(defn winner
-  "Get the ID of the winning player."
+(defn winners
+  "Get a set of ID(s) of the winning player(s)."
   [^String game-id]
-  (-> game-id
-      leaderboard
-      first
-      :player-id))
+  (->> game-id
+       leaderboard
+       (filter :winner?)
+       (map :player-id)
+       set))
 
 (defn has-enough-players?
   "Test if the game with `game-id` has at least 2 players."

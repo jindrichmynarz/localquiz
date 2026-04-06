@@ -128,7 +128,7 @@
     (exit-game tr game-id)
     [:section#content
      (if (game/all-questions-answered? game-id)
-       (if (= player-id (game/winner game-id))
+       (if ((game/winners game-id) player-id)
          [:div.verdict.winner
           [:i.material-icons (svg "emoji_events.svg")]
           [:h2 (tr [:you-won])]]

@@ -91,9 +91,7 @@
         [:th (tr [:score])]
         [:th]]]
       [:tbody
-       (for [{:keys [player-name score index]} (map-indexed (fn [index data]
-                                                              (assoc data :index (inc index)))
-                                                            leaderboard-data)
+       (for [{:keys [index player-name score winner?]} leaderboard-data
              :let [score-decimal (decimal-format score)
                    score-style (->> (if (zero? score) score (/ score max-score))
                                     decimal-format
@@ -103,7 +101,7 @@
           [:td player-name
            (when (pos? score)
              [:i.score-direction "↑"])
-           (when (and final-leaderboard? (= index 1))
+           (when (and final-leaderboard? winner?)
              [:i.material-icons (svg "emoji_events.svg")])]
           [:td [:span.score-bar {:style score-style}]]
           [:td score-decimal]])]]]))

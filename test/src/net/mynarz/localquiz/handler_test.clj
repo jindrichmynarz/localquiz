@@ -87,7 +87,6 @@
                 :status
                 (= 204)))))
     (let [player-1 (join-player handler game-id "Jane")
-          player-2 (join-player handler game-id "Bob")
           answer (fn [session]
                    (-> (request :post (str "/answer/" game-id))
                        (add-session session)
@@ -105,5 +104,5 @@
                 (= 204))))
       (testing "Player 2 answers late"
         (Thread/sleep (* 1000 (:question-time-out config)))
-        (is (= (game/winner game-id)
-               (:sid player-1)))))))
+        (is ((game/winners game-id)
+             (:sid player-1)))))))

@@ -95,7 +95,7 @@
 
 (deftest winner
   (let [expected-winner-id (get-player-id "Jane")]
-    (is (= (game/winner fixtures/game-id) expected-winner-id))))
+    (is ((game/winners fixtures/game-id) expected-winner-id))))
 
 (deftest leaderboard
   (is (= (->> fixtures/game-id
