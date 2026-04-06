@@ -425,8 +425,8 @@ label {
 }
 
 #scoring-icon svg {
-  height: 3em;
-  width: 3em;
+  height: 2em;
+  width: 2em;
   filter: drop-shadow(1px 2px 0 var(--darker));
 }
 
@@ -589,8 +589,15 @@ label {
           inset 0 0 0 2px rgb(from var(--darker) r g b / 50%),
           inset 0 -4px 0 0 rgb(from var(--darker) r g b / 50%);
 
-        td:first-child { border-radius: 6px 0 0 6px; color: var(--darker); text-shadow: 0 1px 0 rgb(from var(--offwhite) r g b / 20%); }
-        td:last-child { border-radius: 0 6px 6px 0; }
+        td:first-child {
+          border-radius: 6px 0 0 6px;
+          color: var(--darker);
+          text-shadow: 0 1px 0 rgb(from var(--offwhite) r g b / 20%);
+        }
+
+        td:last-child {
+          border-radius: 0 6px 6px 0;
+        }
       }
 
     }
@@ -989,8 +996,8 @@ body:has(.winner) {
 
 #venn-conversation {
   svg {
-    height: 3em;
     width: 3em;
+    height: 3em;
   }
 
   g {
@@ -1042,4 +1049,9 @@ i.material-icons {
     height: 3em;
     filter: drop-shadow(0 3px 0 var(--darker));
   }
+}
+
+i.score-direction {
+  font-style: normal;
+  padding-left: .25em;
 }

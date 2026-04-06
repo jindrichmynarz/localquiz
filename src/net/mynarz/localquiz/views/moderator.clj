@@ -101,6 +101,8 @@
          [:tr
           [:td index]
           [:td player-name
+           (when (pos? score)
+             [:i.score-direction "↑"])
            (when (and final-leaderboard? (= index 1))
              [:i.material-icons (svg "emoji_events.svg")])]
           [:td [:span.score-bar {:style score-style}]]
