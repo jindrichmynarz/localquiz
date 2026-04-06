@@ -401,3 +401,15 @@
     (cond-> answer
       (= scoring :consensus)
       (assoc :answer/consensus (* (/ (dec same-answer-count) (dec player-count)) 100)))))
+
+(defn game-players
+  "Get the names of players in game with `game-id`."
+  [^String game-id]
+  (d/q '[:find ?player-name
+         :keys player-name
+         :in $ ?game-id
+         :where [?game :game/id ?game-id]
+                [?game :game/players ?player]
+                [?player :player/name ?player-name]]
+       @db-conn
+       game-id))

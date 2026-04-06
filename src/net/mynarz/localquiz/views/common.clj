@@ -445,3 +445,27 @@
      (when-not disabled?
        [:p (submit-button tr game-id)])
      (note-view answer-revealed? note)]))
+
+(defmethod answers-view :player-choice
+  [_
+   ^Boolean disabled?
+   {:keys [answer-revealed?]
+    :as answers}
+   ^String game-id
+   _
+   {:keys [note]}]
+  [:form#answers
+   [:ul#choices
+    (answer-form-handler disabled? game-id)
+    (for [{:keys [index player-name]} (->> game-id game/game-players add-index util/deterministic-shuffle)]
+      [:label.btn
+       [:input
+        {:disabled (or disabled? answer-revealed?)
+         :name "answer"
+         :type "checkbox"
+         :value index}]
+       [:div.answer
+        [:div
+         player-name]
+        (answer-frequency answers index)]])]
+   (note-view answer-revealed? note)])

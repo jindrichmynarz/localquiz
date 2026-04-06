@@ -51,6 +51,9 @@
   (s/keys :req-un [::percentage]
           :opt-un [::threshold]))
 
+(defmethod question :player-choice [_]
+  (comp #{:consensus} :scoring))
+
 (s/def ::sort-value
   number?)
 
