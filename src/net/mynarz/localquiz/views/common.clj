@@ -8,8 +8,7 @@
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.api :refer [CDN-url]]
-            [starfederation.datastar.clojure.brotli :as brotli]
-            [taoensso.timbre :as log]))
+            [starfederation.datastar.clojure.brotli :as brotli]))
 
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)

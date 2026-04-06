@@ -1,5 +1,5 @@
 (ns net.mynarz.localquiz.actions.moderator
-  (:require [net.mynarz.localquiz.actions.common :refer [refresh-signals!]]
+  (:require [net.mynarz.localquiz.actions.common :refer [refresh-event!]]
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
@@ -54,7 +54,7 @@
                   {:error error}
                   {:error false
                    :numberOfQuestions (count questions)})]
-    (refresh-signals! game-id game-id signals)))
+    (refresh-event! game-id game-id {:signals signals})))
 
 (defn create-game!
   "Create a game identified by `game-id`."
@@ -64,7 +64,7 @@
   ; TODO: What should happen if the game already exists? Shall we recreate it?
   (let [{:keys [error success]} (parse-questions request)]
     (if error
-      (refresh-signals! game-id game-id {:error error})
+      (refresh-event! game-id game-id {:signals {:error error}})
       (game/create-game! game-id (->> success
                                       :questions
                                       shuffle

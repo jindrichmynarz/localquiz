@@ -49,9 +49,10 @@
                  (a/close! ch))
 
                [<throttled-ch]
-               ([{:keys [signals]}]
-                (if-let [session-signals (get signals session-id)]
-                  (do (patch-signals! sse-gen session-signals)
+               ([event]
+                (if-let [{:keys [signals redirect]} (get event session-id)]
+                  (do (cond signals (patch-signals! sse-gen signals)
+                            redirect (d*/redirect! sse-gen redirect))
                       (recur last-view-hash))
                   (some-> ; Stop in case of error
                    (on-cpu-pool ; CPU work on real threads

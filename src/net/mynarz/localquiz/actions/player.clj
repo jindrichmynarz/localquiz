@@ -1,5 +1,5 @@
 (ns net.mynarz.localquiz.actions.player
-  (:require [net.mynarz.localquiz.actions.common :refer [refresh-signals!]]
+  (:require [net.mynarz.localquiz.actions.common :refer [refresh-event!]]
             [net.mynarz.localquiz.game :as game]
             [taoensso.timbre :as log]))
 
@@ -13,7 +13,7 @@
         signals (if validation-error
                   {:error (tr [validation-error])}
                   {:error false})]
-    (refresh-signals! game-id player-id signals)))
+    (refresh-event! game-id player-id {:signals signals})))
 
 (defn join-game!
   "Add a player with `player-name` to the game identified by `game-id`."
@@ -28,7 +28,7 @@
       (game/join-game! game-id player-id player-name)
       (catch Exception e
         (when (= (:error (ex-data e)) :game-already-started)
-          (refresh-signals! game-id player-id {:error (tr [:errors/game-not-joinable])}))))))
+          (refresh-event! game-id player-id {:signals {:error (tr [:errors/game-not-joinable])}}))))))
 
 (defn answer-question!
   [{{answer "answer"} :form-params
@@ -37,8 +37,10 @@
     :tempura/keys [tr]}]
   (let [{:keys [error]} (game/answer-question! game-id player-id answer)]
     (when error
-      (refresh-signals! game-id player-id {:error (tr [error])}))))
+      (refresh-event! game-id player-id {:signals {:error (tr [error])}}))))
 
 (defn leave-game!
-  [{player-id :sid}]
-  (game/disconnect-player! player-id))
+  [{{:keys [game-id]} :path-params
+    player-id :sid}]
+  (game/disconnect-player! player-id)
+  (refresh-event! game-id player-id {:redirect "/"}))
