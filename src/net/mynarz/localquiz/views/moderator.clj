@@ -280,7 +280,7 @@
          {:data-signals:_audio "el.querySelector('audio')"
           :data-init (if answer-revealed?
                        "$_audio && $_audio.pause()"
-                       "$_audio && $_audio.play()")} ; Play any audio if present in the question.
+                       "$_audio && $_audio.play(); typeText(el)")} ; Play any audio if present in the question.
          text]
         (views/answers-view tr
                             true
