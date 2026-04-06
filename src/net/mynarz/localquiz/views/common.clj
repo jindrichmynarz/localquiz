@@ -101,9 +101,15 @@
     [:header
      [:h1 "Localquiz"]
      [:div#header-center center]
-     [:div#top-menu
-      header
-      (lang-switch tr)]]
+     [:div#menu-trigger
+      {:data-signals:_menu-open "false"}
+      [:div#top-menu
+       {:data-class:open "$_menuOpen"}
+       header
+       (lang-switch tr)]
+      [:i.material-icons
+       {:data-on:click "$_menuOpen = !$_menuOpen"}
+       (svg "menu.svg")]]]
     [:main main]
     (footer tr)
     (cookie-warning tr)

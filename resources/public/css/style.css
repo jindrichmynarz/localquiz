@@ -60,14 +60,27 @@ header {
   }
 }
 
-#top-menu {
+#menu-trigger {
   justify-self: end;
+  display: flex;
+  align-items: center;
+
+  > .material-icons {
+    padding: 0 .5ch;
+    color: rgb(from var(--offwhite) r g b / 70%);
+    cursor: pointer;
+    user-select: none;
+  }
 }
 
 #top-menu {
   display: flex;
   align-items: stretch;
   gap: .5em;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 0;
+  transition: max-width 0.25s ease-out;
 
   #end-game {
     display: flex;
@@ -76,8 +89,7 @@ header {
   .btn {
     display: flex;
     align-items: center;
-    top: 0;
-    left: 0;
+    transform: none;
     padding: .25em 1ch;
     border-color: var(--darker);
 
@@ -85,6 +97,11 @@ header {
       display: none;
     }
   }
+}
+
+#menu-trigger:hover #top-menu,
+#top-menu.open {
+  max-width: 40rem;
 }
 
 main {
