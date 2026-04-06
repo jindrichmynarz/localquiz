@@ -425,8 +425,8 @@ label {
 }
 
 #scoring-icon svg {
-  height: 1em;
-  width: 1em;
+  height: 3em;
+  width: 3em;
   filter: drop-shadow(1px 2px 0 var(--darker));
 }
 
@@ -989,8 +989,8 @@ body:has(.winner) {
 
 #venn-conversation {
   svg {
-    height: 1em;
-    width: 1em;
+    height: 3em;
+    width: 3em;
   }
 
   g {
