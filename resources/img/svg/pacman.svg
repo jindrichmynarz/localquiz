@@ -1,4 +1,22 @@
 <svg viewBox="0 0 100 100"
-     xmlns="http://www.w3.org/2000/svg">
-  <path d="M13.107 26.336a13.107 13.107 0 0 1-11.351-6.553 13.107 13.107 0 0 1 0-13.107A13.107 13.107 0 0 1 13.106.122V13.23z"/>
+     xmlns="http://www.w3.org/2000/svg"
+     fill="currentColor">
+  <path d="M 50 50 L 95 50 A 45 45 0 0 0 5 50 Z">
+    <animateTransform attributeName="transform" type="rotate"
+                      dur="4s"
+                      repeatCount="indefinite"
+                      values="0 50 50;-90 50 50;0 50 50"
+                      keyTimes="0;0.5;1"
+                      calcMode="spline"
+                      keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </path>
+  <path d="M 50 50 L 95 50 A 45 45 0 0 1 5 50 Z">
+    <animateTransform attributeName="transform" type="rotate"
+                      dur="4s"
+                      repeatCount="indefinite"
+                      values="0 50 50;90 50 50;0 50 50"
+                      keyTimes="0;0.5;1"
+                      calcMode="spline"
+                      keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>
+  </path>
 </svg>
