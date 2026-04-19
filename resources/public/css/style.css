@@ -8,7 +8,7 @@
   --grey: #999;
 
   /* Fonts */
-  --font-size: 28px;
+  --font-size: clamp(16px, 4vw, 28px);
 }
 
 ::selection {
@@ -336,8 +336,8 @@ label {
   margin: 0;
 
   svg {
-    height: max(20dvw, 480px);
-    width: max(20dvw, 480px);
+    height: max(20dvw, 300px);
+    width: max(20dvw, 300px);
   }
 }
 
