@@ -11,7 +11,7 @@
   "Mark if given answers are correct for the given question by adding the boolean :correct? flag
   and give them numeric :score from <0, 1>."
   (fn [{:keys [type scoring]} _]
-    (if (= scoring :consensus)
+    (if (#{:consensus :majority} scoring)
       [scoring]
       [type scoring])))
 
@@ -93,6 +93,19 @@
       (assoc answer :score (-> answer
                                :answer
                                answer->score)))))
+
+(defmethod score-answers [:majority]
+  [_ answers]
+  (let [majority-threshold (/ (count answers) 2)
+        majority-answer (->> answers
+                            (keep :answer)
+                            frequencies
+                            (filter (comp (partial < majority-threshold) val))
+                            ffirst)]
+    (for [answer answers]
+      (assoc answer :score (if (and majority-answer (= (:answer answer) majority-answer))
+                             1.0
+                             0.0)))))
 
 (defn scale-scores-by-answer-times
   "Scale `scores` by answer times."

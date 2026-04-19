@@ -45,6 +45,14 @@
        [{:answer 1} {:answer 1}]
        [1.0 1.0]))
 
+(deftest majority-scoring
+  (are [answers scores] (= (map :score (scoring/score-answers {:scoring :majority} answers)) scores)
+       [{:answer 1} {:answer 2}]
+       [0.0 0.0]
+
+       [{:answer 1} {:answer 0} {:answer 1}]
+       [1.0 0.0 1.0]))
+
 (deftest scale-scores-by-answer-times
   (are [scores scaled-scores] (= (map :score (scoring/scale-scores-by-answer-times scores)) scaled-scores)
        [{:score 1.0 :answer-time 10} {:score 1.0 :answer-time 20}]

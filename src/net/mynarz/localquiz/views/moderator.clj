@@ -251,11 +251,19 @@
   [tr
    ^String game-id]
   (let [scoring (-> game-id game/current-question :scoring)
-        scoring-indicator (if (= scoring :consensus)
+        scoring-indicator (case scoring
+                            :consensus
                             [:span#venn-conversation
                              [:span.chip-label (tr [:scoring])]
-                             (svg "venn_conversation_animated.svg")
+                             [:i.material-icons (svg "venn_conversation_animated.svg")]
                              (tr [:consensus])]
+
+                            :majority
+                            [:span#scoring-icon
+                             [:span.chip-label (tr [:scoring])]
+                             [:i.material-icons (svg "pacman.svg")]
+                             (tr [:majority])]
+
                             [:span#scoring-icon
                              [:span.chip-label (tr [:scoring])]
                              [:i.material-icons (svg "task_alt.svg")]
