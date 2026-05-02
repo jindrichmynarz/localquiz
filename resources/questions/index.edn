@@ -1,6 +1,6 @@
 {:cs [{:name "Zvířecí kvíz"
        :url "questions/cs/animal_quiz.edn"}
-      {:name "Femquiz"}
-      {:url "questions/cs/femquiz.edn"}]
+      {:name "Femquiz"
+       :url "questions/cs/femquiz.edn"}]
  :en [{:name "Animal quiz"
        :url "questions/en/animal_quiz.edn"}]}
