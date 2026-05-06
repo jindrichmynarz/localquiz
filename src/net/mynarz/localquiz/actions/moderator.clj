@@ -58,17 +58,20 @@
 
 (defn create-game!
   "Create a game identified by `game-id`."
-  [{{{:keys [number-of-questions]} :form} :parameters
+  [{{:keys [form multipart]} :parameters
     game-id :sid
     :as request}]
   ; TODO: What should happen if the game already exists? Shall we recreate it?
-  (let [{:keys [error success]} (parse-questions request)]
+  (let [number-of-questions (or (:number-of-questions form)
+                                (:number-of-questions multipart)
+                                (:default-number-of-questions config))
+        {:keys [error success]} (parse-questions request)]
     (if error
       (refresh-event! game-id game-id {:signals {:error error}})
       (game/create-game! game-id (->> success
                                       :questions
                                       shuffle
-                                      (take (or number-of-questions (:default-number-of-questions config)))
+                                      (take number-of-questions)
                                       (map (comp pr-str util/replace-react-fragments)))))))
 
 (defn leaderboard!
