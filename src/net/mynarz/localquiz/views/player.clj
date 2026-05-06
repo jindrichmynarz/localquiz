@@ -100,6 +100,34 @@
                              false
                              current-question)))]))
 
+(defmethod views/game-view [:player :voting]
+  [{{:keys [game-id]} :path-params
+    player-id :sid
+    :tempura/keys [tr]
+    :as request}]
+  (views/morph-body
+    request
+    (exit-game tr game-id)
+    [:section#content
+     [:h2.error
+      {:data-show "$error"
+       :data-text "$error"}]
+     (if (game/player-voted? player-id)
+       [waiting-icon
+        [:h2 (tr [:wait-for-votes])]]
+       [:form#answers
+        [:p [:small (tr [:vote-instruction])]]
+        [:ul#choices
+         {:data-on:click (str "evt.target.tagName == 'INPUT' &&"
+                              (views/post (str "/vote/" game-id)))}
+         (for [text (game/answers-for-voting game-id player-id)]
+           [:label.btn
+            [:input
+             {:name "answer"
+              :type "checkbox"
+              :value text}]
+            [:div.answer [:div text]]])]])]))
+
 (defmethod views/game-view [:player :show-answers]
   [{{:keys [game-id]} :path-params
     player-id :sid
@@ -108,7 +136,8 @@
   (views/morph-body
     request
     (exit-game tr game-id)
-    (let [{:answer/keys [consensus correct?] :as answer} (game/player-answer game-id player-id)]
+    (let [{:answer/keys [consensus correct? majority votes]
+           :as answer} (game/player-answer game-id player-id)]
       [:section#content
        [:h2
         (cond (some? correct?) [:i.material-icons.answer-mark
@@ -116,6 +145,8 @@
                                   (svg "check.svg")
                                   (svg "close.svg"))]
               (some? consensus) (tr [:consensus-evaluation] [(decimal-format consensus)])
+              (some? majority) (tr [(if majority :majority-gained :majority-failed)])
+              (some? votes) (tr [:voting-evalution] [(decimal-format votes)])
               (nil? answer) (tr [:no-answer]))]])))
 
 (defmethod views/game-view [:player :leaderboard]

@@ -22,6 +22,7 @@
                                :taken "Hráč tohoto jména už je ve hře."}
                  :game-not-joinable "Hra již začala."
                  :question-source-missing "Žádné otázky nebyly zadány!"
+                 :duplicate-answer "Tuto odpověď už někdo zadal!"
                  :time-out "Čas vypršel!"
                  :unknown-question-source "Neznámý zdroj otázek!"}
         :exit-game "Opustit hru"
@@ -34,6 +35,8 @@
         :incorrect "Nesprávně"
         :join-game "Hrát"
         :majority "Většina"
+        :majority-failed "Získat většinu hlasů se nepodařilo!"
+        :majority-gained "Získat většinu hlasů se podařilo!"
         :most-common-answers "Nejčetnější odpovědi"
         :next "Dále"
         :no-answer "Bez odpovědi"
@@ -57,9 +60,13 @@
         :submit "Odeslat"
         :switch-lang "Přepni jazyk"
         :upload-questions "Nahrát otázky"
+        :vote-instruction "Hlasujte pro nejlepší odpověď."
+        :voting "Hlasování"
+        :voting-evaluation "%1 % hlasů"
         :wait-for-answers "Čekáme na další odpovědi..."
         :wait-for-game-start "Počkej prosím na zahájení hry."
         :wait-for-players "Čekáme alespoň na dva hráče..."
+        :wait-for-votes "Čekáme na hlasy..."
         :you-lost "Prohrál jste, saláte."
         :you-won "Vítězství je tvé!"}
    :en {:accept "Accept"
@@ -83,6 +90,7 @@
                                :taken "This name is already taken."}
                  :game-not-joinable "The game has already started."
                  :question-source-missing "Question source missing!"
+                 :duplicate-answer "This answer has already been submitted!"
                  :time-out "Time's out!"
                  :unknown-question-source "Unknown question source!"}
         :exit-game "Exit game"
@@ -95,6 +103,8 @@
         :incorrect "Incorrect"
         :join-game "Join game"
         :majority "Majority"
+        :majority-failed "Gaining majority failed!"
+        :majority-gained "Gaining majority succeeded!"
         :most-common-answers "Most common answers"
         :next "Next"
         :no-answer "No answer"
@@ -118,8 +128,12 @@
         :submit "Submit"
         :switch-lang "Switch the language"
         :upload-questions "Upload questions"
+        :vote-instruction "Vote for the best answer."
+        :voting "Voting"
+        :voting-evaluation "%1 % of votes"
         :wait-for-answers "Waiting for other answers..."
         :wait-for-game-start "Please wait for the game to start."
         :wait-for-players "Waiting for at least two players to join..."
+        :wait-for-votes "Waiting for votes..."
         :you-lost "You lost."
         :you-won "You won!"}})

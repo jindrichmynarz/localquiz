@@ -68,7 +68,7 @@
     (is (= (last (game/lobby fixtures/game-id)) player-name))))
 
 (deftest next-question!
-  (with-redefs [game/schedule-timeout (fn [_])]
+  (with-redefs [game/schedule-timeout! (fn [_ _])]
     (game/next-question! fixtures/game-id))
   (is (= (game/current-question fixtures/game-id) fixtures/question)))
 

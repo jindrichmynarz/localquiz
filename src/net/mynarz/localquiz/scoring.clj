@@ -67,6 +67,18 @@
       (assoc answer :correct? correct?
                     :score (boolean->score correct?)))))
 
+(defn crowd-scores
+  "Build a map of answers to their scores based on votes received.
+  Each vote contributes 1/(total votes) to the author's score,
+  so score = votes_received / total_votes."
+  [votes]
+  (let [n (-> votes count double)]
+    (if (pos? n)
+      (-> votes
+          frequencies
+          (update-vals #(/ % n)))
+      {})))
+
 (defn consensus-scores
   "Build a map of answers to their scores based on consensus.
   No consensus gets the score of 0, complete consensus the score of 1."
@@ -83,6 +95,12 @@
                             (or (and answer-score (+ answer-score increment)) 0.0))))
                 (transient {}))
         persistent!)))
+
+(defmethod score-answers [:crowd nil]
+  [{:keys [votes]} answers]
+  (let [vote->score (->> votes (map :answer) crowd-scores)]
+    (for [answer answers]
+      (assoc answer :score (get vote->score (:answer answer) 0.0)))))
 
 (defmethod score-answers [:consensus]
   [_ answers]

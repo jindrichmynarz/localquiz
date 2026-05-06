@@ -7,6 +7,7 @@
 (def game-states
   #{:new
     :question
+    :voting
     :show-answers
     :leaderboard})
 
@@ -60,6 +61,10 @@
    {:db/ident :answer/score
     :db/doc "The answer's score"
     :db/valueType :db.type/double
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :answer/vote
+    :db/doc "Player's vote in a :crowd question"
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
    {:db/ident :game/players
     :db/doc "Players of a game"

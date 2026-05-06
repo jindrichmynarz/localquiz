@@ -61,11 +61,12 @@
 
 (defn get-answers
   [^String game-id]
-  (let [answers (game/get-answers game-id)]
-    {:answer-count (count answers)
-     :answer-frequencies (->> answers
-                              (map :answer)
-                              frequencies)}))
+  (let [get-fn (if (= (-> game-id game/current-question :type) :crowd)
+                 game/get-votes
+                 game/get-answers)
+        answers (get-fn game-id)]
+     {:answer-count (count answers)
+      :answer-frequencies (->> answers (map :answer) frequencies)}))
 
 (defn leaderboard
   [tr
@@ -99,12 +100,12 @@
          [:tr
           [:td index]
           [:td player-name
-           (when (pos? score)
-             [:i.score-direction "↑"])
            (when (and final-leaderboard? winner?)
              [:i.material-icons (svg "emoji_events.svg")])]
           [:td [:span.score-bar {:style score-style}]]
-          [:td score-decimal]])]]]))
+          [:td score-decimal
+           (when (pos? score)
+             [:i.score-direction "↑"])]])]]]))
 
 (defn next-button
   [tr
@@ -249,27 +250,34 @@
 
 (defn question-header
   [tr
-   ^String game-id]
-  (let [scoring (-> game-id game/current-question :scoring)
-        scoring-indicator (case scoring
-                            :consensus
-                            [:span#venn-conversation
-                             [:span.chip-label (tr [:scoring])]
-                             [:i.material-icons (svg "venn_conversation_animated.svg")]
-                             (tr [:consensus])]
+   ^String game-id
+   progress-fn]
+  [(progress-fn tr game-id)
+   (let [{:keys [scoring type]} (game/current-question game-id)]
+     (cond
+       (= type :crowd)
+       [:span#scoring-icon
+        [:span.chip-label (tr [:scoring])]
+        [:i.material-icons (svg "vote.svg")]
+        (tr [:voting])]
 
-                            :majority
-                            [:span#scoring-icon
-                             [:span.chip-label (tr [:scoring])]
-                             [:i.material-icons (svg "pacman.svg")]
-                             (tr [:majority])]
+       (= scoring :consensus)
+       [:span#venn-conversation
+        [:span.chip-label (tr [:scoring])]
+        [:i.material-icons (svg "venn_conversation_animated.svg")]
+        (tr [:consensus])]
 
-                            [:span#scoring-icon
-                             [:span.chip-label (tr [:scoring])]
-                             [:i.material-icons (svg "task_alt.svg")]
-                             (tr [:correctness])])]
-    [(answer-progress tr game-id)
-     scoring-indicator]))
+       (= scoring :majority)
+       [:span#scoring-icon
+        [:span.chip-label (tr [:scoring])]
+        [:i.material-icons (svg "pacman.svg")]
+        (tr [:majority])]
+
+       :else
+       [:span#scoring-icon
+        [:span.chip-label (tr [:scoring])]
+        [:i.material-icons (svg "task_alt.svg")]
+        (tr [:correctness])]))])
 
 (defn question-view
   ([tr
@@ -280,7 +288,7 @@
     {:keys [answer-revealed?]
      :as answers}]
    (let [{:keys [scoring text] :as question} (game/current-question game-id)
-         mark-correct? (and answer-revealed? (not= scoring :consensus))]
+         mark-correct? (and answer-revealed? (not scoring))]
       [:section#content
        (timer answer-revealed?)
        [:div#question-container
@@ -305,9 +313,34 @@
     :as request}]
   (views/morph-body
     request
-    (question-header tr game-id)
+    (question-header tr game-id answer-progress)
     (end-game tr)
     (question-view tr game-id)))
+
+(defn vote-progress
+  [tr
+   ^String game-id]
+  (let [{:keys [total answered]} (game/vote-count game-id)
+        vote-progress-text (format "%d/%d" answered total)]
+    [:label#answer-progress
+     [:span.chip-label (tr [:voting])]
+     [:progress
+      {:max total
+       :value answered}
+      vote-progress-text]]))
+
+(defmethod views/game-view [:moderator :voting]
+  [{:tempura/keys [tr]
+    game-id :sid
+    :as request}]
+  (views/morph-body
+    request
+    (question-header tr game-id vote-progress)
+    (end-game tr)
+    (let [answers (-> game-id
+                      get-answers
+                      (assoc :answer-revealed? true))]
+      (question-view tr game-id answers))))
 
 (defmethod views/game-view [:moderator :show-answers]
   [{:tempura/keys [tr]
@@ -315,7 +348,7 @@
     :as request}]
   (views/morph-body
     request
-    (question-header tr game-id)
+    (question-header tr game-id answer-progress)
     [(replay-audio tr)
      (end-game tr)]
     (let [answers (-> game-id

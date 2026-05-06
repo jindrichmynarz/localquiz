@@ -34,4 +34,5 @@
     ["/validate" {:post {:handler (comp views/view player-actions/validate-player-name!)
                          :parameters {:form ::spec/player-params}}}]]
    ["/answer/:game-id" (comp views/view player-actions/answer-question!)]
+   ["/vote/:game-id" (comp views/view player-actions/vote-for-answer!)]
    ["/leave/:game-id" (comp views/view player-actions/leave-game!)]])

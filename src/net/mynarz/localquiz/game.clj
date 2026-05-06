@@ -240,23 +240,68 @@
         (dissoc timeouts game-id))
     timeouts))
 
+(defn get-votes
+  "Get the votes for the current :crowd question in `game-id`."
+  [^String game-id]
+  (d/q '[:find ?player ?answer-entity ?vote
+         :in $ ?game-id
+         :keys player answer-entity answer
+         :where [?game :game/id ?game-id]
+                [?game :game/players ?player]
+                [?game :game/answers ?answer-entity]
+                [?answer-entity :answer/player ?player]
+                [?answer-entity :answer/vote ?vote]]
+       @db-conn
+       game-id))
+
+(defn evaluate-votes!
+  "Score a :crowd question: each vote contributes 1/total_votes to the author's score."
+  [^String game-id]
+  (swap! timeouts cancel-timeout! game-id)
+  (log/infof "Evaluating votes for game %s." game-id)
+  (let [votes (get-votes game-id)
+        question (-> game-id
+                     current-question
+                     (assoc :votes votes))
+        scores (->> game-id
+                    get-answers
+                    (scoring/score-answers question))]
+    (->> [(store-scores scores)
+          (add-scores scores)
+          [[:db/add [:game/id game-id] :game/state :show-answers]]]
+         (reduce into)
+         (d/transact db-conn))))
+
+(defn schedule-timeout!
+  "Schedule a timeout for `game-id` that calls `callback` when it fires."
+  [^String game-id
+   callback]
+  (swap! timeouts assoc game-id
+    (future
+      (Thread/sleep ^int (* 1000 (:question-time-out config)))
+      (log/infof "Time-out in game %s!" game-id)
+      (callback game-id))))
+
 (defn evaluate-answers!
   [^String game-id]
   (swap! timeouts cancel-timeout! game-id)
   ; FIXME: Is it possible that this is evaluated more than once for the same question?
   ;        Shall we store a "lock" indicating if the question was already evaluated? Don't evaluate answers if they were evaluated before.
   (log/infof "Evaluating answers for game %s." game-id)
-  (let [{:keys [scoring]
-         :as question} (current-question game-id)
-        scores (cond-> (->> game-id
-                            get-answers
-                            (scoring/score-answers question))
-                  (not= scoring :consensus) scoring/scale-scores-by-answer-times)]
-    (->> [(store-scores scores)
-          (add-scores scores)
-          [[:db/add [:game/id game-id] :game/state :show-answers]]]
-         (reduce into)
-         (d/transact db-conn))))
+  (let [{:keys [scoring type]
+         :as question} (current-question game-id)]
+    (if (= type :crowd)
+      (do (d/transact db-conn [[:db/add [:game/id game-id] :game/state :voting]])
+          (schedule-timeout! game-id evaluate-votes!))
+      (let [scores (cond-> (->> game-id
+                                get-answers
+                                (scoring/score-answers question))
+                     (not= scoring :consensus) scoring/scale-scores-by-answer-times)]
+        (->> [(store-scores scores)
+              (add-scores scores)
+              [[:db/add [:game/id game-id] :game/state :show-answers]]]
+             (reduce into)
+             (d/transact db-conn))))))
 
 (defn get-answer-ids
   [^String game-id]
@@ -267,16 +312,95 @@
        @db-conn
        game-id))
 
-(defn schedule-timeout
-  "Schedule a timeout for the game identified by `game-id`."
+(defn player-voted?
+  "Test if a player with `player-id` has voted in the current :crowd question."
+  [^String player-id]
+  (d/q '[:find ?a .
+         :in $ ?player-id
+         :where [?p :player/id ?player-id]
+                [?a :answer/player ?p]
+                [?a :answer/vote _]]
+       @db-conn
+       player-id))
+
+(defn all-players-voted?
+  "Test if all players who submitted text in phase 1 have voted."
   [^String game-id]
-  (swap! timeouts
-         assoc
-         game-id
-         (future
-           (Thread/sleep ^int (* 1000 (:question-time-out config)))
-           (log/infof "Time-out in game %s!" game-id)
-           (evaluate-answers! game-id))))
+  (->> game-id
+       (d/q '[:find ?p
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]
+                     [?game :game/answers ?a]
+                     [?a :answer/player ?p]
+                     (not [?a :answer/vote _])]
+            @db-conn)
+       seq
+       not))
+
+(defn answers-for-voting
+  "Get the distinct text answers available for voting in `game-id` for `player-id`,
+  excluding the player's own answer text."
+  [^String game-id
+   player-id]
+  (let [own-text (when player-id
+                   (d/q '[:find ?t .
+                          :in $ ?game-id ?player-id
+                          :where [?game :game/id ?game-id]
+                                 [?game :game/answers ?a]
+                                 [?a :answer/player ?p]
+                                 [?p :player/id ?player-id]
+                                 [?a :answer/answer ?t]]
+                        @db-conn game-id player-id))]
+    (->> (d/q '[:find [?t ...]
+                :in $ ?game-id ?own
+                :where [?game :game/id ?game-id]
+                       [?game :game/answers ?a]
+                       [?a :answer/answer ?t]
+                       [(not= ?t ?own)]]
+              @db-conn game-id own-text)
+         sort)))
+
+(defn player-answer-entity
+  "Get the answer entity for `player-id` in game `game-id`."
+  [^String game-id
+   ^String player-id]
+  (d/q '[:find ?a .
+         :in $ ?game-id ?player-id
+         :where [?game :game/id ?game-id]
+                [?game :game/answers ?a]
+                [?a :answer/player ?p]
+                [?p :player/id ?player-id]]
+       @db-conn game-id player-id))
+
+(defn vote-count
+  "Get total phase-1 answerers and how many have voted, for `game-id`."
+  [^String game-id]
+  {:total (count (get-answer-ids game-id))
+   :answered (or (d/q '[:find (count ?a) .
+                         :in $ ?game-id
+                         :where [?game :game/id ?game-id]
+                                [?game :game/answers ?a]
+                                [?a :answer/vote _]]
+                       @db-conn game-id)
+                 0)})
+
+(defn vote-for-answer!
+  "Vote for an `answer` for `player-id` in game `game-id`."
+  [^String game-id
+   ^String player-id
+   ^String answer]
+  (cond
+    (not (@timeouts game-id))
+    {:error :errors/time-out}
+
+    (and (some? answer) (not (player-voted? player-id)) (player-answered? player-id))
+    (do
+      (log/infof "Player %s in game %s votes for '%s'." player-id game-id answer)
+      (when-let [ans (player-answer-entity game-id player-id)]
+        (d/transact db-conn [[:db/add ans :answer/vote (str answer)]])
+        (when (all-players-voted? game-id)
+          (log/infof "All players in game %s have voted." game-id)
+          (evaluate-votes! game-id))))))
 
 (defn next-question!
   "Get the next question for `game-id`.
@@ -296,7 +420,7 @@
                 [:db/add [:game/id game-id] :game/current-question question]
                 [:db/retract [:game/id game-id] :game/questions question]])
          (d/transact db-conn))
-    (schedule-timeout game-id)))
+    (schedule-timeout! game-id evaluate-answers!)))
 
 (defn answer-question!
   "Answer the current question in game with `game-id`
@@ -306,6 +430,17 @@
    ^String answer]
   (cond (not (@timeouts game-id))
         {:error :errors/time-out}
+
+        (and (some? answer)
+             (not (player-answered? player-id))
+             (= :crowd (:type (current-question game-id)))
+             (d/q '[:find ?a .
+                    :in $ ?gid ?text
+                    :where [?g :game/id ?gid]
+                           [?g :game/answers ?a]
+                           [?a :answer/answer ?text]]
+                  @db-conn game-id (str answer)))
+        {:error :errors/duplicate-answer}
 
         (and (some? answer) (not (player-answered? player-id)))
         (do
@@ -400,7 +535,8 @@
                        [?answer :answer/answer ?value]
                        [?other-answer :answer/answer ?value]
                        [?game :game/players ?other-player]]
-        {{:keys [scoring]} :current-question
+        {{:keys [scoring type]} :current-question
+         {:answer/keys [score]} :answer
          :keys [answer
                 player-count
                 same-answer-count]} (-> query
@@ -409,7 +545,13 @@
                                         (update :current-question edn/read-string))]
     (cond-> answer
       (= scoring :consensus)
-      (assoc :answer/consensus (* (/ (dec same-answer-count) (dec player-count)) 100)))))
+      (assoc :answer/consensus (* (/ (dec same-answer-count) (dec player-count)) 100))
+
+      (= scoring :majority)
+      (assoc :answer/majority (pos? score))
+
+      (= type :crowd)
+      (assoc :answer/votes (* score 100)))))
 
 (defn game-players
   "Get the names of players in game with `game-id`."

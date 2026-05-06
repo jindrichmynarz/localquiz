@@ -67,6 +67,9 @@
              :min-count 2
              :distinct true))
 
+(defmethod question :crowd [_]
+  (constantly true))
+
 (defmethod question :sort [_]
   (s/keys :req-un [::items]))
 

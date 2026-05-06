@@ -39,6 +39,15 @@
     (when error
       (refresh-event! game-id player-id {:signals {:error (tr [error])}}))))
 
+(defn vote-for-answer!
+  [{{answer "answer"} :form-params
+    {:keys [game-id]} :path-params
+    player-id :sid
+    :tempura/keys [tr]}]
+  (let [{:keys [error]} (game/vote-for-answer! game-id player-id answer)]
+    (when error
+      (refresh-event! game-id player-id {:signals {:error (tr [error])}}))))
+
 (defn leave-game!
   [{{:keys [game-id]} :path-params
     player-id :sid}]

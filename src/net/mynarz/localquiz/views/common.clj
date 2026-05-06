@@ -25,6 +25,7 @@
   []
   [:input.offscreen#lang-toggle
    {:data-attr:checked "$language == 'en'"
+    :data-ignore-morph "" ; Avoid the checked attribute to be reset.
     :data-on:change "$language = {'cs': 'en', 'en': 'cs'}[$language];
                      localStorage.setItem('language', $language);
                      location.reload()"
@@ -95,7 +96,10 @@
    (morph-body request nil nil main))
   ([request header main]
    (morph-body request nil header main))
-  ([{:tempura/keys [tr]} center header main]
+  ([{:tempura/keys [tr]}
+    center
+    header
+    main]
    [:div#morph
     {:data-signals:error__ifmissing ""}
     [:header
@@ -445,6 +449,28 @@
      (when-not disabled?
        [:p (submit-button tr game-id)])
      (note-view answer-revealed? note)]))
+
+(defmethod answers-view :crowd
+  [tr
+   ^Boolean disabled?
+   {:keys [answer-revealed?]
+    :as answers}
+   ^String game-id
+   _
+   {:keys [note]}]
+  [:form#answers
+   (when-not disabled?
+     [:p
+      [:input
+       {:autofocus true
+        :minlength 1
+        :maxlength 100
+        :name "answer"
+        :type "text"}]
+      (submit-button tr game-id)])
+   (when answer-revealed?
+     (open-answers tr answers))
+   (note-view answer-revealed? note)])
 
 (defmethod answers-view :player-choice
   [_
