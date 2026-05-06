@@ -108,7 +108,7 @@
   (views/morph-body
     request
     (exit-game tr game-id)
-    (let [{:answer/keys [consensus correct?]
+    (let [{:answer/keys [consensus correct? majority]
            :as answer} (game/player-answer game-id player-id)]
       [:section#content
        [:h2
@@ -117,6 +117,7 @@
                                   (svg "check.svg")
                                   (svg "close.svg"))]
               (some? consensus) (tr [:consensus-evaluation] [(decimal-format consensus)])
+              (some? majority) (tr [(if majority :majority-gained :majority-failed)])
               (nil? answer) (tr [:no-answer]))]])))
 
 (defmethod views/game-view [:player :leaderboard]

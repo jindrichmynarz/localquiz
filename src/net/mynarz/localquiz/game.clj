@@ -401,6 +401,7 @@
                        [?other-answer :answer/answer ?value]
                        [?game :game/players ?other-player]]
         {{:keys [scoring]} :current-question
+         {:answer/keys [score]} :answer
          :keys [answer
                 player-count
                 same-answer-count]} (-> query
@@ -409,7 +410,10 @@
                                         (update :current-question edn/read-string))]
     (cond-> answer
       (= scoring :consensus)
-      (assoc :answer/consensus (* (/ (dec same-answer-count) (dec player-count)) 100)))))
+      (assoc :answer/consensus (* (/ (dec same-answer-count) (dec player-count)) 100))
+
+      (= scoring :majority)
+      (assoc :answer/majority (pos? score)))))
 
 (defn game-players
   "Get the names of players in game with `game-id`."
