@@ -136,19 +136,12 @@
       {:as "script"
        :href "/js/sortable.js"
        :rel "modulepreload"}]
-     [:link
-      {:as "script"
-       :href "/js/quiz.js"
-       :rel "modulepreload"}]
      [:script
       {:defer true
        :src CDN-url
        :type "module"}]
      [:script
       {:src "/js/sortable.js"
-       :type "module"}]
-     [:script
-      {:src "/js/quiz.js"
        :type "module"}]
      ; Enables responsiveness on mobile devices
      [:meta {:name "viewport"
