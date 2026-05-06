@@ -108,7 +108,8 @@
   (views/morph-body
     request
     (exit-game tr game-id)
-    (let [{:answer/keys [consensus correct?] :as answer} (game/player-answer game-id player-id)]
+    (let [{:answer/keys [consensus correct?]
+           :as answer} (game/player-answer game-id player-id)]
       [:section#content
        [:h2
         (cond (some? correct?) [:i.material-icons.answer-mark
