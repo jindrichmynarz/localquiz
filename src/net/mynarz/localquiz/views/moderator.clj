@@ -280,7 +280,7 @@
     {:keys [answer-revealed?]
      :as answers}]
    (let [{:keys [scoring text] :as question} (game/current-question game-id)
-         mark-correct? (and answer-revealed? (not= scoring :consensus))]
+         mark-correct? (and answer-revealed? (nil? scoring))]
       [:section#content
        (timer answer-revealed?)
        [:div#question-container
