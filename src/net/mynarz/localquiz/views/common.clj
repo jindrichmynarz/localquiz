@@ -25,6 +25,7 @@
   []
   [:input.offscreen#lang-toggle
    {:data-attr:checked "$language == 'en'"
+    :data-ignore-morph "" ; Avoid the checked attribute to be reset.
     :data-on:change "$language = {'cs': 'en', 'en': 'cs'}[$language];
                      localStorage.setItem('language', $language);
                      location.reload()"
