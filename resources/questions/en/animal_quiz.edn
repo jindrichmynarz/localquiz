@@ -478,4 +478,64 @@
                :note [:div
                       [:p "It is a golden eagle."]
                       [:p [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Golden_Eagle_(Aquila_chrysaetos)_(W1CDR0001387_BD6).ogg"} "The call of a Golden Eagle, recorded at Kinlochewe, Scotland"]]
-                       " - License: Creative Commons Attribution 4.0"]]}}}
+                       " - License: Creative Commons Attribution 4.0"]]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/148/148873_2378499-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐘 Elephant" :correct? true}
+                         {:text "🦛 Hippopotamus"}
+                         {:text "🦍 Gorilla"}
+                         {:text "🦬 Bison"}]
+               :note [:small [:a {:href "https://freesound.org/s/148873/"} "Voice elephant by vataaa"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/149/149190_6361365-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐅 Tiger" :correct? true}
+                         {:text "🦁 Lion"}
+                         {:text "🐆 Leopard"}
+                         {:text "🐻 Bear"}]
+               :note [:small [:a {:href "https://freesound.org/s/149190/"} "tiger roar by videog"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/716/716962_159528-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐦‍⬛ Crow" :correct? true}
+                         {:text "🦅 Eagle"}
+                         {:text "🦉 Owl"}
+                         {:text "🕊️ Pigeon"}]
+               :note [:small [:a {:href "https://freesound.org/s/716962/"} "Raven Croak or Crow Caw by fudgealtoid"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/717/717839_97550-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦝 Raccoon" :correct? true}
+                         {:text "🦊 Fox"}
+                         {:text "🦡 Badger"}
+                         {:text "🦫 Beaver"}]
+               :note [:small [:a {:href "https://freesound.org/s/717839/"} "230127 Raccoon calls by TRP"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/423/423454_6253486-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🐍 Snake" :correct? true}
+                         {:text "🦎 Lizard"}
+                         {:text "🐊 Crocodile"}
+                         {:text "🐸 Frog"}]
+               :note [:small [:a {:href "https://freesound.org/s/423454/"} "snarling Snake by florianreichelt"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/850/850661_15895934-lq.ogg"}]
+                      [:p "Which animal makes this sound?"]]
+               :choices [{:text "🦓 Zebra" :correct? true}
+                         {:text "🐴 Horse"}
+                         {:text "🫏 Donkey"}
+                         {:text "🦌 Deer"}]
+               :note [:small [:a {:href "https://freesound.org/s/850661/"} "Zebras - Grant's Zebra Braying by TheKingOfGeeks360"]
+                      " - License: Creative Commons 0"]}}}

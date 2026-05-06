@@ -478,4 +478,54 @@
                :note [:div
                       [:p "Je to orel skalní."]
                       [:p [:small [:a {:href "https://commons.wikimedia.org/wiki/File:Golden_Eagle_(Aquila_chrysaetos)_(W1CDR0001387_BD6).ogg"} "The call of a Golden Eagle, recorded at Kinlochewe, Scotland"]]
-                       " - License: Creative Commons Attribution 4.0"]]}}}
+                       " - License: Creative Commons Attribution 4.0"]]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/148/148873_2378499-lq.ogg"}]
+                      [:p "Který živočich vydává tento zvuk?"]]
+               :choices [{:text "🐘 Slon" :correct? true}
+                         {:text "🦛 Hroch"}
+                         {:text "🦍 Gorila"}
+                         {:text "🦬 Bizon"}]
+               :note [:small [:a {:href "https://freesound.org/s/148873/"} "Voice elephant by vataaa"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/149/149190_2688492-lq.ogg"}]
+                      [:p "Který živočich vydává tento zvuk?"]]
+               :choices [{:text "🐅 Tygr" :correct? true}
+                         {:text "🦁 Lev"}
+                         {:text "🐆 Leopard"}
+                         {:text "🐻 Medvěd"}]
+               :note [:small [:a {:href "https://freesound.org/s/149190/"} "tiger roar by videog"]
+                      " - License: Attribution 4.0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/716/716962_159528-lq.ogg"}]
+                      [:p "Který živočich vydává tento zvuk?"]]
+               :choices [{:text "🐦‍⬛ Vrána" :correct? true}
+                         {:text "🦅 Orel"}
+                         {:text "🦉 Sova"}
+                         {:text "🕊️ Holub"}]
+               :note [:small [:a {:href "https://freesound.org/s/716962/"} "Raven Croak or Crow Caw by fudgealtoid"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/717/717839_97550-lq.ogg"}]
+                      [:p "Který živočich vydává tento zvuk?"]]
+               :choices [{:text "🦝 Mýval" :correct? true}
+                         {:text "🦊 Liška"}
+                         {:text "🦡 Jezevec"}
+                         {:text "🦫 Bobr"}]
+               :note [:small [:a {:href "https://freesound.org/s/717839/"} "230127 Raccoon calls by TRP"]
+                      " - License: Creative Commons 0"]}
+              {:type :multiple
+               :text [:div
+                      [:audio {:src "https://cdn.freesound.org/previews/423/423454_6253486-lq.ogg"}]
+                      [:p "Který živočich vydává tento zvuk?"]]
+               :choices [{:text "🐍 Had" :correct? true}
+                         {:text "🦎 Ještěrka"}
+                         {:text "🐊 Krokodýl"}
+                         {:text "🐸 Žába"}]
+               :note [:small [:a {:href "https://freesound.org/s/423454/"} "snarling Snake by florianreichelt"]
+                      " - License: Creative Commons 0"]}}}
