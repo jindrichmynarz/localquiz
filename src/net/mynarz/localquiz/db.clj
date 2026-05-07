@@ -94,7 +94,8 @@
           :store (:db-store config)})
 
 (defstate ^{:on-reload :noop} db-conn
-  :start (do (d/create-database db-config)
+  :start (do (when-not (d/database-exists? db-config)
+               (d/create-database db-config))
              (d/connect db-config))
   :stop (do (d/release db-conn)
             (d/delete-database db-config)))
