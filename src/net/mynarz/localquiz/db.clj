@@ -97,5 +97,4 @@
   :start (do (when-not (d/database-exists? db-config)
                (d/create-database db-config))
              (d/connect db-config))
-  :stop (do (d/release db-conn)
-            (d/delete-database db-config)))
+  :stop (d/release db-conn))
