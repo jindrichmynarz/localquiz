@@ -163,7 +163,7 @@
   (some->> game-id
            (d/q '[:find (pull ?game [{:game/players [[:player/id :as :player-id]
                                                      [:player/name :as :player-name]
-                                                     {:answer/_player [[:answer/score :as :score]]}
+                                                     {:answer/_player [[:answer/score :default 0.0 :as :score]]}
                                                      [:player/score :default 0.0 :as :total-score]]}]) .
                   :in $ ?game-id
                   :where [?game :game/id ?game-id]]
