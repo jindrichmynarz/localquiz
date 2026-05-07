@@ -13,7 +13,8 @@
         signals (if validation-error
                   {:error (tr [validation-error])}
                   {:error false})]
-    (refresh-event! game-id player-id {:signals signals})))
+    (refresh-event! game-id player-id {:signals signals})
+    (not validation-error)))
 
 (defn join-game!
   "Add a player with `player-name` to the game identified by `game-id`."
