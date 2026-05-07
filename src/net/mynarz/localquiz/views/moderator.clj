@@ -74,7 +74,7 @@
         questions-answered (- questions-total questions)
         leaderboard-data (game/leaderboard game-id)
         max-score (->> leaderboard-data
-                       (map :score)
+                       (map :total-score)
                        (apply max))
         final-leaderboard? (= questions-answered questions-total)]
     [:div#leaderboard
@@ -91,9 +91,9 @@
         [:th (tr [:score])]
         [:th]]]
       [:tbody
-       (for [{:keys [index player-name score winner?]} leaderboard-data
-             :let [score-decimal (decimal-format score)
-                   score-style (->> (if (zero? score) score (/ score max-score))
+       (for [{:keys [index player-name score total-score winner?]} leaderboard-data
+             :let [score-decimal (decimal-format total-score)
+                   score-style (->> (if (zero? total-score) total-score (/ total-score max-score))
                                     decimal-format
                                     (format "--score: %s;"))]]
          [:tr

@@ -163,17 +163,20 @@
   (some->> game-id
            (d/q '[:find (pull ?game [{:game/players [[:player/id :as :player-id]
                                                      [:player/name :as :player-name]
-                                                     [:player/score :default 0.0 :as :score]]}]) .
+                                                     {:answer/_player [[:answer/score :as :score]]}
+                                                     [:player/score :default 0.0 :as :total-score]]}]) .
                   :in $ ?game-id
                   :where [?game :game/id ?game-id]]
                 @db-conn)
            :game/players
-           (sort-by :score util/descending-order)
-           (partition-by :score)
+           (sort-by :total-score util/descending-order)
+           (partition-by :total-score)
            (map-indexed (fn [index players]
-                          (map (fn [player]
+                          (map (fn [{[{:keys [score]} & _] :answer/_player
+                                     :as player}]
                                  (assoc player
                                         :index (inc index)
+                                        :score score
                                         :winner? (zero? index)))
                                players)))
            (apply concat)))
