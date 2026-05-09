@@ -3,7 +3,6 @@
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.cpu-pool :refer [on-cpu-pool]]
             [net.mynarz.localquiz.error :as error]
-            [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :as util]
             [net.mynarz.localquiz.views.common :as views]
             [charred.api :as charred]
@@ -77,8 +76,4 @@
        (fn [sse-gen status]
          (log/infof "Closing the session %s to game %s with status %s." session-id game-id status)
          (a/>!! <cancel :cancel)
-         (when (and (not (:is-dev? config)) ; Don't close connections in development to allow testing.
-                    player-game-id
-                    (= (game/get-game-state player-game-id) :new))
-           (game/disconnect-player! session-id))
          (d*/close-sse! sse-gen))})))
