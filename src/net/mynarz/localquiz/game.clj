@@ -413,7 +413,7 @@
                                         (update :current-question edn/read-string))]
     (cond-> answer
       (= scoring :consensus)
-      (assoc :answer/consensus (* (/ (dec same-answer-count) (dec player-count)) 100))
+      (assoc :answer/consensus (* (/ same-answer-count player-count) 100))
 
       (= scoring :majority)
       (assoc :answer/majority (pos? score)))))
