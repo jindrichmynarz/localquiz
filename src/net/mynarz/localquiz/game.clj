@@ -161,14 +161,14 @@
   "Get the player leaderboard for `game-id` using the database `conn`."
   [^String game-id]
   (some->> game-id
-           (d/q '[:find (pull ?game [{:game/players [[:player/id :as :player-id]
-                                                     [:player/name :as :player-name]
-                                                     {:answer/_player [[:answer/score :as :score]]}
-                                                     [:player/score :default 0.0 :as :total-score]]}]) .
+           (d/q '[:find [(pull ?player [[:player/id :as :player-id]
+                                        [:player/name :as :player-name]
+                                        {:answer/_player [[:answer/score :as :score]]}
+                                        [:player/score :default 0.0 :as :total-score]]) ...]
                   :in $ ?game-id
-                  :where [?game :game/id ?game-id]]
+                  :where [?game :game/id ?game-id]
+                         [?game :game/players ?player]]
                 @db-conn)
-           :game/players
            (sort-by :total-score util/descending-order)
            (partition-by :total-score)
            (map-indexed (fn [index players]
