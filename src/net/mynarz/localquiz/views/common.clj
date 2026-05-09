@@ -13,9 +13,6 @@
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
 
-; Allow HTML entities
-(alter-var-root #'h/escape-text-fragment (constantly identity))
-
 (defn init-js
   ;; Retry Infinity means we always try to reconnect. The other defaults
   ;; mean that this will at most take 30s (default max backoff).
