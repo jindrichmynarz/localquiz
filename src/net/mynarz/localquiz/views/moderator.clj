@@ -35,7 +35,9 @@
 (defn create-button
   [tr]
   [:button.btn.btn-primary
-   {:data-on:click (views/post "/create")}
+   {:data-attr:disabled "$_creating || $_validating"
+    :data-indicator "_creating"
+    :data-on:click (views/post "/create")}
    (tr [:create-game])])
 
 (def end-game-cmd
@@ -176,6 +178,7 @@
        [:p
         [:select#question-picker
          {:data-on:change (views/post "/create/validate")
+          :data-indicator "_validating"
           :name "question-source"}
          [:option
           {:disabled true
