@@ -137,7 +137,8 @@
        :href "/js/sortable.js"
        :rel "modulepreload"}]
      [:script
-      {:defer true
+      {:crossorigin "anonymous"
+       :defer true
        :src CDN-url
        :type "module"}]
      [:script
