@@ -9,6 +9,7 @@
             [charred.api :as charred]))
 
 (defn answer-progress
+  "Show how many players in `game-id` have already answered the current question."
   [tr
    ^String game-id]
   (let [{:keys [total answered]} (game/answer-progress game-id)
@@ -118,6 +119,7 @@
    [:i.material-icons.md-large (svg "arrow_circle_right.svg")]])
 
 (defn number-of-questions
+  "Input for the number of questions for a game."
   [tr]
   [:p.form-group
    {:data-signals:number-of-questions__ifmissing (:default-number-of-questions config)}
@@ -131,6 +133,7 @@
      :type "number"}]])
 
 (defn replay-audio
+  "A button to replay audio from the question, if present."
   [tr]
   [:button.btn#replay-audio
    {:data-show "$_audio"
@@ -309,7 +312,8 @@
   (views/morph-body
     request
     (question-header tr game-id)
-    (end-game tr)
+    [(replay-audio tr)
+     (end-game tr)]
     (question-view tr game-id)))
 
 (defmethod views/game-view [:moderator :show-answers]
