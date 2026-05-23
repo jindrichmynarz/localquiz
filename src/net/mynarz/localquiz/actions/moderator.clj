@@ -74,13 +74,9 @@
                                       (take number-of-questions)
                                       (map (comp pr-str util/replace-react-fragments)))))))
 
-(defn leaderboard!
+(defn next!
   [{game-id :sid}]
-  (game/leaderboard! game-id))
-
-(defn next-question!
-  [{game-id :sid}]
-  (game/next-question! game-id))
+  (game/advance! game-id))
 
 (defn end-game!
   [{game-id :sid}]

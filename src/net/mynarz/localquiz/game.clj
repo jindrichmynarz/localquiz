@@ -335,6 +335,19 @@
   (log/infof "Ending the game %s." game-id)
   (d/transact db-conn [[:db/retractEntity [:game/id game-id]]]))
 
+(def transitions
+  {:new          next-question!
+   :show-answers leaderboard!
+   :leaderboard  (fn [game-id]
+                   (if (all-questions-answered? game-id)
+                     (end-game! game-id)
+                     (next-question! game-id)))})
+
+(defn advance!
+  "Advance the game with `game-id` to its next state."
+  [^String game-id]
+  (some-> game-id get-game-state transitions (apply [game-id])))
+
 (defn join-game
   "Transaction function that adds `player-id` with `player-name` to the game with `game-id`.
   Requires the game to be in :new state."

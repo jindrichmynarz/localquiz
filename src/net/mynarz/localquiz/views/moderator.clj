@@ -230,7 +230,7 @@
         (if has-enough-players?
           [:p
            [:button.btn.btn-primary
-            {:data-on:click "@post('/question')"
+            {:data-on:click (views/post "/next")
              :disabled (not has-enough-players?)
              :type "submit"}
             (tr [:start-game])]]
@@ -303,7 +303,7 @@
                             mark-correct?
                             question)]
        (when answer-revealed?
-         [:p (next-button tr "@post('/leaderboard')")])])))
+         [:p (next-button tr (views/post "/next"))])])))
 
 (defmethod views/game-view [:moderator :question]
   [{:tempura/keys [tr]
@@ -339,11 +339,12 @@
     (end-game tr)
     [:section#content
      (leaderboard tr game-id)
-     (if (game/all-questions-answered? game-id)
-       [:p
-        [:button.btn.btn-primary
-         {:data-on:click end-game-cmd
-          :data-on:keydown__window (format "evt.key === 'Enter' && %s" end-game-cmd)}
-         (tr [:end-game])
-         [:i.material-icons.md-dark (svg "cancel.svg")]]]
-       [:p (next-button tr "@post('/question')")])]))
+     (let [next-cmd (views/post "/next")]
+       (if (game/all-questions-answered? game-id)
+         [:p
+          [:button.btn.btn-primary
+           {:data-on:click next-cmd
+            :data-on:keydown__window (format "evt.key === 'Enter' && %s" next-cmd)}
+           (tr [:end-game])
+           [:i.material-icons.md-dark (svg "cancel.svg")]]]
+         [:p (next-button tr next-cmd)]))]))

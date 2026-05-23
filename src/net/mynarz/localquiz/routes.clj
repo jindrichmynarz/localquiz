@@ -20,8 +20,7 @@
     ["/validate" {:post {:handler (comp views/view moderator-actions/validate-questions!)
                          :parameters {:form ::spec/question-form-params
                                       :multipart ::spec/question-file-params}}}]]
-   ["/question" {:post (comp views/view moderator-actions/next-question!)}]
-   ["/leaderboard" {:post (comp views/view moderator-actions/leaderboard!)}]
+   ["/next" {:post (comp views/view moderator-actions/next!)}]
    ["/end" {:post (comp views/view moderator-actions/end-game!)}]
 
    ; Players' routes
