@@ -2,7 +2,7 @@
 
 ## Design summary
 
-localquiz is a **server-driven, real-time multiplayer quiz** with a strictly **unidirectional data flow**: actions travel client → server via HTTP POST; view updates travel server → client via SSE. These are two separate one-way channels — the server never requests anything from a client, and clients never hold or mutate state. All state lives exclusively on the server in Datahike.
+localquiz is a **server-driven, real-time multiplayer quiz** with a strictly **unidirectional data flow**: actions travel client → server via HTTP POST; view updates travel server → client via SSE. These are two separate one-way channels — the server never requests anything from a client, and all domain state lives exclusively on the server in Datahike. Clients hold only **[Datastar reactive signals](https://data-star.dev/guide/reactive_signals)** — `$`-prefixed variables that automatically track and propagate changes to any HTML expression that references them. Signals cover ephemeral UI state (form values, loading indicators, dialog references), server-pushed feedback (`$error`, `$numberOfQuestions`), and user preferences (`$language`, `$_cookieAccepted`). The server can patch signals directly over SSE (`patch-signals!`) without triggering a full view re-render, and the client can mutate them through `data-bind` and `data-on` event handlers. None of the signals carry domain state.
 
 **Two roles:**
 
@@ -31,17 +31,18 @@ The dominant paradigm for interactive web applications is the **single-page appl
 
 | Axis | SPA / virtual DOM | localquiz |
 |---|---|---|
-| **State location** | Client — component state, Redux, Zustand, etc. | Server only — Datahike is the single source of truth |
+| **State location** | Client — component state, Redux, Zustand, etc. | Domain state on the server (Datahike); clients hold only Datastar signals for ephemeral UI state, server-pushed feedback, and user preferences |
 | **Rendering** | Client renders via JavaScript; virtual DOM diffing patches the real DOM | Server renders HTML (Hiccup/Chassis); full view HTML is sent over SSE |
 | **DOM reconciliation** | Virtual DOM diff computed in the browser (React reconciler, Vue reactivity) | Datastar morphs server-sent HTML into the live DOM — no virtual DOM |
 | **Data flow** | Bidirectional: client fetches JSON, mutates local state, re-renders | Unidirectional: client POSTs actions, server pushes HTML — two separate one-way channels |
 | **Multi-client sync** | Each client owns its state; real-time sync requires additional infrastructure (WebSockets, state merging, conflict resolution) | All clients are kept in sync automatically — every DB change is fanned out to all connected SSE streams |
-| **Client-side logic** | Application logic lives in the browser JS bundle | No application logic in the browser — the only JS is the Datastar runtime |
+| **Client-side logic** | Application logic lives in the browser JS bundle | No application logic in the browser — the Datastar runtime provides declarative reactivity via signals; UI behaviour is expressed as HTML attributes, not JS code |
+| **Reactivity model** | Front-end: a state change in the browser (e.g. Redux dispatch, `setState`) triggers a reconciliation cycle within the client; the server is a passive data source | Back-end: a Datahike transaction is the reactive event — `db_listener` subscribes to transactions and fans changes out to all connected SSE streams; clients are passive receivers |
 
 **Consequences of moving state to the server:**
 
 - An entire class of client-side bugs disappears: stale caches, optimistic update rollbacks, race conditions between concurrent fetches and renders, and state divergence between clients are structurally impossible.
-- The fat-morph approach trades per-update payload size (full view HTML rather than a minimal JSON delta) for the elimination of a client-side state model. The hash check in the SSE handler ensures no redundant renders are sent.
+- The fat-morph approach nominally trades per-update payload size (full view HTML rather than a minimal JSON delta) for the elimination of a client-side state model. In practice the concern is largely neutralised by [Brotli compression over SSE](https://andersmurphy.com/2025/04/15/why-you-should-use-brotli-sse.html): because successive frames share nearly identical HTML structure, Brotli's large context window (up to 263 KB, vs. gzip's fixed 32 KB) can reference prior frames, yielding compression ratios of 30:1–250:1 for repetitive HTML streams — far beyond what a hand-crafted JSON delta would achieve. This is why `wrap-blocker` requires Brotli support and why the SSE handler compresses each `patch-elements!` frame. The hash check additionally ensures no redundant frames are emitted at all.
 - Real-time multiplayer consistency is trivial: because every player's view is derived from the same DB value on each SSE tick, players are always looking at the same game state without any client-side reconciliation.
 
 **Trade-off:** every view update requires a server round-trip. The design is unsuitable for purely offline use or interactions that demand sub-millisecond local feedback (e.g. canvas drawing, real-time text editing). It is well suited to turn-based or event-driven flows — exactly the quiz game model.
