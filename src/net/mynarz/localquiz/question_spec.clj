@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.question-spec
-  (:require [clojure.spec.alpha :as s])
+  (:require [clojure.spec.alpha :as s]
+            [clojure.walk :as walk])
   (:import (java.net URL)))
 
 (s/def ::hiccup
@@ -104,6 +105,27 @@
              :min-count 1
              :distinct true))
 
+(s/def ::defs (s/map-of keyword? any?))
+
 (s/def ::data
   (s/keys :req-un [::questions]
-          :opt-un [::creators]))
+          :opt-un [::creators ::defs]))
+
+(defn resolve-refs
+  "Walk `data`, replacing each {:ref id} node with the value from `defs`.
+  Namespaced keywords do a two-level look-up: namespace key first, name key second.
+  Throws ex-info on unknown IDs."
+  [defs data]
+  (walk/postwalk
+    (fn [node]
+      (if (and (map? node) (= #{:ref} (set (keys node))))
+        (let [ref-id (:ref node)
+              value (if-let [ref-ns (namespace ref-id)]
+                      (get-in defs [(keyword ref-ns) (keyword (name ref-id))])
+                      (get defs ref-id))]
+          (if (some? value)
+            value
+            (throw (ex-info (str "Undefined ref: " (pr-str ref-id))
+                            {:ref ref-id}))))
+        node))
+    data))

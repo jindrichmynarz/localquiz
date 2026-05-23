@@ -1,5 +1,6 @@
-{:creators #{{:name "Jindřich Mynarz"
+{:defs {:texts {:test-question "Is this test successful?"}}
+ :creators #{{:name "Jindřich Mynarz"
               :url "https://mynarz.net/#jindrich"}}
  :questions #{{:type :yesno
-               :text "Is this test successful?"
+               :text {:ref :texts/test-question}
                :correct? true}}}

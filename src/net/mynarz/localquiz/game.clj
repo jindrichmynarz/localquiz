@@ -1,6 +1,7 @@
 (ns net.mynarz.localquiz.game
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db :refer [db-conn]]
+            [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.scoring :as scoring]
             [net.mynarz.localquiz.spec :as spec]
             [net.mynarz.localquiz.util :as util]
@@ -80,6 +81,18 @@
        (sort-by :time-joined)
        (map :player-name)))
 
+(defn get-defs
+  "Return the defs for `game-id` as a map of id → parsed value."
+  [^String game-id]
+  (->> (d/q '[:find ?id ?value
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]
+                     [?game :game/defs ?def]
+                     [?def :def/id ?id]
+                     [?def :def/value ?value]]
+            @db-conn game-id)
+       (into {} (map (fn [[id value]] [id (edn/read-string value)])))))
+
 (defn current-question
   "Get the current question for `game-id`."
   [^String game-id]
@@ -89,7 +102,8 @@
                   :where [?game :game/id ?game-id]
                          [?game :game/current-question ?current-question]]
                 @db-conn)
-           edn/read-string))
+           edn/read-string
+           (qs/resolve-refs (get-defs game-id))))
 
 (defn parse-answer
   "Parse `answer` to Clojure data types."
@@ -321,13 +335,19 @@
             (evaluate-answers! game-id)))))
 
 (defn create-game!
-  "Create a game with `game-id` from the given `questions`."
-  [^String game-id questions]
-  (log/infof "Creating a new game %s." game-id)
-  (d/transact db-conn [{:game/id game-id
-                        :game/state :new
-                        :game/questions questions
-                        :game/questions-total (-> questions count long)}]))
+  "Create a game with `game-id` from the given `questions` and optional `defs`."
+  ([^String game-id
+    questions]
+   (create-game! game-id questions []))
+  ([^String game-id
+    questions
+    defs]
+   (log/infof "Creating a new game %s." game-id)
+   (d/transact db-conn [(cond-> {:game/id game-id
+                                 :game/state :new
+                                 :game/questions questions
+                                 :game/questions-total (-> questions count long)}
+                          (seq defs) (assoc :game/defs defs))])))
 
 (defn end-game!
   "End the game with `game-id`."

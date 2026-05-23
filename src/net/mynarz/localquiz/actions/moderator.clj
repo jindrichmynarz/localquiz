@@ -14,11 +14,14 @@
   "Parse quiz questions from `questions-file`."
   [^File questions-file]
   (try
-    (let [questions (edn/read-once {:readers {}} ; Disable readers
-                                   questions-file)]
-      (if-let [validation-report (s/validate ::qs/data questions)]
+    (let [data (edn/read-once {:readers {}} ; Disable readers for security
+                              questions-file)
+          resolved (qs/resolve-refs (:defs data) data)]
+      (if-let [validation-report (s/validate ::qs/data resolved)]
         {:error validation-report}
-        {:success questions}))
+        {:success data}))
+    (catch clojure.lang.ExceptionInfo ex
+      {:error (.getMessage ex)})
     (catch Exception ex
       {:error (.getMessage ex)})))
 
@@ -31,7 +34,9 @@
            (apply concat)
            (some (comp #{resource-url} :url)))
     (with-open [input-stream (-> resource-url io/resource io/input-stream)]
-      {:success (edn/read-once input-stream)})
+      (let [data (edn/read-once input-stream)]
+        (qs/resolve-refs (:defs data) data)
+        {:success data}))
     {:error (tr [:errors/unknown-question-source])}))
 
 (defn parse-questions
@@ -56,6 +61,9 @@
                    :numberOfQuestions (count questions)})]
     (refresh-event! game-id game-id {:signals signals})))
 
+(def serialize
+  (comp pr-str util/replace-react-fragments))
+
 (defn create-game!
   "Create a game identified by `game-id`."
   [{{:keys [form multipart]} :parameters
@@ -68,11 +76,17 @@
         {:keys [error success]} (parse-questions request)]
     (if error
       (refresh-event! game-id game-id {:signals {:error error}})
-      (game/create-game! game-id (->> success
-                                      :questions
-                                      shuffle
-                                      (take number-of-questions)
-                                      (map (comp pr-str util/replace-react-fragments)))))))
+      (let [defs (mapv (fn [[id value]]
+                         {:def/id id
+                          :def/value (serialize value)})
+                       (:defs success))]
+        (game/create-game! game-id
+                           (->> success
+                                :questions
+                                shuffle
+                                (take number-of-questions)
+                                (map serialize))
+                           defs)))))
 
 (defn next!
   [{game-id :sid}]

@@ -80,6 +80,19 @@
     :db/doc "Player's score"
     :db/valueType :db.type/double
     :db/cardinality :db.cardinality/one}
+   {:db/ident :def/id
+    :db/doc "$def identifier"
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :def/value
+    :db/doc "$def value as an EDN string"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :game/defs
+    :db/doc "defs of a game"
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/isComponent true}
    {:db/ident :game
     :db.entity/attrs [:game/id :game/state :game/questions]
     :db.entity/preds ['net.mynarz.localquiz.db/valid-game-state?]}
