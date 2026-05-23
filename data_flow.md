@@ -2,7 +2,7 @@
 
 ## Design summary
 
-localquiz is a **server-driven, real-time multiplayer quiz**. The server owns all state (Datahike) and pushes HTML patches to connected clients via SSE. Clients never manage view state — they only send HTTP POST actions and receive SSE events.
+localquiz is a **server-driven, real-time multiplayer quiz** with a strictly **unidirectional data flow**: actions travel client → server via HTTP POST; view updates travel server → client via SSE. These are two separate one-way channels — the server never requests anything from a client, and clients never hold or mutate state. All state lives exclusively on the server in Datahike.
 
 **Two roles:**
 
@@ -19,9 +19,34 @@ localquiz is a **server-driven, real-time multiplayer quiz**. The server owns al
 
 4. **State machine** — the game progresses through `:new → :question → :show-answers → :leaderboard` and back (or terminates). State transitions are triggered by moderator POST actions; the `:show-answers` transition fires automatically when all players answer or the 45-second timeout expires.
 
+**CQRS:** the architecture follows Command Query Responsibility Segregation. Commands (HTTP POST → `actions/` → `d/transact`) mutate state and return HTTP 204 — no view data. Queries (DB listener → SSE → `views/`) read state and produce HTML; they never mutate. The `refresh-event!` path carries per-session command acknowledgements (validation errors, redirects) and is exclusively triggered by client commands — never by server-initiated processes. Server-initiated state changes (question timeout, idle-game sweeper) go through `d/transact` and are reflected on the query side via the same DB listener → SSE pipeline.
+
 **Brotli gate:** `wrap-blocker` rejects all requests that do not accept Brotli (`br`) with HTTP 406.
 
-**POST responses:** all POST action handlers return HTTP 204 (No Content). The actual view update is always delivered via SSE.
+---
+
+## Contrast with SPAs
+
+The dominant paradigm for interactive web applications is the **single-page application (SPA)** with a virtual DOM (React, Vue, Svelte). localquiz deliberately inverts most of its assumptions.
+
+| Axis | SPA / virtual DOM | localquiz |
+|---|---|---|
+| **State location** | Client — component state, Redux, Zustand, etc. | Server only — Datahike is the single source of truth |
+| **Rendering** | Client renders via JavaScript; virtual DOM diffing patches the real DOM | Server renders HTML (Hiccup/Chassis); full view HTML is sent over SSE |
+| **DOM reconciliation** | Virtual DOM diff computed in the browser (React reconciler, Vue reactivity) | Datastar morphs server-sent HTML into the live DOM — no virtual DOM |
+| **Data flow** | Bidirectional: client fetches JSON, mutates local state, re-renders | Unidirectional: client POSTs actions, server pushes HTML — two separate one-way channels |
+| **Multi-client sync** | Each client owns its state; real-time sync requires additional infrastructure (WebSockets, state merging, conflict resolution) | All clients are kept in sync automatically — every DB change is fanned out to all connected SSE streams |
+| **Client-side logic** | Application logic lives in the browser JS bundle | No application logic in the browser — the only JS is the Datastar runtime |
+
+**Consequences of moving state to the server:**
+
+- An entire class of client-side bugs disappears: stale caches, optimistic update rollbacks, race conditions between concurrent fetches and renders, and state divergence between clients are structurally impossible.
+- The fat-morph approach trades per-update payload size (full view HTML rather than a minimal JSON delta) for the elimination of a client-side state model. The hash check in the SSE handler ensures no redundant renders are sent.
+- Real-time multiplayer consistency is trivial: because every player's view is derived from the same DB value on each SSE tick, players are always looking at the same game state without any client-side reconciliation.
+
+**Trade-off:** every view update requires a server round-trip. The design is unsuitable for purely offline use or interactions that demand sub-millisecond local feedback (e.g. canvas drawing, real-time text editing). It is well suited to turn-based or event-driven flows — exactly the quiz game model.
+
+---
 
 ## Roles
 
@@ -104,7 +129,6 @@ stateDiagram-v2
     [*] --> new : POST /create
     new --> question : POST /question
     question --> show_answers : all answered or timeout (45 s)
-    show_answers --> question : POST /question (questions remain)
     show_answers --> leaderboard : POST /leaderboard (no questions remain)
     leaderboard --> question : POST /question (next round)
     leaderboard --> [*] : POST /end
