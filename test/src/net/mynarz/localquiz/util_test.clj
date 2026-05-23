@@ -14,11 +14,3 @@
        [0 1 2 4]
        [:a :b :c :d]
        ["foo" "bar" "baz"]))
-
-(deftest replace-react-fragments
-  (is (= (util/replace-react-fragments [:section
-                                        [:<>
-                                         [:p "Paragraph 1"]]])
-         [:section
-          [:div
-           [:p "Paragraph 1"]]])))

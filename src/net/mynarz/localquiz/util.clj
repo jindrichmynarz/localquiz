@@ -3,7 +3,6 @@
             [dev.onionpancakes.chassis.core :as h]
             [clojure.java.io :as io]
             [clojure.string :as string]
-            [clojure.walk :refer [postwalk-replace]]
             [fast-edn.core :as edn])
   (:import (clojure.lang RT)
            (java.io PushbackReader)
@@ -56,11 +55,6 @@
   (charred/parse-json-fn {:async? false
                           :bufsize buf-size
                           :key-fn keyword}))
-
-(defn replace-react-fragments
-  "Replace React fragments (:<>) in `hiccup` with :div elements."
-  [hiccup]
-  (postwalk-replace {:<> :div} hiccup))
 
 (defmacro svg
   "Load SVG `resource`."

@@ -5,7 +5,6 @@
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.spec :as s]
-            [net.mynarz.localquiz.util :as util]
             [clojure.java.io :as io]
             [fast-edn.core :as edn])
   (:import (java.io File)))
@@ -61,9 +60,6 @@
                    :numberOfQuestions (count questions)})]
     (refresh-event! game-id game-id {:signals signals})))
 
-(def serialize
-  (comp pr-str util/replace-react-fragments))
-
 (defn create-game!
   "Create a game identified by `game-id`."
   [{{:keys [form multipart]} :parameters
@@ -78,14 +74,14 @@
       (refresh-event! game-id game-id {:signals {:error error}})
       (let [defs (mapv (fn [[id value]]
                          {:def/id id
-                          :def/value (serialize value)})
+                          :def/value (pr-str value)})
                        (:defs success))]
         (game/create-game! game-id
                            (->> success
                                 :questions
                                 shuffle
                                 (take number-of-questions)
-                                (map serialize))
+                                (map pr-str))
                            defs)))))
 
 (defn next!

@@ -204,7 +204,7 @@
                :text "Kapsy dámských džín jsou průměrně o 48 % kratší a o 6,5 % užší než kapsy mužských džín."
                :correct? true}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/ovary.svg"}]
                       [:p "Jak se nazývá tato část ženské anatomie?"]]
                :choices [{:text "Vaječník" :correct? true}
@@ -212,7 +212,7 @@
                          {:text "Děloha"}
                          {:text "Děložní sliznice"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/endometrium.svg"}]
                       [:p "Jak se nazývá tato část ženské anatomie?"]]
                :choices [{:text "Děložní sliznice" :correct? true}
@@ -220,7 +220,7 @@
                          {:text "Panenská blána"}
                          {:text "Velké stydké pysky"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/hymen.svg"}]
                       [:p "Jak se nazývá tato část ženské anatomie?"]]
                :choices [{:text "Panenská blána" :correct? true}
@@ -228,7 +228,7 @@
                          {:text "Malé stydké pysky"}
                          {:text "Velké stydké pysky"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/uterine_tube.svg"}]
                       [:p "Jak se nazývá tato část ženské anatomie?"]]
                :choices [{:text "Vejcovod" :correct? true}
@@ -248,7 +248,7 @@
                          {:text "Přívrženkyně súfijského učení"}
                          {:text "Feministka před svým coming outem"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/frantiska_plaminkova.jpg"}]
                       [:p "Jak se jmenovala česká politička a novinářka, která se zasadila se o zrušení celibátu učitelek a o zakotvení všeobecného (tedy i ženského) volebního práva do ústavy První republiky? Byla popravena během heydrichiády."]]
                :choices [{:text "Františka Plamínková" :correct? true}
@@ -256,7 +256,7 @@
                          {:text "Alena Schillerová"}
                          {:text "Albína Honzáková"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/clara_zetkin.jpg"}]
                       [:p "Jak se jmenovala prominentní německá socialistická politička, novinářka, učitelka a bojovnice za ženská práva, poslankyně Reichstagu za Komunistickou stranu Německa za Výmarské republiky?"]]
                :choices [{:text "Clara Zetkin" :correct? true}
@@ -264,7 +264,7 @@
                          {:text "Angela Merkel"}
                          {:text "Alexandra Kollontai"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/grace_hopper.jpg"}]
                       [:p "Jak se jmenovala americká matematička, informatička a důstojnice námořnictva Spojených států, která vyvinula vůbec první kompilátor pro programovací jazyk?"]]
                :choices [{:text "Grace Hopper" :correct? true}
@@ -285,7 +285,7 @@
                          {:text "Ženy v offsidu"}
                          {:text "Malý pitaval z velkého města"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/olga_hepnarova.jpg"}]
                       [:p "Kdo byla Olga Hepnarová?"]]
                :choices [{:text "Masová vražedkyně" :correct? true}
@@ -293,7 +293,7 @@
                          {:text "Předsedkyně Socialistického svazu mládeže"}
                          {:text "Herečka známá z detektivek"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/marie_kabrhelova.jpg"}]
                       [:p "Kdo byla Marie Kabrhelová?"]]
                :choices [{:text "Předsedkyně Československého svazu žen" :correct? true}
@@ -319,7 +319,7 @@
                          {:text "1984"}
                          {:text "Ženská obřízka je stále legální."}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/simone_de_beauvoir.png"}]
                       [:p "Jak se nazývá kniha existenciální filosofky Simone de Beauvoir, kde popisuje ženu jako vždy relativní vůči muži?"]]
                :choices [{:text "Druhé pohlaví" :correct? true}
@@ -399,7 +399,7 @@
                :text "'Mléční sourozenci' jsou lidé, kteří sdíleli stejnou kojnou."
                :correct? true}
               {:type :sort
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/barbie.png"}]
                       [:p "Seřaďte chronologicky, kdy Mattel začal prodávat následující druhy Barbie:"]]
                :items [{:text "Astronaut Barbie" :sort-value 1965}
@@ -516,7 +516,7 @@
                          {:text "Kriminalizací popírání holokaustu"}]
                :note "Byla první prezidentkou zvoleného Evropského parlamentu."}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/laura_janackova.png"}]
                       [:p "Jaký slogan použila Laura Janáčková na svých volebních billboardech?"]]
                :choices [{:text "V posteli a politice jsem jako doma"}
@@ -593,7 +593,7 @@
                          {:text "Egypt"}]
                :note "Byla zvolena roku 2005."}
               {:type :multiple
-               :text [:<>
+               :text [:div
                        [:img {:src "https://mynarz.net/femquiz/img/burkini.jpg"}]
                        [:p "Jak se nazývá tento ženský oděv?"]]
                :choices [{:text "Hidžáb"}
@@ -625,7 +625,7 @@
                        {:text "Řecko" :sort-value 1952}
                        {:text "Lichtenštejnsko" :sort-value 1984}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:p "Kterému náboženství patří následující modlitba?"]
                       [:blockquote "Požehnaný jsi Ty, Hospodine, Bože náš, Králi všehomíra, jenž mě neučinil ženou."]]
                :choices [{:text "Judaismus" :correct? true}
@@ -653,7 +653,7 @@
                :text "V Sovětském svazu byl feminismus klasifikován jako buržoazní ideologie, tedy kontrarevoluční a antisovětská."
                :correct? true}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/volte_nase_holky.png"}]
                       [:p "Která politická strana použila tento billboard?"]]
                :choices [{:text "Věci veřejné" :correct? true}
@@ -734,7 +734,7 @@
                          {:text "Úplné zrovnoprávnění žen ve společnosti" :correct? true}
                          {:text "Eliminace platových rozdílů mezi muži a ženami" :correct? true}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/devcatka_na_slovicko.jpg"}]
                       [:p "O čem je kniha 'Děvčátka, na slovíčko'?"]]
                :choices [{:text "První osvětová publikace o ženské reprodukci, která v Československu vyšla" :correct? true}
@@ -768,7 +768,7 @@
                :text "Jak se nazývala demonstrace polských žen proti zpřísnění pravidel pro interrupce roku 2016?"
                :answer "Czarny protest"}
               {:type :open
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/cyborg_manifesto.jpg"}]
                       [:p "Jak se nazývá posthumanistická esej feministky Donny Haraway z roku 1985?"]]
                :answer "Cyborg Manifesto"}
@@ -820,7 +820,7 @@
                :text "Do roku 1977 v západním Německu platil zákon, podle něhož mohla být žena zaměstnaná, jen pokud to nebylo v rozporu s jejími povinnostmi v rodině a manželství."
                :correct? true}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:p "Kdo je autorem následujících slov?"]
                       [:blockquote "Musím však konstatovat, že v našem prostředí - jakkoliv jsou tu ženy na tom mnohonásobně hůře než na Západě - se jeví feminismus prostě jako dada."]]
                :choices [{:text "Václav Havel" :correct? true}
@@ -850,7 +850,7 @@
                          {:text "Nalezení manžela jako ochránce"}
                          {:text "Aplikaci nouzové antikoncepce Postinor"}]}
               {:type :yesno
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/fdr.png"}]
                       [:p "Na fotce je muž."]]
                :correct? true
@@ -865,7 +865,7 @@
                :text "V antickém Řecku musel muž znásilněnou manželku opustit."
                :correct? true}
               {:type :open
-               :text [:<>
+               :text [:div
                       [:p "Jak se jmenoval autor následujících slov:"]
                       [:blockquote "Vždyť je věc jasná, že všechny ženy mají dlouhé vlasy, ale krátký rozum."]]
                :answer "Kosmas"}
@@ -891,7 +891,7 @@
                :text "Jak se jmenuje myšlenkový směr založený Sdružením přátel heterosexuálního bílého muže a jejich obdivovatelek?"
                :answer "Maskulinismus"}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:p "Kdo řekl následující slova?"]
                       [:blockquote "Kdybych byl trochu mladší, tak zorganizuji obrovskou demonstraci heterosexuálů v Praze. A budou nás miliony."]]
                :choices [{:text "Miloš Zeman" :correct? true}
@@ -955,7 +955,7 @@
                          {:text "Indie"}]
                :note "Irsko uspořádalo roku 2024 referendum o změně této části ústavy, ale 73,9 % hlasujících tuto změnu odmítlo."}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:p "Doplňte následující slogan, který se často skanduje na feministických protestech."]
                       [:blockquote "Držte vaše doktríny dál od mojí..."]]
                :choices [{:text "Vagíny" :correct? true}
@@ -963,7 +963,7 @@
                          {:text "Latríny"}
                          {:text "Konírny"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/napalm_girl.jpg"}]
                       [:p "Během které války byla pořízena fotka zvaná \"Napalm Girl\"?"]]
                :choices [{:text "Války ve Vietnamu" :correct? true}
@@ -971,7 +971,7 @@
                          {:text "Války v Koreji"}
                          {:text "2. puntské války"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/charles_fourier.jpeg"}]
                       [:p "Na obraze je muž, který jako první použil slovo \"feminismus\". Kdo to je?"]]
                :choices [{:text "Filozof Charles Fourier" :correct? true}
@@ -979,7 +979,7 @@
                          {:text "Another white man with a podcast"}
                          {:text "George Washington"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/betty_friedan.jpg"}]
                       [:p "Kdo je žena na obrázku?"]]
                :choices [{:text "Betty Friedan" :correct? true}
@@ -988,7 +988,7 @@
                          {:text "Simone de Beauvoir"}]
                :note "Její knize The Feminine Mystique z roku 1963 je často připisováno, že podnítila druhou vlnu amerického feminismu ve 20. století."}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/ruth_bader_ginsburg.jpg"}]
                       [:p "Kdo je žena na obrázku?"]]
                :choices [{:text "Ruth Bader Ginsburg" :correct? true}
@@ -997,7 +997,7 @@
                          {:text "Miley Cyrus"}]
                :note "Byla druhou soudkyní Nejvyššího soudu USA."}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/lenka_smerdova.jpg"}]
                       [:p "Na fotce je první generálka české armády. Jak se jmenuje?"]]
                :choices [{:text "Lenka Šmerdová" :correct? true}
@@ -1005,7 +1005,7 @@
                          {:text "Karla Šlechtová"}
                          {:text "Vlasta Parkanová"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/bozena_vikova_kuneticka.png"}]
                       [:p "Na fotce je první česká poslankyně. Jak se jmenovala?"]]
                :choices [{:text "Božena Viková-Kunětická" :correct? true}
@@ -1085,7 +1085,7 @@
                              [:a {:href "https://www.un.org/womenwatch/daw/followup/session/presskit/fs5.htm"} "zdroj"]
                              ")."]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/junko_tabei.jpeg"}]
                       [:p "Žena na fotografii je Džunko Tabei. Čím se proslavila?"]]
                :choices [{:text "Jako první žena vystoupala na Mt. Everest." :correct? true}
@@ -1094,7 +1094,7 @@
                          {:text "Natočením filmu o mužích horolezcích."}]
                :note "Tabei byla také první ženou, která vylezla Seven Summits (nejvyšší vrcholy sedmi kontinentů)."}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/sarojini_naidu.png"}]
                       [:p "Žena na fotografii je Saródžiní Naidú. Čím se proslavila?"]]
                :choices [{:text "První ženská guvernérka indického státu Uttarpradéš." :correct? true}
@@ -1102,7 +1102,7 @@
                          {:text "Upečením prvního chleba naan."}
                          {:text "Byla ženou Mahátmá Gandhího."}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/pornokrates.jpeg"}]
                       [:p "Co oslavuje tento obraz, které se nazývá Pornokratès?"]]
                :choices [{:text "Moc a vládu prostitutek" :correct? true}
@@ -1116,7 +1116,7 @@
                          {:text "Femke Bol"}
                          {:text "Jelena Isinbajeva"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:p "Kdo řekl následující slova:"]
                       [:blockquote "V dnešní době mají ženy své první dítě v průměru okolo 30. roku. [...] Dítě starší matku značně duševně a fyzicky vyčerpává, a proto většinou skončí pouze u jednoho dítěte. A to je z hlediska naší země nevýhodné."]]
                :choices [{:text "Andrej Babiš" :correct? true}
@@ -1125,7 +1125,7 @@
                          {:text "Miloš Zeman"}]
                :note "Optimální věk pro první dítě je podle něj 24 let."}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/signal_for_help.png"}]
                       [:p "Co znamená tento znak?"]]
                :choices [{:text "Signál pro pomoc" :correct? true}
@@ -1163,7 +1163,7 @@
                :percentage 27
                :note "Česko mělo roku 2019 nejnižší podíl ženy ve výzkumu v EU."}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/bicycling_feminism.jpg"}]
                       [:p "Co má původně vepsáno muž v předním kole na novozélandském kampaňovém plakátu?"]]
                :choices [{:text "Male electors only" :correct? true}
@@ -1249,13 +1249,13 @@
                :correct? false
                :note "Ve vedení policie ČR je žen jen desetina."}
               {:type :yesno
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/feminism_cz_google_trends.png"}]
                       [:p "Vrchol zájmu o feminismus dle počtu vyhledávání na Google byl v Česku v dubnu 2010."]]
                :correct? true
                :note "Co se stalo?"}
               {:type :yesno
-               :text [:<>
+               :text [:div
                       [:img {:src "https://mynarz.net/femquiz/img/communism_vs_feminism.png"}]
                       [:p "Graf ukazuje zájem o feminismus a komunismus dle počtu vyhledávání na Google. Feminismus je modře, komunismus červeně."]]
                :correct? false
@@ -1276,7 +1276,7 @@
                :correct? false
                :note "Byla povolena roku 1948."}
               {:type :yesno
-               :text [:<>
+               :text [:div
                       [:p "Bible obsahuje následující slova:"]
                       [:blockquote "A žádejte svědectví dvou svědků z mužů vašich, a nemáte-li dva muže, pak vezměte jednoho muže a dvě ženy z těch, které uznáte za vhodné svědkyně; aby, kdyby jedna z nich se zmýlila, druhá ji mohla připomenout."]]
                :correct? false
@@ -1370,7 +1370,7 @@
                          {:text "15,5"}
                          {:text "16"}]}
               {:type :multiple
-               :text [:<>
+               :text [:div
                       [:p "Bývalý prezident Evropské komise Jean Rey roku 1974 řekl:"]
                       [:blockquote "Hluboce nesouhlasím se situací, kdy by o politice této velké země měly rozhodovat ženy v domácnosti."]
                       [:p "Jak citát pokračuje?"]]
