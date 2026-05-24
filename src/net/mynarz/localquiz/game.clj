@@ -358,10 +358,7 @@
 (def transitions
   {:new          next-question!
    :show-answers leaderboard!
-   :leaderboard  (fn [game-id]
-                   (if (all-questions-answered? game-id)
-                     (end-game! game-id)
-                     (next-question! game-id)))})
+   :leaderboard  next-question!})
 
 (defn advance!
   "Advance the game with `game-id` to its next state."
