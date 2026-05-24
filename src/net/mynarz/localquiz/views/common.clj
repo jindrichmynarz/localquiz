@@ -193,6 +193,7 @@
   (let [state (game/get-game-state (or game-id session-id))
         game {:session-role (if game-id :player :moderator)
               :state state}]
+    ; If a player is not in the game, redirect to the home page.
     (when (and game-id
                (not= state :new)
                (not (game/player-in-game? game-id session-id)))
