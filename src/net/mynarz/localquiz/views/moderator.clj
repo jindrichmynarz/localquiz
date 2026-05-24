@@ -110,13 +110,20 @@
           [:td score-decimal]])]]]))
 
 (defn next-button
-  [tr
-   ^String next-action]
-  [:button.btn.btn-primary
-   {:data-on:click next-action
-    :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
-   (tr [:next])
-   [:i.material-icons.md-large (svg "arrow_circle_right.svg")]])
+  ([tr]
+   (next-button tr
+                "@post('/next')"
+                :next
+                [:i.material-icons.md-large (svg "arrow_circle_right.svg")]))
+  ([tr
+    ^String next-action
+    label-key
+    icon]
+   [:button.btn.btn-primary
+    {:data-on:click next-action
+     :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
+    (tr [label-key])
+    icon]))
 
 (defn number-of-questions
   "Input for the number of questions for a game."
@@ -230,7 +237,7 @@
         (if has-enough-players?
           [:p
            [:button.btn.btn-primary
-            {:data-on:click (views/post "/next")
+            {:data-on:click "@post('/next')"
              :disabled (not has-enough-players?)
              :type "submit"}
             (tr [:start-game])]]
@@ -303,7 +310,7 @@
                             mark-correct?
                             question)]
        (when answer-revealed?
-         [:p (next-button tr (views/post "/next"))])])))
+         [:p (next-button tr)])])))
 
 (defmethod views/game-view [:moderator :question]
   [{:tempura/keys [tr]
@@ -339,12 +346,9 @@
     (end-game tr)
     [:section#content
      (leaderboard tr game-id)
-     (let [next-cmd (views/post "/next")]
-       (if (game/all-questions-answered? game-id)
-         [:p
-          [:button.btn.btn-primary
-           {:data-on:click next-cmd
-            :data-on:keydown__window (format "evt.key === 'Enter' && %s" next-cmd)}
-           (tr [:end-game])
-           [:i.material-icons.md-dark (svg "cancel.svg")]]]
-         [:p (next-button tr next-cmd)]))]))
+     (if (game/all-questions-answered? game-id)
+       (next-button tr
+                    "@post('/end')"
+                    :end-game
+                    [:i.material-icons.md-dark (svg "cancel.svg")])
+       (next-button tr))]))
