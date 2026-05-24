@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.views.common
-  (:require [net.mynarz.localquiz.crypto :as crypto]
+  (:require [net.mynarz.localquiz.actions.common :refer [refresh-event!]]
+            [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
             [net.mynarz.localquiz.session :as session]
@@ -189,10 +190,14 @@
   [{{:keys [game-id]} :path-params
     session-id :sid
     :as request}]
-  (->> {:session-role (if game-id :player :moderator)
-        :state (game/get-game-state (or game-id session-id))}
-       (assoc request :game)
-       game-view))
+  (let [state (game/get-game-state (or game-id session-id))
+        game {:session-role (if game-id :player :moderator)
+              :state state}]
+    (when (and game-id
+               (not= state :new)
+               (not (game/player-in-game? game-id session-id)))
+      (refresh-event! game-id session-id {:redirect "/"}))
+    (game-view (assoc request :game game))))
 
 (defn post
   ([^String endpoint]
