@@ -81,6 +81,7 @@ header {
   overflow: hidden;
   max-width: 0;
   transition: max-width 0.25s ease-out;
+  margin-right: 1em;
 
   #end-game {
     display: flex;
