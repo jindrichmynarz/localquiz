@@ -6,37 +6,41 @@
             [mount.core :refer [defstate]]
             [taoensso.timbre :as log]))
 
-(def updated-game-query
-  '[:find ?game-id . ; Only one game can be updated in a transaction.
+(def updated-session-ids-query
+  '[:find [?session-id ...]
     :in $ [?entity ...]
-    :where (or-join [?entity ?game-id]
-                    [?entity :game/id ?game-id] ; Either the entity is a game
-                    (and [?game ?attr ?entity]  ; Or it is a component entity of a game
-                         [?component :db/ident ?attr]
-                         [?component :db/isComponent true]
-                         [?game :game/id ?game-id]))])
+    :where (or-join [?entity ?session-id]
+              [?entity :game/id ?session-id]
+              (and [?game ?attr ?entity]
+                   [?component :db/ident ?attr]
+                   [?component :db/isComponent true]
+                   (or-join [?session-id ?game]
+                      [?game :game/id ?session-id]
+                      (and [?game :game/players ?player]
+                           [?player :player/id ?session-id])))
+              [?entity :session/id ?session-id])])
 
-(defn find-updated-game
-  "Given transaction report, find the ID of the game that was updated."
+(defn find-updated-sessions
+  "Given transaction report, find session IDs of all affected sessions."
   [{:keys [db-after db-before tx-data]}]
   (let [added (->> tx-data
-                   (filter last) ; Added datoms have `true` as their last value.
+                   (filter last)
                    (map first)
                    distinct)
         retracted (->> tx-data
-                       (remove last) ; Retracted datoms have `false` as their last value.
+                       (remove last)
                        (map first)
                        distinct)]
-    (or (and added (d/q updated-game-query db-after added))
-        (and retracted (d/q updated-game-query db-before retracted)))))
+    (or (and added (d/q updated-session-ids-query db-after added))
+        (and retracted (d/q updated-session-ids-query db-before retracted)))))
 
-(defn refresh-game
-  "Given the database transaction report `tx-report`, publish the updated game's ID."
+(defn refresh
+  "Given the database transaction report `tx-report`, publish refresh events for all affected sessions."
   [tx-report]
-  (when-let [updated-game (find-updated-game tx-report)]
-    (log/infof "The game %s was updated." updated-game)
-    (a/>!! refresh-channel {:game-id updated-game})))
+  (doseq [sid (find-updated-sessions tx-report)]
+    (log/infof "Refreshing session %s." sid)
+    (a/>!! refresh-channel {:session-id sid})))
 
 (defstate db-listener
-  :start (d/listen db-conn :refresh-game refresh-game)
-  :stop (d/unlisten db-conn :refresh-game))
+  :start (d/listen db-conn :refresh refresh)
+  :stop (d/unlisten db-conn :refresh))

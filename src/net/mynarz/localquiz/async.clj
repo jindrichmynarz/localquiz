@@ -20,5 +20,5 @@
   :start (a/chan (a/dropping-buffer 1)))
 
 (defstate refresh-pub
-  "Publication of refresh signals for each game ID."
-  :start (a/pub refresh-channel :game-id))
+  "Publication of refresh signals for each session ID."
+  :start (a/pub refresh-channel :session-id))

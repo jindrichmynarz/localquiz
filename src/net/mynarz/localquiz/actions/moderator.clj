@@ -1,5 +1,5 @@
 (ns net.mynarz.localquiz.actions.moderator
-  (:require [net.mynarz.localquiz.actions.common :refer [refresh-event!]]
+  (:require [net.mynarz.localquiz.actions.common :refer [refresh-session!]]
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
@@ -50,15 +50,14 @@
 
 (defn validate-questions!
   "Validate the uploaded questions according to their spec."
-  [{game-id :sid
-    :as request}]
+  [request]
   (let [{:keys [error]
          {:keys [questions]} :success} (parse-questions request)
         signals (if error
                   {:error error}
                   {:error false
                    :numberOfQuestions (count questions)})]
-    (refresh-event! game-id game-id {:signals signals})))
+    (refresh-session! request {:signals signals})))
 
 (defn create-game!
   "Create a game identified by `game-id`."
@@ -71,7 +70,7 @@
                                 (:default-number-of-questions config))
         {:keys [error success]} (parse-questions request)]
     (if error
-      (refresh-event! game-id game-id {:signals {:error error}})
+      (refresh-session! request {:signals {:error error}})
       (let [defs (mapv (fn [[id value]]
                          {:def/id id
                           :def/value (pr-str value)})

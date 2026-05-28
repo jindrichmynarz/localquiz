@@ -391,6 +391,24 @@
   (log/infof "Disconnecting player %s." player-id)
   (d/transact db-conn [[:db/retractEntity [:player/id player-id]]]))
 
+(defn merge-session-params
+  "Transaction function that merges `params` into :session/params for `session-id`."
+  [db
+   ^String session-id
+   params]
+  (let [current-params (some-> (d/entity db [:session/id session-id])
+                               :session/params
+                               edn/read-string)
+        merged-params  (merge current-params params)]
+    [{:session/id     session-id
+      :session/params (pr-str merged-params)}]))
+
+(defn merge-session-params!
+  "Merge `params` into :session/params for `session-id`."
+  [^String session-id
+   params]
+  (d/transact db-conn [[:db.fn/call merge-session-params session-id params]]))
+
 (defn game-progress
   [^String game-id]
   (-> '[:find (pull ?game [:game/questions :game/questions-total]) .

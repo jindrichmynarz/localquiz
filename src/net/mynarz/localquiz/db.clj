@@ -98,7 +98,19 @@
     :db.entity/preds ['net.mynarz.localquiz.db/valid-game-state?]}
    {:db/ident :player
     :db.entity/attrs [:player/id
-                      :player/name]}])
+                      :player/name]}
+   {:db/ident :session/id
+    :db/doc "Identifier of a session"
+    :db/valueType :db.type/string
+    :db/unique :db.unique/identity
+    :db/index true
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :session/params
+    :db/doc "Session parameters stored as an EDN string"
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :session
+    :db.entity/attrs [:session/id]}])
 
 (defstate db-config
   :start {:initial-tx schema

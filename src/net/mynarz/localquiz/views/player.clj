@@ -25,7 +25,7 @@
     [:section#content
      [:form#player-name-input
       {:data-signals "{_controller: new AbortController(),
-                        _submitted: false}"}
+                       _submitted: false}"}
       [:label
        {:for "player-name"}
        (tr [:player-name])]

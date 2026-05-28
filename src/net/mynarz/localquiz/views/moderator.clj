@@ -34,15 +34,12 @@
      :data-text "$_copyLabel[0]"}]])
 
 (defn create-button
-  [tr]
+  [{:tempura/keys [tr]}]
   [:button.btn.btn-primary
    {:data-attr:disabled "$_creating || $_validating"
     :data-indicator "_creating"
     :data-on:click (views/post "/create")}
    (tr [:create-game])])
-
-(def end-game-cmd
-  "@post('/end')")
 
 (defn end-game
   [tr]
@@ -52,7 +49,7 @@
     [:p (tr [:confirm-end-game])]
     [:p
      [:button.btn
-      {:data-on:click end-game-cmd}
+      {:data-on:click "@post('/end')"}
       (tr [:question.yesno/yes])]
      [:button.btn
       {:data-on:click "$_endGameDialog.close()"}
@@ -117,7 +114,7 @@
                 [:i.material-icons.md-large (svg "arrow_circle_right.svg")]))
   ([tr
     ^String next-action
-    label-key
+    ^clojure.lang.Keyword label-key
     icon]
    [:button.btn.btn-primary
     {:data-on:click next-action
@@ -127,9 +124,10 @@
 
 (defn number-of-questions
   "Input for the number of questions for a game."
-  [tr]
+  [{{number-of-questions :numberOfQuestions} :signals
+    :tempura/keys [tr]}]
   [:p.form-group
-   {:data-signals:number-of-questions__ifmissing (:default-number-of-questions config)}
+   {:data-signals:number-of-questions (or number-of-questions (:default-number-of-questions config))}
    [:label
     {:for "number-of-questions"}
     (tr [:number-of-questions])]
@@ -149,10 +147,10 @@
    (tr [:replay-audio])])
 
 (defn create-game-form-fields
-  [tr]
+  [request]
   [views/lang-input
-   [(number-of-questions tr)
-    (create-button tr)]])
+   [(number-of-questions request)
+    (create-button request)]])
 
 (defn tab-checkbox
   ([^String id]
@@ -198,7 +196,7 @@
            [:option
             {:value url}
             name])]]
-       (create-game-form-fields tr)]
+       (create-game-form-fields request)]
       (tab-checkbox "upload-questions-checkbox")
       [:label
        {:for "upload-questions-checkbox"}
@@ -213,7 +211,7 @@
                                (format " : $error = '%s'" (max-upload-size tr)))
           :name "question-file"
           :type "file"}]]
-       (create-game-form-fields tr)]]]))
+       (create-game-form-fields request)]]]))
 
 (defmethod views/game-view [:moderator :new]
   [{:tempura/keys [tr]
@@ -346,9 +344,10 @@
     (end-game tr)
     [:section#content
      (leaderboard tr game-id)
-     (if (game/all-questions-answered? game-id)
-       (next-button tr
-                    "@post('/end')"
-                    :end-game
-                    [:i.material-icons.md-dark (svg "cancel.svg")])
-       (next-button tr))]))
+     [:p
+      (if (game/all-questions-answered? game-id)
+        (next-button tr
+                     "@post('/end')"
+                     :end-game
+                     [:i.material-icons.md-dark (svg "cancel.svg")])
+        (next-button tr))]]))
