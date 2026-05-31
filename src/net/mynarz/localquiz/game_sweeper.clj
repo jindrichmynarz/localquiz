@@ -11,7 +11,7 @@
 (defn current-games
   "Get current games."
   []
-  (d/q '[:find ?game-id
+  (d/q '[:find [?game-id ...]
          :where [_ :game/id ?game-id]]
        @db-conn))
 
@@ -54,8 +54,8 @@
          (filter (comp (partial < threshold) :last-modified))
          (mapcat (fn [{:keys [game]}]
                    (let [session-purges (->> game
-                                            session-eids-for-game
-                                            (map (partial vector :db.purge/entity)))]
+                                             session-eids-for-game
+                                             (map (partial vector :db.purge/entity)))]
                      (concat session-purges [[:db.purge/entity game]]))))
          vec
          (d/transact db-conn))))
