@@ -23,6 +23,12 @@
     (fn [^double n]
       (.format formatter n))))
 
+(defn deep-merge
+  [& maps]
+  (apply merge-with
+         (fn [a b] (if (map? b) (deep-merge a b) b))
+         maps))
+
 (defn descending-order
   "Sort `a` and `b` in the descending order."
   [a b]
