@@ -26,7 +26,9 @@
                     :player/name "Bob"
                     :player/score 0.0
                     :db/ensure :player}]
-    :db/ensure :game}])
+    :db/ensure :game}
+   {:session/id game-id
+    :session/params (pr-str {})}])
 
 (defn test-config
   [f]
