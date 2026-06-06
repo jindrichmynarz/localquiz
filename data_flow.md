@@ -13,13 +13,13 @@ localquiz is a **server-driven, real-time multiplayer quiz** with a strictly **u
 
 1. **Initial page load** — server issues a session cookie and CSRF token, returns a minimal shim HTML page with the Datastar runtime. The shim immediately opens an SSE connection; all UI content arrives via that stream.
 
-2. **SSE view-update path** — every Datahike transaction triggers `db_listener`, which identifies the affected game and publishes its ID onto `refresh-channel`. Each connected SSE handler receives the event (via `refresh-pub`), generates the **full view** HTML on a CPU thread pool, hashes it, and sends it via `patch-elements!` if the hash changed. Datastar morphs the received HTML into the existing DOM client-side (fat-morph approach — no server-side diffing or partial fragments).
+2. **SSE view-update path** — every Datahike transaction triggers `db_listener`, which identifies all affected session IDs (the game's moderator and every current player) and publishes a refresh event per session ID onto `refresh-channel`. Each connected SSE handler is subscribed by its own session ID, receives the event, generates the **full view** HTML on a CPU thread pool, hashes it, and sends it via `patch-elements!` if the hash changed. Datastar morphs the received HTML into the existing DOM client-side (fat-morph approach — no server-side diffing or partial fragments). If view rendering detects a player is no longer in the game, it calls `refresh-session!` to redirect that session instead of rendering.
 
-3. **Direct signal/redirect path** — actions that need per-session feedback (validation errors, redirect after leaving) call `refresh-event!`, which puts an event with a session-keyed payload directly onto `refresh-channel`. The SSE handler detects the session key, sends only signals or a redirect to that client, and skips full view generation and morphing.
+3. **Direct signal/redirect path** — actions that need per-session feedback (validation errors, redirect after leaving) call `refresh-session!`, which puts an event with the session ID and a payload (`{:signals …}` or `{:redirect …}`) directly onto `refresh-channel`. The SSE handler for that session receives it, sends only signals or a redirect, and skips full view generation and morphing.
 
-4. **State machine** — the game progresses through `:new → :question → :show-answers → :leaderboard` and back (or terminates). State transitions are triggered by moderator POST actions; the `:show-answers` transition fires automatically when all players answer or the 45-second timeout expires.
+4. **State machine** — the game progresses through `:new → :question → :show-answers → :leaderboard` and back (or terminates). State transitions are triggered by a single `POST /next` action; the `:show-answers` transition fires automatically when all players answer or the 45-second timeout expires.
 
-**CQRS:** the architecture follows Command Query Responsibility Segregation. Commands (HTTP POST → `actions/` → `d/transact`) mutate state and return HTTP 204 — no view data. Queries (DB listener → SSE → `views/`) read state and produce HTML; they never mutate. The `refresh-event!` path carries per-session command acknowledgements (validation errors, redirects) and is exclusively triggered by client commands — never by server-initiated processes. Server-initiated state changes (question timeout, idle-game sweeper) go through `d/transact` and are reflected on the query side via the same DB listener → SSE pipeline.
+**CQRS:** the architecture follows Command Query Responsibility Segregation. Commands (HTTP POST → `actions/` → `d/transact`) mutate state and return HTTP 204 — no view data. Queries (DB listener → SSE → `views/`) read state and produce HTML; they never mutate. The `refresh-session!` path carries per-session command acknowledgements (validation errors, redirects) and is exclusively triggered by client commands — never by server-initiated processes. Server-initiated state changes (question timeout, idle-game sweeper) go through `d/transact` and are reflected on the query side via the same DB listener → SSE pipeline.
 
 **Brotli gate:** `wrap-blocker` rejects all requests that do not accept Brotli (`br`) with HTTP 406.
 
@@ -87,7 +87,7 @@ sequenceDiagram
     participant V as views/morph-view
 
     B->>SSE: GET /sse (persistent connection)
-    SSE->>SSE: Subscribe to refresh-pub for game-id
+    SSE->>SSE: Subscribe to refresh-pub for session-id
     SSE->>SSE: Put :first-render onto channel
     SSE->>V: Render current view (on CPU thread pool)
     V->>B: SSE patch-elements! (full initial HTML)
@@ -100,26 +100,30 @@ The SSE handler keeps a virtual thread looping on a throttled channel (≤ 1 upd
 
 ## 3. Real-time update pipeline
 
-Every database transaction and every direct `refresh-event!` call flow through this pipeline. The SSE handler branches on whether the event carries a per-session payload.
+Every database transaction and every direct `refresh-session!` call flow through this pipeline. The SSE handler branches on the event payload: signals → `patch-signals!`, redirect → `redirect!`, neither → full view render.
 
 ```mermaid
 flowchart LR
     TX[d/transact] --> DH[(Datahike)]
-    DH --> DL["db_listener<br/>refresh-game"]
-    DL --> RC["refresh-channel<br/>dropping-buffer 1"]
+    DH --> DL["db_listener<br/>refresh"]
+    DL --> |"one event per<br/>affected session"| RC["refresh-channel<br/>dropping-buffer 1"]
 
-    AE["actions<br/>refresh-event!"] -->|session-keyed payload| RC
+    AE["actions<br/>refresh-session!"] -->|session-keyed payload| RC
 
-    RC --> RP["refresh-pub<br/>pub by :game-id"]
-    RP --> |per-game sub| CH["&lt;ch<br/>dropping-buffer 1"]
+    RC --> RP["refresh-pub<br/>pub by :session-id"]
+    RP --> |per-session sub| CH["&lt;ch<br/>dropping-buffer 1"]
     CH --> TH["throttle<br/>100 ms"]
     TH --> SSE[sse/handler loop]
 
-    SSE --> |session payload present?| SP["patch-signals!<br/>or redirect!"]
-    SSE --> |hash changed, no session payload| PE["patch-elements!<br/>full view, Brotli-compressed"]
+    SSE --> |:signals present| SP["patch-signals!"]
+    SSE --> |:redirect present| RD["redirect!"]
+    SSE --> |hash changed, else| PE["patch-elements!<br/>full view, Brotli-compressed"]
     PE --> B[Browser]
     SP --> B
+    RD --> B
 ```
+
+**DB listener detail:** `find-updated-sessions` queries `db-after` (for additions) and `db-before` (for retractions) to find session IDs for all affected sessions: the moderator (via `:game/id`) and all current players (via `:player/id`). It publishes `{:session-id sid}` for each. This means one transaction fans out to N separate channel puts — one per connected session.
 
 ---
 
@@ -128,12 +132,14 @@ flowchart LR
 ```mermaid
 stateDiagram-v2
     [*] --> new : POST /create
-    new --> question : POST /question
+    new --> question : POST /next
     question --> show_answers : all answered or timeout (45 s)
-    show_answers --> leaderboard : POST /leaderboard (no questions remain)
-    leaderboard --> question : POST /question (next round)
+    show_answers --> leaderboard : POST /next (no questions remain)
+    leaderboard --> question : POST /next (next round)
     leaderboard --> [*] : POST /end
 ```
+
+The moderator advances the game via a single `POST /next` endpoint. `game/advance!` reads the current game state and dispatches to the appropriate transition function via the `transitions` map (`{:new next-question!, :show-answers leaderboard!, :leaderboard next-question!}`). The `:question → :show-answers` transition is never triggered by `POST /next`; it fires only when all players have answered or the timeout elapses.
 
 ---
 
@@ -148,31 +154,28 @@ sequenceDiagram
 
     B->>H: POST /create/validate (question source or file)
     H->>A: validate-questions!
-    A->>A: Parse questions
-    A->>A: refresh-event! {signals: {error: ... or false, numberOfQuestions: N}}
+    A->>A: Parse + resolve $defs in questions
+    A->>A: refresh-session! {signals: {error: ... or false, numberOfQuestions: N}}
 
     B->>H: POST /create (question source + count)
     H->>A: create-game!
-    A->>A: Parse + shuffle questions, take N
-    A->>DB: transact {game/id, game/state :new, game/questions, game/questions-total}
+    A->>A: Parse + resolve $defs, shuffle questions, take N
+    A->>DB: transact {game/id, game/state :new, game/questions, game/questions-total, game/defs}
     DB-->>B: (via SSE pipeline) Render lobby view
 
-    B->>H: POST /question
-    H->>A: next-question!
-    A->>DB: transact state=:question, current-question, retract old answers
-    A->>A: schedule-timeout (45 s future)
-    DB-->>B: (via SSE pipeline) Render question view
-
-    B->>H: POST /leaderboard
-    H->>A: leaderboard!
-    A->>DB: transact state=:leaderboard
-    DB-->>B: (via SSE pipeline) Render leaderboard view
+    B->>H: POST /next
+    H->>A: next!
+    A->>A: advance! — reads state, dispatches to next-question! or leaderboard!
+    A->>DB: transact (state transition + current-question or leaderboard scores)
+    DB-->>B: (via SSE pipeline) Render next view
 
     B->>H: POST /end
     H->>A: end-game!
     A->>DB: retractEntity game
     DB-->>B: (via SSE pipeline) Render end view
 ```
+
+**`$defs`:** question EDN files may declare a top-level `:defs` map of named values. References to those names in question fields are resolved at parse time (`qs/resolve-refs`). The resolved `defs` are stored in the DB as `:game/defs` component entities so that `current-question` can re-resolve references when reading questions back.
 
 ---
 
@@ -188,7 +191,7 @@ sequenceDiagram
     B->>H: POST /join/:game-id/validate {player-name}
     H->>A: validate-player-name!
     A->>A: Check name (length, uniqueness)
-    A->>A: refresh-event! {signals: {error: ... or false}}
+    A->>A: refresh-session! {signals: {error: ... or false}}
 
     B->>H: POST /join/:game-id {player-name}
     H->>A: join-game!
@@ -209,9 +212,11 @@ sequenceDiagram
     B->>H: POST /leave/:game-id
     H->>A: leave-game!
     A->>DB: retractEntity player
-    A->>A: refresh-event! {redirect: "/"}
+    A->>A: refresh-session! {redirect: "/"}
     DB-->>B: (via SSE pipeline) Lobby updated for remaining players
 ```
+
+**Auto-redirect on disconnect:** `morph-view` checks on every view render whether the player is still in the game. If the game has already started (state ≠ `:new`) and the player's entity is gone, it calls `refresh-session!` with `{:redirect "/"}` to redirect that session — so the leaving player is redirected even if the `POST /leave` response races with a concurrent DB update.
 
 ---
 
