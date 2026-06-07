@@ -52,20 +52,20 @@
                 (recur
                   (cond signals (do (patch-signals! sse-gen signals) last-view-hash)
                         redirect (do (d*/redirect! sse-gen redirect) last-view-hash)
-                        :else (some-> ; Stop in case of error
-                                (on-cpu-pool ; CPU work on real threads
-                                  ; Stop in case of error
-                                  (when-some [new-view (error/try-on-error (views/morph-view request))]
-                                    (let [new-view-str (h/html new-view)
-                                          ; This is a very fast hash
-                                          new-view-hash (Integer/toHexString (hash new-view-str))]
+                        :else (on-cpu-pool ; CPU work on real threads
+                                (if-some [new-view (error/try-on-error (views/morph-view request))]
+                                  (let [new-view-str (h/html new-view)
+                                        ; This is a very fast hash
+                                        new-view-hash (Integer/toHexString (hash new-view-str))]
                                       ; Only send an event if the view has changed
                                       (when-not (= last-view-hash new-view-hash)
                                         (log/infof "Rendering game %s for session %s." game-id session-id)
                                         (d*/patch-elements! sse-gen
                                                             new-view-str
                                                             {:use-view-transition true}))
-                                      new-view-hash)))))))
+                                      new-view-hash)
+                                  ; Skip re-render in case of an error
+                                  last-view-hash)))))
 
                ; We want work cancelling to have higher priority.
                :priority true))))
