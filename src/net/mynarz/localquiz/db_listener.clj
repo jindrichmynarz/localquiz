@@ -39,7 +39,7 @@
   "Given the database transaction report `tx-report`, publish refresh events for all affected sessions."
   [tx-report]
   (doseq [sid (find-updated-sessions tx-report)]
-    (a/>!! refresh-channel {:session-id sid})))
+    (a/put! refresh-channel {:session-id sid})))
 
 (defstate db-listener
   :start (d/listen db-conn :refresh refresh)
