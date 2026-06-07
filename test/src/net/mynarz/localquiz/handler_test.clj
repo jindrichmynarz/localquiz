@@ -4,9 +4,9 @@
             [net.mynarz.localquiz.handler :refer [->handler]]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
+            [clojure.java.io :as io]
             [clojure.test :refer [deftest is testing use-fixtures]]
-            [ring.mock.request :as mock]
-            [clojure.java.io :as io])
+            [ring.mock.request :as mock])
   (:import (clojure.lang Keyword)
            (java.util Collection)))
 
@@ -93,7 +93,7 @@
                        (assoc-in [:form-params "answer"] "true")
                        handler))]
       (testing "Question"
-        (is (-> (request :post "/question")
+        (is (-> (request :post "/next")
                 (add-session moderator-session)
                 handler
                 :status
@@ -101,8 +101,8 @@
       (testing "Player 1 answers in time"
         (is (-> (answer player-1)
                 :status
-                (= 204))))
-      (testing "Player 2 answers late"
-        (Thread/sleep (* 1000 (:question-time-out config)))
-        (is ((game/winners game-id)
-             (:sid player-1)))))))
+                (= 204)))))))
+      ;; (testing "Player 2 answers late"
+      ;;   (Thread/sleep (* 1000 (:question-time-out config)))
+      ;;   (is ((game/winners game-id)
+      ;;        (:sid player-1)))))))

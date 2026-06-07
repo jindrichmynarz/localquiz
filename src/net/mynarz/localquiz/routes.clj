@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.routes
-  (:require [net.mynarz.localquiz.actions.moderator :as moderator-actions]
+  (:require [net.mynarz.localquiz.actions.common :as actions]
+            [net.mynarz.localquiz.actions.moderator :as moderator-actions]
             [net.mynarz.localquiz.actions.player :as player-actions]
             [net.mynarz.localquiz.spec :as spec]
             [net.mynarz.localquiz.sse :as sse]
@@ -33,4 +34,5 @@
     ["/validate" {:post {:handler (comp views/view player-actions/validate-player-name!)
                          :parameters {:form ::spec/player-params}}}]]
    ["/answer/:game-id" (comp views/view player-actions/answer-question!)]
-   ["/leave/:game-id" (comp views/view player-actions/leave-game!)]])
+   ["/leave/:game-id" (comp views/view player-actions/leave-game!)]
+   ["/autocomplete/:def-id" {:post (comp views/view actions/autocomplete-handler)}]])

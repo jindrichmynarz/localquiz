@@ -6,6 +6,7 @@
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :as util :refer [svg]]
             [charred.api :as charred]
+            [clojure.string :as string]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
             [starfederation.datastar.clojure.api :refer [CDN-url]]
@@ -470,3 +471,25 @@
          player-name]
         (answer-frequency answers index)]])]
    (note-view answer-revealed? note)])
+
+(defn autocomplete
+  "Autocomplete input for `def-id`, filtering options by the search fragment
+  stored in session params for `session-id`."
+  [session-id def-id]
+  (let [search-fragment (get-in (game/get-session-params session-id) [:autocomplete def-id])
+        options         (cond->> (game/get-session-def session-id def-id)
+                          search-fragment
+                          (filter #(string/includes? (string/lower-case %)
+                                                     (string/lower-case search-fragment))))
+        input-id        (name def-id)
+        list-id         (str "autocomplete-" input-id)]
+    [:div
+     [:input
+      {:data-bind input-id
+       :data-on:input (format "@post('/autocomplete/%s')" input-id)
+       :list list-id
+       :type "text"}]
+     [:datalist
+      {:id list-id}
+      (for [option options]
+        [:option {:value option}])]]))
