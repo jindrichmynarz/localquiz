@@ -81,13 +81,16 @@
   [tr]
   [:div#error-dialog
    {:aria-live "assertive"
-    :data-on:keydown__window "evt.key === 'Escape' && ($error = '')"
+    :data-on:keydown__window "evt.key === 'Escape' && ($error = '', $errorPreformatted = false)"
     :data-show "$error"
     :role "dialog"}
    [:h2 (tr [:errors/errors])]
-   [:p {:data-text "$error"}]
+   [:p {:data-show "!$errorPreformatted"
+        :data-text "$error"}]
+   [:pre {:data-show "$errorPreformatted"
+          :data-text "$error"}]
    [:button.btn.btn-primary
-    {:data-on:click "$error = ''"}
+    {:data-on:click "$error = ''; $errorPreformatted = false"}
     (tr [:close])]])
 
 (defn morph-body
@@ -102,7 +105,8 @@
     header
     main]
    [:div#morph
-    {:data-signals:error__ifmissing ""}
+    {:data-signals:error__ifmissing ""
+     :data-signals:error-preformatted__ifmissing false}
     [:header
      [:h1 "Localquiz"]
      [:div#header-center center]

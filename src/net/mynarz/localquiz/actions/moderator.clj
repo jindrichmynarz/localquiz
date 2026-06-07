@@ -55,10 +55,11 @@
          {:keys [questions]} :success} (parse-questions request)
         signals (if error
                   {:error error
+                   :errorPreformatted true
                    :questionsValidated false}
                   {:error false
-                   :numberOfQuestions (count questions)
-                   :questionsValidated true})]
+                   :questionsValidated true
+                   :numberOfQuestions (count questions)})]
     (refresh-session! request {:signals signals})))
 
 (defn create-game!
@@ -72,7 +73,8 @@
                                 (:default-number-of-questions config))
         {:keys [error success]} (parse-questions request)]
     (if error
-      (refresh-session! request {:signals {:error error}})
+      (refresh-session! request {:signals {:error error
+                                           :errorPreformatted true}})
       (let [defs (mapv (fn [[id value]]
                          {:def/id id
                           :def/value (pr-str value)})
