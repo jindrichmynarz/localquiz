@@ -38,7 +38,8 @@
   [:button.btn.btn-primary
    {:data-attr:disabled "$_creating || $_validating"
     :data-indicator "_creating"
-    :data-on:click (views/post "/create")}
+    :data-on:click (views/post "/create")
+    :data-show "$questionsValidated"}
    (tr [:create-game])])
 
 (defn end-game
@@ -159,7 +160,8 @@
     ^Boolean checked]
    [:input
     {:checked checked
-     :data-on:change (format "$error = false; $numberOfQuestions = %d" (:default-number-of-questions config))
+     :data-on:change (format "$error = false; $numberOfQuestions = %d; $questionsValidated = false;"
+                             (:default-number-of-questions config))
      :id id
      :name "tab-picker"
      :type "radio"}]))
@@ -178,6 +180,7 @@
     request
     [:section#content
      [:div.tabs
+      {:data-signals:questions-validated__ifmissing false}
       (tab-checkbox "select-questions-checkbox" true)
       [:label
        {:for "select-questions-checkbox"}

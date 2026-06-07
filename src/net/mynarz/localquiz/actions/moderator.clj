@@ -54,9 +54,11 @@
   (let [{:keys [error]
          {:keys [questions]} :success} (parse-questions request)
         signals (if error
-                  {:error error}
+                  {:error error
+                   :questionsValidated false}
                   {:error false
-                   :numberOfQuestions (count questions)})]
+                   :numberOfQuestions (count questions)
+                   :questionsValidated true})]
     (refresh-session! request {:signals signals})))
 
 (defn create-game!
