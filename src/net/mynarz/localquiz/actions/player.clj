@@ -1,5 +1,5 @@
 (ns net.mynarz.localquiz.actions.player
-  (:require [net.mynarz.localquiz.actions.common :refer [refresh-event!]]
+  (:require [net.mynarz.localquiz.actions.common :refer [refresh-session!]]
             [net.mynarz.localquiz.game :as game]
             [taoensso.timbre :as log]))
 
@@ -7,13 +7,13 @@
   "Test if `player-name` is valid."
   [{{{:keys [player-name]} :form} :parameters
     {:keys [game-id]} :path-params
-    player-id :sid
-    :tempura/keys [tr]}]
+    :tempura/keys [tr]
+    :as request}]
   (let [validation-error (game/validate-player-name game-id player-name)
         signals (if validation-error
                   {:error (tr [validation-error])}
                   {:error false})]
-    (refresh-event! game-id player-id {:signals signals})
+    (refresh-session! request {:signals signals})
     (not validation-error)))
 
 (defn join-game!
@@ -29,19 +29,20 @@
       (game/join-game! game-id player-id player-name)
       (catch Exception e
         (when (= (:error (ex-data e)) :game-already-started)
-          (refresh-event! game-id player-id {:signals {:error (tr [:errors/game-not-joinable])}}))))))
+          (refresh-session! request {:signals {:error (tr [:errors/game-not-joinable])}}))))))
 
 (defn answer-question!
   [{{answer "answer"} :form-params
     {:keys [game-id]} :path-params
     player-id :sid
-    :tempura/keys [tr]}]
+    :tempura/keys [tr]
+    :as request}]
   (let [{:keys [error]} (game/answer-question! game-id player-id answer)]
     (when error
-      (refresh-event! game-id player-id {:signals {:error (tr [error])}}))))
+      (refresh-session! request {:signals {:error (tr [error])}}))))
 
 (defn leave-game!
-  [{{:keys [game-id]} :path-params
-    player-id :sid}]
+  [{player-id :sid
+    :as request}]
   (game/disconnect-player! player-id)
-  (refresh-event! game-id player-id {:redirect "/"}))
+  (refresh-session! request {:redirect "/"}))

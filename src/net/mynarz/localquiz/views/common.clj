@@ -1,5 +1,5 @@
 (ns net.mynarz.localquiz.views.common
-  (:require [net.mynarz.localquiz.actions.common :refer [refresh-event!]]
+  (:require [net.mynarz.localquiz.actions.common :refer [refresh-session!]]
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
@@ -82,13 +82,16 @@
   [tr]
   [:div#error-dialog
    {:aria-live "assertive"
-    :data-on:keydown__window "evt.key === 'Escape' && ($error = '')"
+    :data-on:keydown__window "evt.key === 'Escape' && ($error = '', $errorPreformatted = false)"
     :data-show "$error"
     :role "dialog"}
    [:h2 (tr [:errors/errors])]
-   [:pre {:data-text "$error"}]
+   [:p {:data-show "!$errorPreformatted"
+        :data-text "$error"}]
+   [:pre {:data-show "$errorPreformatted"
+          :data-text "$error"}]
    [:button.btn.btn-primary
-    {:data-on:click "$error = ''"}
+    {:data-on:click "$error = ''; $errorPreformatted = false"}
     (tr [:close])]])
 
 (defn morph-body
@@ -98,9 +101,13 @@
    (morph-body request nil nil main))
   ([request header main]
    (morph-body request nil header main))
-  ([{:tempura/keys [tr]} center header main]
+  ([{:tempura/keys [tr]}
+    center
+    header
+    main]
    [:div#morph
-    {:data-signals:error__ifmissing ""}
+    {:data-signals:error__ifmissing ""
+     :data-signals:error-preformatted__ifmissing false}
     [:header
      [:h1 "Localquiz"]
      [:div#header-center center]
@@ -198,7 +205,7 @@
     (when (and game-id
                (not= state :new)
                (not (game/player-in-game? game-id session-id)))
-      (refresh-event! game-id session-id {:redirect "/"}))
+      (refresh-session! request {:redirect "/"}))
     (game-view (assoc request :game game))))
 
 (defn post

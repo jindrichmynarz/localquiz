@@ -11,7 +11,7 @@
 (defn current-games
   "Get current games."
   []
-  (d/q '[:find ?game-id
+  (d/q '[:find [?game-id ...]
          :where [_ :game/id ?game-id]]
        @db-conn))
 
@@ -32,6 +32,18 @@
             (d/history @db-conn))
        first))
 
+(defn session-eids-for-game
+  "Return entity IDs for sessions associated with game entity `eid`."
+  [eid]
+  (d/q '[:find [?session ...]
+         :in $ ?game-eid
+         :where (or-join [?sid ?game-eid]
+                  [?game-eid :game/id ?sid]
+                  (and [?game-eid :game/players ?player]
+                       [?player :player/id ?sid]))
+                [?session :session/id ?sid]]
+       @db-conn eid))
+
 (defn delete-idle-games!
   "Delete games that are idle for a configured time."
   []
@@ -40,7 +52,12 @@
     (->> (current-games)
          (map game-last-modified)
          (filter (comp (partial < threshold) :last-modified))
-         (mapv (comp (partial vector :db.purge/entity) :game))
+         (mapcat (fn [{:keys [game]}]
+                   (let [session-purges (->> game
+                                             session-eids-for-game
+                                             (map (partial vector :db.purge/entity)))]
+                     (concat session-purges [[:db.purge/entity game]]))))
+         vec
          (d/transact db-conn))))
 
 (defstate game-sweeper

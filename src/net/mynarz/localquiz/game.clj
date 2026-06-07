@@ -417,8 +417,13 @@
   (let [current-params (some-> (d/entity db [:session/id session-id])
                                :session/params
                                edn/read-string)
+<<<<<<< HEAD
         merged-params (util/deep-merge current-params params)]
     [{:session/id session-id
+=======
+        merged-params  (merge current-params params)]
+    [{:session/id     session-id
+>>>>>>> develop
       :session/params (pr-str merged-params)}]))
 
 (defn merge-session-params!
@@ -427,6 +432,7 @@
    params]
   (d/transact db-conn [[:db.fn/call merge-session-params session-id params]]))
 
+<<<<<<< HEAD
 (defn get-session-params
   "Return the session params map for `session-id`, or nil if absent."
   [^String session-id]
@@ -450,6 +456,8 @@
                def-id)
           edn/read-string))
 
+=======
+>>>>>>> develop
 (defn game-progress
   [^String game-id]
   (-> '[:find (pull ?game [:game/questions :game/questions-total]) .

@@ -3,12 +3,11 @@
             [net.mynarz.localquiz.game :as game]
             [clojure.core.async :as a]))
 
-(defn refresh-event!
-  "Send refresh `event` for `session-id` in `game-id`."
-  [^String game-id
-   ^String session-id
+(defn refresh-session!
+  "Refresh a session with `event`."
+  [{:keys [sid]}
    event]
-  (a/>!! refresh-channel (assoc event :session-id session-id)))
+  (a/>!! refresh-channel (assoc event :session-id sid)))
 
 (defn autocomplete-handler
   "Stores the search fragment for `def-id` nested under :autocomplete in session params."
