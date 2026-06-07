@@ -2,7 +2,6 @@
   (:require [net.mynarz.localquiz.async :refer [refresh-pub throttle]]
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.cpu-pool :refer [on-cpu-pool]]
-            [net.mynarz.localquiz.error :as error]
             [net.mynarz.localquiz.util :as util]
             [net.mynarz.localquiz.views.common :as views]
             [charred.api :as charred]
@@ -13,8 +12,17 @@
             [starfederation.datastar.clojure.brotli :as brotli]
             [taoensso.timbre :as log]))
 
+(defmacro try-on-error
+  [& body]
+  `(try
+     ~@body
+     (catch Throwable ~'t
+       (log/error ~'t)
+       ;; Return nil when there is an error
+       nil)))
+
 (defn patch-signals!
-  "Patch Datastar `signals` using SSE generator `sse-gen`."
+  "Patch Datastar `signals` using the SSE generator `sse-gen`."
   [sse-gen signals]
   (->> signals
        charred/write-json-str
@@ -53,7 +61,7 @@
                   (cond signals (do (patch-signals! sse-gen signals) last-view-hash)
                         redirect (do (d*/redirect! sse-gen redirect) last-view-hash)
                         :else (on-cpu-pool ; CPU work on real threads
-                                (if-some [new-view (error/try-on-error (views/morph-view request))]
+                                (if-some [new-view (try-on-error (views/morph-view request))]
                                   (let [new-view-str (h/html new-view)
                                         ; This is a very fast hash
                                         new-view-hash (Integer/toHexString (hash new-view-str))]
