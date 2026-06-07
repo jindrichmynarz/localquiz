@@ -268,7 +268,7 @@
         scores (cond-> (->> game-id
                             get-answers
                             (scoring/score-answers question))
-                  (not= scoring :consensus) scoring/scale-scores-by-answer-times)]
+                  (nil? scoring) scoring/scale-scores-by-answer-times)]
     (->> [(store-scores scores)
           (add-scores scores)
           [[:db/add [:game/id game-id] :game/state :show-answers]]]
@@ -349,10 +349,28 @@
                                  :game/questions-total (-> questions count long)}
                           (seq defs) (assoc :game/defs defs))])))
 
+(defn end-game-sessions!
+  "End sessions associated with the game with `game-id`."
+  [^String game-id]
+  (let [sessions (d/q '[:find [?session ...]
+                        :in $ ?game-id
+                        :where (or-join [?game-id ?session]
+                                  [?session :session/id ?game-id]
+                                  (and [?game :game/id ?game-id]
+                                       [?game :game/players ?player]
+                                       [?player :player/id ?player-id]
+                                       [?session :session/id ?player-id]))]
+                      @db-conn
+                      game-id)]
+    (->> sessions
+         (mapv (fn [session] [:db/retractEntity {:db/id session}]))
+         (d/transact db-conn))))
+
 (defn end-game!
   "End the game with `game-id`."
   [^String game-id]
   (log/infof "Ending the game %s." game-id)
+  (end-game-sessions! game-id)
   (d/transact db-conn [[:db/retractEntity [:game/id game-id]]]))
 
 (def transitions
@@ -399,7 +417,7 @@
   (let [current-params (some-> (d/entity db [:session/id session-id])
                                :session/params
                                edn/read-string)
-        merged-params  (merge current-params params)]
+        merged-params (util/deep-merge current-params params)]
     [{:session/id     session-id
       :session/params (pr-str merged-params)}]))
 
@@ -408,6 +426,29 @@
   [^String session-id
    params]
   (d/transact db-conn [[:db.fn/call merge-session-params session-id params]]))
+
+(defn get-session-params
+  "Return the session params map for `session-id`, or nil if absent."
+  [^String session-id]
+  (some-> @db-conn
+          (d/entity [:session/id session-id])
+          :session/params
+          edn/read-string))
+
+(defn get-session-def
+  "Return the parsed def value for `def-id` in the game whose :game/id equals `session-id`."
+  [^String session-id
+   def-id]
+  (some-> (d/q '[:find ?value .
+                 :in $ ?session-id ?def-id
+                 :where [?game :game/id ?session-id]
+                        [?game :game/defs ?def]
+                        [?def :def/id ?def-id]
+                        [?def :def/value ?value]]
+               @db-conn
+               session-id
+               def-id)
+          edn/read-string))
 
 (defn game-progress
   [^String game-id]
