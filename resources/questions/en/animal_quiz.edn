@@ -184,7 +184,7 @@
                :text [:div
                       [:audio {:src "https://cdn.freesound.org/previews/582/582938_1486333-lq.ogg"}]
                       [:p "Which animal makes this sound?"]]
-               :choices [{:text "🐹 Mouse" :correct? true}
+               :choices [{:text "🐹 Hamster" :correct? true}
                          {:text "🦦 Otter"}
                          {:text "🐿️ Squirrel"}
                          {:text "🐼 Panda"}]
