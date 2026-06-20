@@ -673,14 +673,27 @@ label {
       text-align: right;
     }
 
+    td:has(.score-bar) {
+      width: calc(var(--score) * 100px);
+    }
+
     .score-bar {
       display: inline-block;
       background-color: var(--orange);
       box-shadow: 1px 1px 0 var(--darker);
-      width: calc(var(--score) * 100px);
       height: .5em;
       vertical-align: middle;
+      animation: grow 1s ease-out forwards;
     }
+  }
+}
+
+@keyframes grow {
+  from {
+    width: calc(var(--former-score) * 100px);
+  }
+  to {
+    width: calc(var(--score) * 100px);
   }
 }
 

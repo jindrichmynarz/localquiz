@@ -93,10 +93,9 @@
         [:th]]]
       [:tbody
        (for [{:keys [index player-name score total-score winner?]} leaderboard-data
-             :let [score-decimal (decimal-format total-score)
-                   score-style (->> (if (zero? total-score) total-score (/ total-score max-score))
-                                    decimal-format
-                                    (format "--score: %s;"))]]
+             :let [score-style (format "--former-score: %s; --score: %s;"
+                                       (decimal-format (/ (- total-score score) max-score))
+                                       (decimal-format (/ total-score max-score)))]]
          [:tr
           [:td index]
           [:td player-name
@@ -104,8 +103,10 @@
              [:i.score-direction "↑"])
            (when (and final-leaderboard? winner?)
              [:i.material-icons (svg "emoji_events.svg")])]
-          [:td [:span.score-bar {:style score-style}]]
-          [:td score-decimal]])]]]))
+          [:td
+           {:style score-style}
+           [:span.score-bar]]
+          [:td (decimal-format total-score)]])]]]))
 
 (defn next-button
   ([tr]
