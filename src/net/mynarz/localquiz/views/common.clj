@@ -175,7 +175,7 @@
         :headers (merge headers/default-headers
                         {"Content-Encoding" "br"
                          "ETag" (crypto/digest body)})
-        :body (brotli/compress body :quality 11)})
+        :body (brotli/compress body :quality 3)})
     ; No content
     {:headers {"Strict-Transport-Security" headers/strict-transport
                "Cache-Control" "no-store"}
