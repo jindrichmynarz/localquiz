@@ -51,7 +51,9 @@
     (log/infof "Deleting the games idle since %s." threshold)
     (->> (current-games)
          (map game-last-modified)
-         (filter (comp (partial < threshold) :last-modified))
+         (filter (fn [{:keys [last-modified]}]
+                   ; Test if the game was last modified before the threshold
+                   (.isBefore last-modified threshold)))
          (mapcat (fn [{:keys [game]}]
                    (let [session-purges (->> game
                                              session-eids-for-game
