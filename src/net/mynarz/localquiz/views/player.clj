@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.views.player
-  (:require [net.mynarz.localquiz.game :as game]
+  (:require [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [decimal-format long-str svg]]
             [net.mynarz.localquiz.views.common :as views]))
 
@@ -50,6 +51,11 @@
        [:i.material-icons (svg "play_circle.svg")]
        (tr [:join-game])]]]))
 
+(defn game-rules
+  [tr]
+  [:div#rules
+   (tr [:rules] [(:question-time-out config)])])
+
 (defmethod views/game-view [:player nil]
   [{:tempura/keys [tr]
     :as request}]
@@ -71,7 +77,8 @@
       (exit-game tr game-id)
       [:section#content
         waiting-icon
-        [:h2 (tr [:wait-for-game-start])]])
+        [:p (tr [:wait-for-game-start])]
+        (game-rules tr)])
     (views/morph-body
       request
       (player-name-input request))))

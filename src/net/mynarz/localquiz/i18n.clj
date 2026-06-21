@@ -53,6 +53,45 @@
                    :yesno {:yes "Ano"
                            :no "Ne"}}
         :replay-audio "Přehrát znovu"
+        :rules [[:h2 "Pravidla hry"]
+                [:p "Hráči kvízu odpovídají na otázky a získávají body.
+                     Hráč s nejvyšším počtem bodů po odehrání všech otázek se stává vítězem.
+                     Nejvyšší skóre za odpověď je 1 bod.
+                     Hráči mají na zodpovězení každé otázky %1 sekund.
+                     Hráči, kteří nestihnou odpovědět, získávají 0 bodů."]
+                [:h3 "Druhy skórování"]
+                [:p "Skóre za odpověď je určeno druhem skórování otázky."]
+                [:h4 "Správnost"]
+                [:p "Pokud je otázka skórována dle **správnosti**, pak body získávají hráči, kteří odpoví správně.
+                     Čím rychleji hráč odpoví správně, tím vyšší skóre získá.
+                     Hráči, kteří odpoví nesprávně, nedostanou žádné body."]
+                [:h4 "Konsenzus"]
+                [:p "Pokud je otázka skórována dle **konsenzu**, pak body získávají hráči úměrně tomu, s kolika dalšími hráči odpoví stejně.
+                     Například, pokud jsou všechny odpovědi shodné, všichni získávají 1 bod.
+                     Pokud se polovina hráčů shodne na stejné odpovědi, získávají půl bodu.
+                     Rychlost odpovědi získané skóre neovlivňuje."]
+                [:h4 "Většina"]
+                [:p "Pokud je otázka skórována dle **většiny**, pak hráči získají bod, pokud odpoví stejně jako většina hráčů.
+                     Když hráči nedosáhnou většinové shody, nikdo z nich nezíská žádné body.
+                     Rychlost odpovědi získané skóre neovlivňuje."]
+                [:h3 "Druhy otázek"]
+                [:p "Kvízy mohou obsahovat různé druhy otázek."]
+                [:h4 "Více možností"]
+                [:p "Hráči dostanou možnost si vybrat z několika odpovědí."]
+                [:h4 "Ano/ne"]
+                [:p "Hráči odpovídají buď \"ano\" nebo \"ne\"."]
+                [:h4 "Otevřená otázka"]
+                [:p "Hráči můžou napsat jakoukoli odpověď.
+                     Když se odpovědi porovnávají, například s očekávanou správnou odpovědí, malé překlepy jsou tolerovány."]
+                [:h4 "Seřazování"]
+                [:p "Hráči musí seřadit položky podle instrukcí v otázce.
+                     Položky lze přeřadit jejich přetahováním."]
+                [:h4 "Procentní odpověď"]
+                [:p "Hráči odpovídají procentní hodnotou.
+                     Rozdíly do 5 % jsou tolerovány, pokud je odpověď skórována dle správnosti."]
+                [:h4 "Volba hráče"]
+                [:p "Hráči musí vybrat jednoho z hráčů jako svou odpověď.
+                    Je možné zvolit si sebe."]]
         :score "Skóre"
         :scoring "Hodnocení"
         :start-game "Zahájit hru"
@@ -116,6 +155,45 @@
                    :yesno {:yes "Yes"
                            :no "No"}}
         :replay-audio "Replay"
+        :rules [[:h2 "Rules of the game"]
+                [:p "This is a quiz: the players answer questions and score points.
+                     The player with the highest score after all the questions are answered wins the game.
+                     The maximum score for a question is 1 point.
+                     The players have %1 seconds to answer each question.
+                     Players who don't answer get no points."]
+                [:h3 "Scoring methods"]
+                [:p "Answer's scores are determined by the question's scoring method."]
+                [:h4 "Correctness"]
+                [:p "When the question's scoring method is **correctness**, the players who gave the correct answers score points.
+                     The faster a player answer correctly, the higher their score is.
+                     The players who answer incorrectly score no points."]
+                [:h4 "Consensus"]
+                [:p "When the question's scoring method is **consensus**, the players score points when answer the same as other players.
+                     For example, if all players answer the same, all score 1 point, achieving full consensus.
+                     If half of the players agrees on an answer, they score half a point.
+                     Answer speed does not affect the score."]
+                [:h4 "Majority"]
+                [:p "When the question's scoring method is **majority**, the players score a point when they answer the same as the majority of the players.
+                     If the players don't reach the majority consensus, none of them scores any points.
+                     Answer speed does not affect the score."]
+                [:h3 "Question types"]
+                [:p "The quizes can contain questions of different types."]
+                [:h4 "Multiple choice"]
+                [:p "The players are given multiple choices to pick their answers from."]
+                [:h4 "Yes/no"]
+                [:p "The players can answer either \"yes\" or \"no\"."]
+                [:h4 "Open question"]
+                [:p "The players can write any answer to the question.
+                     When comparing the answers, for example with the expected correct answer, minor spelling differences are ignored."]
+                [:h4 "Sorting question"]
+                [:p "The players must sort a list according to the question's instructions.
+                     Each list item can be dragged and dropped into its position."]
+                [:h4 "Percentage range"]
+                [:p "The players answer with a percentage.
+                     Differences up to 5 % are ignored when scoring by correctness."]
+                [:h4 "Player choice"]
+                [:p "The players must pick one of the players as their answer.
+                     Picking oneself is allowed."]]
         :score "Score"
         :scoring "Scoring"
         :start-game "Start the game"

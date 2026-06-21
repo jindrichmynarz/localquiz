@@ -751,7 +751,7 @@ progress {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin: 1.5em 0;
+  margin: .5em 0;
 
   i.material-icons {
     font-size: 3em;
@@ -1071,4 +1071,18 @@ i.material-icons {
 i.score-direction {
   font-style: normal;
   padding-left: .25em;
+}
+
+#rules {
+  text-align: left;
+  font-size: .8em;
+
+  h2, h3, h4 {
+    color: var(--orange);
+  }
+
+  h3 {
+    padding-bottom: 2px;
+    border-bottom: solid 1px var(--orange);
+  }
 }
