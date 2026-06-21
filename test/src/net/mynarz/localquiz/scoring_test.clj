@@ -51,7 +51,10 @@
        [0.0 0.0]
 
        [{:answer 1} {:answer 0} {:answer 1}]
-       [1.0 0.0 1.0]))
+       [1.0 0.0 1.0]
+
+       [{:answer 1} {:answer 0}]
+       [0.0 0.0]))
 
 (deftest scale-scores-by-answer-times
   (are [scores scaled-scores] (= (map :score (scoring/scale-scores-by-answer-times scores)) scaled-scores)
