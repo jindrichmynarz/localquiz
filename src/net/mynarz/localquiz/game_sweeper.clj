@@ -19,7 +19,7 @@
   "Find when the game with `game-id` was last modified."
   [^String game-id]
   (->> game-id
-       (d/q '[:find ?game (max ?inst)
+       (d/q '[:find ?game (max ?ms)
               :keys game last-modified
               :in $ ?game-id
               :where [?game :game/id ?game-id]
@@ -28,7 +28,8 @@
                        [?game :game/players ?e]
                        [?game :game/answers ?e])
                      [?e _ _ ?tx true]
-                     [?tx :db/txInstant ?inst]]
+                     [?tx :db/txInstant ?inst]
+                     [(inst-ms ?inst) ?ms]]
             (d/history @db-conn))
        first))
 
@@ -47,13 +48,11 @@
 (defn delete-idle-games!
   "Delete games that are idle for a configured time."
   []
-  (let [threshold (.minus (Instant/now) ^int (:game-idle-time config) ChronoUnit/HOURS)]
+  (let [threshold (inst-ms (.minus (Instant/now) ^int (:game-idle-time config) ChronoUnit/HOURS))]
     (log/infof "Deleting the games idle since %s." threshold)
     (->> (current-games)
          (map game-last-modified)
-         (filter (fn [{:keys [last-modified]}]
-                   ; Test if the game was last modified before the threshold
-                   (.isBefore last-modified threshold)))
+         (filter (comp (partial > threshold) :last-modified))
          (mapcat (fn [{:keys [game]}]
                    (let [session-purges (->> game
                                              session-eids-for-game
