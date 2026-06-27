@@ -54,7 +54,28 @@
        [1.0 0.0 1.0]
 
        [{:answer 1} {:answer 0}]
-       [0.0 0.0]))
+       [0.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer 1}]
+       [1.0 1.0 1.0]
+
+       [{:answer 1} {:answer 1} {:answer 2} {:answer 2}]
+       [0.0 0.0 0.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer 2} {:answer 3}]
+       [0.0 0.0 0.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer 1} {:answer 2} {:answer 2}]
+       [1.0 1.0 1.0 0.0 0.0]
+
+       [{:answer false} {:answer false} {:answer true}]
+       [1.0 1.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer nil}]
+       [1.0 1.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer nil} {:answer nil}]
+       [0.0 0.0 0.0 0.0]))
 
 (deftest scale-scores-by-answer-times
   (are [scores scaled-scores] (= (map :score (scoring/scale-scores-by-answer-times scores)) scaled-scores)

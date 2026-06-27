@@ -97,13 +97,13 @@
 (defmethod score-answers [:majority]
   [_ answers]
   (let [majority-threshold (/ (count answers) 2)
-        majority-answer (->> answers
+        majority-entry (->> answers
                             (keep :answer)
                             frequencies
                             (filter (comp (partial < majority-threshold) val))
-                            ffirst)]
+                            first)]
     (for [answer answers]
-      (assoc answer :score (if (and majority-answer (= (:answer answer) majority-answer))
+      (assoc answer :score (if (and majority-entry (= (:answer answer) (key majority-entry)))
                              1.0
                              0.0)))))
 
