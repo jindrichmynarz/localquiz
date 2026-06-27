@@ -317,6 +317,9 @@ input[type="text"], input[type="number"] {
   position: relative;
   top: -5px;
   font-size: var(--font-size);
+  &:focus-visible {
+    outline: none;
+  }
 }
 
 input[type="number"] {
