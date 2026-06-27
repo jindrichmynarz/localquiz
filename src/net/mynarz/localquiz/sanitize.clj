@@ -26,14 +26,14 @@
            disallowed-tags
            boolean)))
 
-(defn event-attr?
+(defn disallowed-attr?
   "True if attribute key `k` runs code on an event — a native on* handler or a
-  Datastar data-on* handler (case-insensitive)."
+  Datastar data-* attribute (case-insensitive)."
   [k]
   (and (or (keyword? k) (string? k))
        (let [attr (string/lower-case (name k))]
          (or (string/starts-with? attr "on")
-             (string/starts-with? attr "data-on")))))
+             (string/starts-with? attr "data")))))
 
 (defn sanitize-hiccup
   "Remove dangerous elements and event-handler attributes from `hiccup`."
@@ -51,7 +51,7 @@
 
         (map? form)
         (->> form
-             (remove (comp event-attr? key))
+             (remove (comp disallowed-attr? key))
              (into {}))
 
         :else form))
