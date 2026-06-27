@@ -17,7 +17,7 @@
                          fixtures/game-id)
         session-ids (-> player-ids
                         set
-                        (conj fixtures/game-id))]
+                        (conj fixtures/moderator-id))]
     (testing "Game updates"
       (are [tx-data] (let [tx-report (d/transact db-conn tx-data)]
                        (is (= (set (db-listener/find-updated-sessions tx-report)) session-ids)))

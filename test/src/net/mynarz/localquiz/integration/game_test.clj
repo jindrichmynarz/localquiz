@@ -3,9 +3,12 @@
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
-            [net.mynarz.localquiz.actions.player :as player]
             [clojure.test :refer [are deftest is testing use-fixtures]]
             [datahike.api :as d]))
+
+(defn -create-game!
+  [^String game-id]
+  (game/create-game! game-id (crypto/random-unguessable-uid) [(pr-str fixtures/question)]))
 
 (defn get-player-db-id
   [^String player-name]
@@ -109,18 +112,18 @@
 
 (deftest leaderboard!
   (let [game-id (crypto/random-unguessable-uid)]
-    (game/create-game! game-id [(pr-str fixtures/question)])
+    (-create-game! game-id)
     (game/leaderboard! game-id)
     (is (= (game/get-game-state game-id) :leaderboard))))
 
 (deftest create-game!
   (let [game-id (crypto/random-unguessable-uid)]
-    (game/create-game! game-id [(pr-str fixtures/question)])
+    (-create-game! game-id)
     (is (= (game/get-game-state game-id) :new))))
 
 (deftest end-game!
   (let [game-id (crypto/random-unguessable-uid)]
-    (game/create-game! game-id [(pr-str fixtures/question)])
+    (-create-game! game-id)
     (game/end-game! game-id)
     (game-deleted? game-id)
     (db-empty?)))

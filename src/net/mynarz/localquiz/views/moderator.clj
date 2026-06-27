@@ -43,14 +43,15 @@
    (tr [:create-game])])
 
 (defn end-game
-  [tr]
+  [tr
+   ^String game-id]
   [:div#end-game
    [:dialog#end-game-dialog
     {:data-ref "_endGameDialog"}
     [:p (tr [:confirm-end-game])]
     [:p
      [:button.btn
-      {:data-on:click "@post('/end')"}
+      {:data-on:click (str "@post('/end/" game-id "')")}
       (tr [:question.yesno/yes])]
      [:button.btn
       {:data-on:click "$_endGameDialog.close()"}
@@ -109,9 +110,10 @@
           [:td (decimal-format total-score)]])]]]))
 
 (defn next-button
-  ([tr]
+  ([tr
+    ^String game-id]
    (next-button tr
-                "@post('/next')"
+                (str "@post('/next/" game-id "')")
                 :next
                 [:i.material-icons.md-large (svg "arrow_circle_right.svg")]))
   ([tr
@@ -219,11 +221,11 @@
 
 (defmethod views/game-view [:moderator :new]
   [{:tempura/keys [tr]
-    game-id :sid
+    {:keys [game-id]} :path-params
     :as request}]
   (views/morph-body
     request
-    (end-game tr)
+    (end-game tr game-id)
     (let [play-game-url (str (:url config) "/play/" game-id)
           lobby (game/lobby game-id)
           has-enough-players? (game/has-enough-players? game-id)]
@@ -239,7 +241,7 @@
         (if has-enough-players?
           [:p
            [:button.btn.btn-primary
-            {:data-on:click "@post('/next')"
+            {:data-on:click (str "@post('/next/" game-id "')")
              :disabled (not has-enough-players?)
              :type "submit"}
             (tr [:start-game])]]
@@ -312,28 +314,28 @@
                             mark-correct?
                             question)]
        (when answer-revealed?
-         [:p (next-button tr)])])))
+         [:p (next-button tr game-id)])])))
 
 (defmethod views/game-view [:moderator :question]
   [{:tempura/keys [tr]
-    game-id :sid
+    {:keys [game-id]} :path-params
     :as request}]
   (views/morph-body
     request
     (question-header tr game-id)
     [(replay-audio tr)
-     (end-game tr)]
+     (end-game tr game-id)]
     (question-view tr game-id)))
 
 (defmethod views/game-view [:moderator :show-answers]
   [{:tempura/keys [tr]
-    game-id :sid
+    {:keys [game-id]} :path-params
     :as request}]
   (views/morph-body
     request
     (question-header tr game-id)
     [(replay-audio tr)
-     (end-game tr)]
+     (end-game tr game-id)]
     (let [answers (-> game-id
                       get-answers
                       (assoc :answer-revealed? true))]
@@ -341,17 +343,17 @@
 
 (defmethod views/game-view [:moderator :leaderboard]
   [{:tempura/keys [tr]
-    game-id :sid
+    {:keys [game-id]} :path-params
     :as request}]
   (views/morph-body
     request
-    (end-game tr)
+    (end-game tr game-id)
     [:section#content
      (leaderboard tr game-id)
      [:p
       (if (game/all-questions-answered? game-id)
         (next-button tr
-                     "@post('/end')"
+                     (str "@post('/end/" game-id "')")
                      :end-game
                      [:i.material-icons.md-dark (svg "cancel.svg")])
-        (next-button tr))]]))
+        (next-button tr game-id))]]))

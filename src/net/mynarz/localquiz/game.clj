@@ -9,8 +9,8 @@
             [clojure.string :as string]
             [datahike.api :as d]
             [fast-edn.core :as edn]
-            [taoensso.timbre :as log]
-            [spec-tools.core :as st]))
+            [spec-tools.core :as st]
+            [taoensso.timbre :as log]))
 
 (defn get-game-state
   "Get game state for the given `game-id`."
@@ -21,6 +21,19 @@
                 [?game :game/state ?state]]
        @db-conn
        game-id))
+
+(defn moderator?
+  "Test if `session-id` is the moderator (owner) of the game with `game-id`."
+  [^String game-id
+   ^String session-id]
+  (and session-id
+       (= session-id
+          (d/q '[:find ?moderator .
+                 :in $ ?game-id
+                 :where [?game :game/id ?game-id]
+                        [?game :game/moderator ?moderator]]
+               @db-conn
+               game-id))))
 
 (defn player-in-game?
   "Test if the player with `player-id` is in the game with `game-id`."
@@ -335,15 +348,18 @@
             (evaluate-answers! game-id)))))
 
 (defn create-game!
-  "Create a game with `game-id` from the given `questions` and optional `defs`."
+  "Create a game `game-id` owned by moderator session `moderator-id` from `questions` and optional `defs`."
   ([^String game-id
+    ^String moderator-id
     questions]
-   (create-game! game-id questions []))
+   (create-game! game-id moderator-id questions []))
   ([^String game-id
+    ^String moderator-id
     questions
     defs]
    (log/infof "Creating a new game %s." game-id)
    (d/transact db-conn [(cond-> {:game/id game-id
+                                 :game/moderator moderator-id
                                  :game/state :new
                                  :game/questions questions
                                  :game/questions-total (-> questions count long)}
@@ -354,10 +370,11 @@
   [^String game-id]
   (let [sessions (d/q '[:find [?session ...]
                         :in $ ?game-id
-                        :where (or-join [?game-id ?session]
-                                  [?session :session/id ?game-id]
-                                  (and [?game :game/id ?game-id]
-                                       [?game :game/players ?player]
+                        :where [?game :game/id ?game-id]
+                               (or-join [?game ?session]
+                                  (and [?game :game/moderator ?moderator-id]
+                                       [?session :session/id ?moderator-id])
+                                  (and [?game :game/players ?player]
                                        [?player :player/id ?player-id]
                                        [?session :session/id ?player-id]))]
                       @db-conn

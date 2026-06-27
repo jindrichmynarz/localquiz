@@ -1,13 +1,14 @@
 (ns net.mynarz.localquiz.handler-test
   (:require [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.db :refer [db-conn]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.handler :refer [->handler]]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
             [clojure.java.io :as io]
             [clojure.test :refer [deftest is testing use-fixtures]]
-            [ring.mock.request :as mock]
-            [taoensso.timbre :as log])
+            [datahike.api :as d]
+            [ring.mock.request :as mock])
   (:import (clojure.lang Keyword)
            (java.util Collection)))
 
@@ -23,6 +24,16 @@
   (some->> cookies
            (keep (partial session/get-cookie cookie-name))
            first))
+
+(defn moderator-game-id
+  "Public id of the game owned by moderator session `session-id`, if any."
+  [^String session-id]
+  (d/q '[:find ?game-id .
+         :in $ ?session-id
+         :where [?game :game/moderator ?session-id]
+                [?game :game/id ?game-id]]
+       @db-conn
+       session-id))
 
 (defn get-session
   [{{cookies "Set-Cookie"} :headers}]
@@ -74,8 +85,7 @@
   (let [handler (->handler)
         {:keys [status]
          :as response} (handler (request :get "/"))
-        moderator-session (get-session response)
-        game-id (:sid moderator-session)]
+        moderator-session (get-session response)]
     (is (= status 200))
     (testing "Create game"
       (let [questions (-> "questions/questions.edn"
@@ -87,14 +97,15 @@
                 handler
                 :status
                 (= 204)))))
-    (let [player-1 (join-player handler game-id "Jane")
+    (let [game-id (moderator-game-id (:sid moderator-session))
+          player-1 (join-player handler game-id "Jane")
           answer (fn [session]
                    (-> (request :post (str "/answer/" game-id))
                        (add-session session)
                        (assoc-in [:form-params "answer"] "true")
                        handler))]
       (testing "Question"
-        (is (-> (request :post "/next")
+        (is (-> (request :post (str "/next/" game-id))
                 (add-session moderator-session)
                 handler
                 :status

@@ -1,6 +1,7 @@
 (ns net.mynarz.localquiz.actions.moderator
   (:require [net.mynarz.localquiz.actions.common :refer [refresh-session!]]
             [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.question-spec :as qs]
@@ -63,11 +64,10 @@
     (refresh-session! request {:signals signals})))
 
 (defn create-game!
-  "Create a game identified by `game-id`."
+  "Create a game with a fresh, random public id, owned by the requesting session."
   [{{:keys [form multipart]} :parameters
-    game-id :sid
+    sid :sid
     :as request}]
-  ; TODO: What should happen if the game already exists? Shall we recreate it?
   (let [number-of-questions (or (:number-of-questions form)
                                 (:number-of-questions multipart)
                                 (:default-number-of-questions config))
@@ -75,22 +75,29 @@
     (if error
       (refresh-session! request {:signals {:error error
                                            :errorPreformatted true}})
-      (let [defs (mapv (fn [[id value]]
+      (let [game-id (crypto/random-unguessable-uid)
+            defs (mapv (fn [[id value]]
                          {:def/id id
                           :def/value (pr-str value)})
                        (:defs success))]
         (game/create-game! game-id
+                           sid
                            (->> success
                                 :questions
                                 shuffle
                                 (take number-of-questions)
                                 (map pr-str))
-                           defs)))))
+                           defs)
+        (refresh-session! request {:redirect (str "/host/" game-id)})))))
 
 (defn next!
-  [{game-id :sid}]
-  (game/advance! game-id))
+  [{{:keys [game-id]} :path-params
+    sid :sid}]
+  (when (game/moderator? game-id sid)
+    (game/advance! game-id)))
 
 (defn end-game!
-  [{game-id :sid}]
-  (game/end-game! game-id))
+  [{{:keys [game-id]} :path-params
+    sid :sid}]
+  (when (game/moderator? game-id sid)
+    (game/end-game! game-id)))

@@ -11,11 +11,15 @@
 (defonce game-id
   (crypto/random-unguessable-uid))
 
+(defonce moderator-id
+  (crypto/random-unguessable-uid))
+
 (defonce question
   {})
 
 (def initial-tx
   [{:game/id game-id
+    :game/moderator moderator-id
     :game/state :new
     :game/questions [(pr-str question)]
     :game/players [{:player/id (crypto/random-unguessable-uid)
@@ -27,7 +31,7 @@
                     :player/score 0.0
                     :db/ensure :player}]
     :db/ensure :game}
-   {:session/id game-id
+   {:session/id moderator-id
     :session/params (pr-str {})}])
 
 (defn test-config
