@@ -68,7 +68,7 @@
                 [:h4 "Konsenzus"]
                 [:p "Pokud je otázka skórována dle **konsenzu**, pak body získávají hráči úměrně tomu, s kolika dalšími hráči odpoví stejně.
                      Například, pokud jsou všechny odpovědi shodné, všichni získávají 1 bod.
-                     Pokud se polovina hráčů shodne na stejné odpovědi, získávají půl bodu.
+                     Pokud se hráč shodne s polovinou ostatních hráčů, získá půl bodu.
                      Rychlost odpovědi získané skóre neovlivňuje."]
                 [:h4 "Většina"]
                 [:p "Pokud je otázka skórována dle **většiny**, pak hráči získají bod, pokud odpoví stejně jako většina hráčů.
@@ -165,19 +165,19 @@
                 [:p "Answer's scores are determined by the question's scoring method."]
                 [:h4 "Correctness"]
                 [:p "When the question's scoring method is **correctness**, the players who gave the correct answers score points.
-                     The faster a player answer correctly, the higher their score is.
+                     The faster a player answers correctly, the higher their score is.
                      The players who answer incorrectly score no points."]
                 [:h4 "Consensus"]
-                [:p "When the question's scoring method is **consensus**, the players score points when answer the same as other players.
-                     For example, if all players answer the same, all score 1 point, achieving full consensus.
-                     If half of the players agrees on an answer, they score half a point.
+                [:p "When the question's scoring method is **consensus**, players score points in proportion to how many of the other players answer the same as them.
+                     For example, if all players answer the same, everyone scores 1 point, achieving full consensus.
+                     If a player's answer matches half of the other players, they score half a point.
                      Answer speed does not affect the score."]
                 [:h4 "Majority"]
                 [:p "When the question's scoring method is **majority**, the players score a point when they answer the same as the majority of the players.
                      If the players don't reach the majority consensus, none of them scores any points.
                      Answer speed does not affect the score."]
                 [:h3 "Question types"]
-                [:p "The quizes can contain questions of different types."]
+                [:p "The quizzes can contain questions of different types."]
                 [:h4 "Multiple choice"]
                 [:p "The players are given multiple choices to pick their answers from."]
                 [:h4 "Yes/no"]
