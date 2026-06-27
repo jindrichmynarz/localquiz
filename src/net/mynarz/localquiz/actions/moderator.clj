@@ -5,11 +5,10 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.question-spec :as qs]
+            [net.mynarz.localquiz.sanitize :as sanitize]
             [net.mynarz.localquiz.spec :as s]
             [clojure.java.io :as io]
-            [clojure.walk :as walk]
-            [fast-edn.core :as edn]
-            [clojure.string :as string])
+            [fast-edn.core :as edn])
   (:import (java.io File)))
 
 (defn parse-questions-file
@@ -65,22 +64,6 @@
                    :numberOfQuestions (count questions)})]
     (refresh-session! request {:signals signals})))
 
-(def script?
-  (every-pred vector?
-              (comp #(string/starts-with? % "script") string/lower-case name first)))
-
-(defn sanitize-hiccup
-  "Remove dangerous elements from `hiccup`."
-  [hiccup]
-  (walk/postwalk
-    (fn [form]
-      (cond
-        (script? form) nil
-        (and (vector? form) (not (map-entry? form)))
-        (into [] (remove (some-fn nil? script?) form))
-        :else form))
-    hiccup))
-
 (defn create-game!
   "Create a game with a fresh, random public ID, owned by the requesting session."
   [{{:keys [form multipart]} :parameters
@@ -96,7 +79,7 @@
       (let [game-id (crypto/random-unguessable-uid)
             defs (mapv (fn [[id value]]
                          {:def/id id
-                          :def/value (pr-str (sanitize-hiccup value))})
+                          :def/value (pr-str (sanitize/sanitize-hiccup value))})
                        (:defs success))]
         (game/create-game! game-id
                            sid
@@ -104,7 +87,7 @@
                                 :questions
                                 shuffle
                                 (take number-of-questions)
-                                (map (comp pr-str sanitize-hiccup)))
+                                (map (comp pr-str sanitize/sanitize-hiccup)))
                            defs)
         (refresh-session! request {:redirect (str "/host/" game-id)})))))
 
