@@ -2,7 +2,7 @@
  :deps {org.clojure/clojure            {:mvn/version "1.12.5"}
         org.clojure/core.async         {:mvn/version "1.9.865"}
         clj-fuzzy/clj-fuzzy            {:mvn/version "0.4.1"}
-        com.cnuernber/charred          {:mvn/version "1.038"}
+        com.cnuernber/charred          {:mvn/version "1.039"}
         com.taoensso/tempura           {:mvn/version "1.5.4"}
         com.taoensso/timbre            {:mvn/version "6.8.0"}
         dev.data-star.clojure/brotli   {:mvn/version "1.0.0-RC11"}
@@ -15,7 +15,7 @@
         io.replikativ/datahike-lmdb    {:git/url "https://github.com/replikativ/datahike-lmdb"
                                         :git/sha "bc9f024b791c30ea8fcf48b1dbba7c1abe00f3de"}
         metosin/reitit                 {:mvn/version "0.10.1"}
-        mount/mount                    {:mvn/version "0.1.23"}
+        mount/mount                    {:mvn/version "0.1.24"}
         ring/ring-devel                {:mvn/version "1.15.0-beta1"}}
  :aliases {:dev {:extra-deps {com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.7.0"}
                               criterium/criterium                      {:mvn/version "0.4.6"}
@@ -26,11 +26,11 @@
                             "-XX:+UseZGC"
                             "-Djdk.attach.allowAttachSelf"
                             "-XX:+EnableDynamicAgentLoading"]}
-           :build {:deps {io.github.clojure/tools.build {:git/tag "v0.10.13" :git/sha "ae52edf"}}
+           :build {:deps {io.github.clojure/tools.build {:git/tag "v0.10.14" :git/sha "1176afd"}}
                    :ns-default build}
            :repl {:extra-paths ["dev"]
                   :extra-deps  {nrepl/nrepl                 {:mvn/version "1.7.0"}
-                                cider/cider-nrepl           {:mvn/version "0.59.0"}
+                                cider/cider-nrepl           {:mvn/version "0.60.0"}
                                 io.github.tonsky/clj-reload {:mvn/version "1.0.0"}}
                   :main-opts ["--main" "nrepl.cmdline"
                               "--middleware" "[cider.nrepl/cider-middleware]"
