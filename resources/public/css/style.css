@@ -200,10 +200,13 @@ footer {
   }
 }
 
-button, a {
-  &:focus {
-    outline-color: var(--orange);
-  }
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
 }
 
 input,
@@ -281,10 +284,6 @@ select {
     top: -3px;
     z-index: -2;
   }
-
-  &:focus:not(:focus-visible) {
-    outline: none;
-  }
 }
 
 .btn, .btn:before, .btn:after {
@@ -317,10 +316,6 @@ input[type="text"], input[type="number"] {
   position: relative;
   top: -5px;
   font-size: var(--font-size);
-
-  &:focus {
-    outline: 0;
-  }
 }
 
 input[type="number"] {
@@ -838,6 +833,11 @@ progress {
   input[type="checkbox"]:checked + .switch::after {
     transform: translateX(20px);
   }
+
+  input[type="checkbox"]:focus-visible + .switch {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+  }
 }
 
 .error i.material-icons {
@@ -908,10 +908,6 @@ progress {
   box-shadow: 2px 2px 0 var(--darker);
   padding: .5em;
   cursor: pointer;
-
-  &:focus {
-    outline: 0;
-  }
 }
 
 input::file-selector-button {
@@ -939,11 +935,7 @@ input::file-selector-button {
 #player-name {
   border: none;
 
-  &:focus {
-    outline-width: 2px;
-  }
-
-  &:user-invalid {
+  &:user-invalid:focus-visible {
     outline-color: var(--red);
   }
 }
