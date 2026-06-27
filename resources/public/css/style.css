@@ -261,7 +261,7 @@ select {
     filter: grayscale(1);
   }
 
-  &:before, &:after {
+  &::before, &::after {
     border: 3px solid;
     border-color: var(--darker);
     border-radius: 3px;
@@ -271,14 +271,14 @@ select {
     width: 100%;
   }
 
-  &:before {
+  &::before {
     background-color: var(--dark);
     left: -5px;
     top: -5px;
     z-index: -1;
   }
 
-  &:after {
+  &::after {
     background-color: var(--darker);
     left: -3px;
     right: 0;
@@ -287,7 +287,7 @@ select {
   }
 }
 
-.btn, .btn:before, .btn:after {
+.btn, .btn::before, .btn::after {
   transition: all 1s ease-in;
 }
 
@@ -296,15 +296,15 @@ select {
   background-color: var(--orange);
   border-color: var(--red);
 
-  &:before, &:after {
+  &::before, &::after {
     border-color: var(--red);
   }
 
-  &:before {
+  &::before {
     background-color: var(--orange);
   }
 
-  &:after {
+  &::after {
     background-color: var(--red);
   }
 }
@@ -856,7 +856,7 @@ progress {
   input[type="radio"] + label {
     cursor: pointer;
     order: 1;
-    margin-bottom: -1px;
+    margin-bottom: -3px;
     padding: .5em 1em;
     color: var(--grey);
     z-index: 1;
@@ -870,14 +870,14 @@ progress {
   form {
     padding: 1em;
     margin-bottom: 1.5em;
-    border: solid 1px var(--darker);
+    border: solid 3px var(--darker);
     box-shadow: 0px 3px 0 var(--darker);
     z-index: 0;
   }
 
   input[type="radio"]:checked + label {
     cursor: inherit;
-    border: solid 1px var(--darker);
+    border: solid 3px var(--darker);
     border-radius: 6px 6px 0 0;
     border-bottom-color: transparent;
   }
@@ -1074,6 +1074,6 @@ i.score-direction {
 
   h3 {
     padding-bottom: 2px;
-    border-bottom: solid 1px var(--orange);
+    border-bottom: solid 3px var(--orange);
   }
 }
