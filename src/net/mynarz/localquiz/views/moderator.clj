@@ -33,13 +33,19 @@
                                 join-game-url)
      :data-text "$_copyLabel[0]"}]])
 
+(def form-validity-handlers
+  "Datastar attributes that keep the $_formValid signal in sync with the form's
+  built-in (Constraint Validation API) validity. `el` is the form element."
+  {:data-on:input "$_formValid = el.checkValidity()"
+   :data-on:change "$_formValid = el.checkValidity()"})
+
 (defn create-button
   [{:tempura/keys [tr]}]
   [:button.btn.btn-primary
    {:data-attr:disabled "$_creating || $_validating"
     :data-indicator "_creating"
     :data-on:click (views/post "/create")
-    :data-show "$questionsValidated"}
+    :data-show "$questionsValidated && $_formValid"}
    (tr [:create-game])])
 
 (defn end-game
@@ -183,12 +189,14 @@
     request
     [:section#content
      [:div.tabs
-      {:data-signals:questions-validated__ifmissing false}
+      {:data-signals:questions-validated__ifmissing false
+       :data-signals:_form-valid__ifmissing "true"}
       (tab-checkbox "select-questions-checkbox" true)
       [:label
        {:for "select-questions-checkbox"}
        (tr [:pick-questions])]
       [:form
+       form-validity-handlers
        [:p
         [:select#question-picker
          {:data-on:change (views/post "/create/validate")
@@ -208,13 +216,14 @@
        {:for "upload-questions-checkbox"}
        (tr [:upload-questions])]
       [:form
-       {:enctype "multipart/form-data"}
+       (merge {:enctype "multipart/form-data"} form-validity-handlers)
        [:p
         [:input#questions-upload
          {:accept ".edn"
           :data-on:change (str (format "evt.target.files[0]?.size < %d ? " (:max-upload-size config))
                                (views/post "/create/validate")
                                (format " : $error = '%s'" (max-upload-size tr)))
+          :data-indicator "_validating"
           :name "question-file"
           :type "file"}]]
        (create-game-form-fields request)]]]))
