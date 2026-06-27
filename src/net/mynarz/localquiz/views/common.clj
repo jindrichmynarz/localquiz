@@ -117,7 +117,11 @@
        header
        (lang-switch tr)]
       [:i.material-icons
-       {:data-on:click "$_menuOpen = !$_menuOpen"}
+       {:role "button"
+        :tabindex "0"
+        :aria-label (tr [:menu])
+        :data-on:click "$_menuOpen = !$_menuOpen"
+        :data-on:keydown "evt.key === 'Enter' && (evt.preventDefault(), $_menuOpen = !$_menuOpen)"}
        (svg "menu.svg")]]]
     [:main main]
     (footer tr)
