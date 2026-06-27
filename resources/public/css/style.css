@@ -9,6 +9,9 @@
 
   /* Fonts */
   --font-size: clamp(16px, 4vw, 28px);
+
+  /* Motion */
+  --transition: 0.2s ease-out;
 }
 
 ::selection {
@@ -81,7 +84,7 @@ header {
   white-space: nowrap;
   overflow: hidden;
   max-width: 0;
-  transition: max-width 0.25s ease-out;
+  transition: max-width var(--transition);
   margin-right: 1em;
 
   #end-game {
@@ -288,7 +291,7 @@ select {
 }
 
 .btn, .btn::before, .btn::after {
-  transition: all 1s ease-in;
+  transition: all var(--transition);
 }
 
 .btn-primary {
@@ -818,7 +821,7 @@ progress {
     height: 20px;
     background-color: var(--darker);
     border-radius: 20px;
-    transition: transform 0.3s;
+    transition: transform var(--transition);
   }
 
   .switch::after {
@@ -830,7 +833,7 @@ progress {
     background-color: var(--offwhite);
     top: 1px;
     left: 1px;
-    transition: transform 0.3s;
+    transition: transform var(--transition);
     cursor: pointer;
   }
 
@@ -863,7 +866,7 @@ progress {
     padding: .5em 1em;
     color: var(--grey);
     z-index: 1;
-    transition: color .4s;
+    transition: color var(--transition);
 
     &:hover {
       color: var(--orange);
