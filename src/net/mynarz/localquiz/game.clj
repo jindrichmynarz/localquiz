@@ -270,23 +270,37 @@
         (dissoc timeouts game-id))
     timeouts))
 
+(defn cas-failed?
+  "Test if `ex` was thrown due to a failure of :db/cas."
+  [ex]
+  (->> ex
+       (iterate ex-cause)
+       (take-while some?)
+       (some #(= :transact/cas (:error (ex-data %))))
+       boolean))
+
 (defn evaluate-answers!
+  "Score the current question's answers and reveal them. Idempotent: a compare-and-swap on
+  :game/state ensures at most one of the concurrent triggers commits, so scores are never
+  applied twice. Exception-safe: if scoring throws, the answers are still revealed unscored
+  rather than freezing the game (individual malformed answers already score 0)."
   [^String game-id]
   (swap! timeouts cancel-timeout! game-id)
-  ; FIXME: Is it possible that this is evaluated more than once for the same question?
-  ;        Shall we store a "lock" indicating if the question was already evaluated? Don't evaluate answers if they were evaluated before.
   (log/infof "Evaluating answers for game %s." game-id)
   (let [{:keys [scoring]
          :as question} (current-question game-id)
-        scores (cond-> (->> game-id
-                            get-answers
-                            (scoring/score-answers question))
-                  (nil? scoring) scoring/scale-scores-by-answer-times)]
-    (->> [(store-scores scores)
-          (add-scores scores)
-          [[:db/add [:game/id game-id] :game/state :show-answers]]]
-         (reduce into)
-         (d/transact db-conn))))
+        reveal [:db/cas [:game/id game-id] :game/state :question :show-answers]
+        tx (let [scores (cond-> (->> game-id
+                                     get-answers
+                                     (scoring/score-answers question))
+                          (nil? scoring) scoring/scale-scores-by-answer-times)]
+             (reduce into [[reveal] (store-scores scores) (add-scores scores)]))]
+    (try
+      (d/transact db-conn tx)
+      (catch Exception ex
+        (if (cas-failed? ex)
+          (log/debugf "Game %s already evaluated. Skipping duplicate." game-id)
+          (throw ex))))))
 
 (defn get-answer-ids
   [^String game-id]

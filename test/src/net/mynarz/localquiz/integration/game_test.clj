@@ -47,6 +47,47 @@
        seq
        not))
 
+(def multiple-question
+  "A multiple-choice question whose first choice (index 0) is correct."
+  {:type :multiple
+   :choices [{:text "A" :correct? true} {:text "B"}]})
+
+(defn create-question-game!
+  "Create a fresh game already in :question with `multiple-question` as the current
+  question, one player per entry in `answers`, and each player's answer recorded."
+  [^String game-id answers]
+  (d/transact db/db-conn
+              [{:game/id game-id
+                :game/moderator (crypto/random-unguessable-uid)
+                :game/state :question
+                :game/questions-total 1
+                :game/current-question (pr-str multiple-question)
+                :game/players (vec (map-indexed
+                                     (fn [i _] {:player/id (str game-id "-p" i)
+                                                :player/name (str "P" i)
+                                                :player/score 0.0})
+                                     answers))}])
+  (d/transact db/db-conn
+              [{:db/id [:game/id game-id]
+                :game/answers (vec (map-indexed
+                                    (fn [i answer] {:answer/player [:player/id (str game-id "-p" i)]
+                                                    :answer/answer answer})
+                                    answers))}]))
+
+(defn player-total
+  "The :player/score of player `player-name` in game `game-id`."
+  [^String game-id
+   ^String player-name]
+  (d/q '[:find ?score .
+         :in $ ?game-id ?player-name
+         :where [?game :game/id ?game-id]
+                [?game :game/players ?player]
+                [?player :player/name ?player-name]
+                [?player :player/score ?score]]
+       @db/db-conn
+       game-id
+       player-name))
+
 (use-fixtures :once fixtures/test-db)
 
 (deftest get-game-state
@@ -127,3 +168,24 @@
     (game/end-game! game-id)
     (game-deleted? game-id)
     (db-empty?)))
+
+(deftest evaluate-answers!-idempotent
+  ;; A second trigger (timeout vs. last answer) must not score the question twice.
+  (let [game-id (crypto/random-unguessable-uid)]
+    (create-question-game! game-id ["0" "1"]) ; P0 correct, P1 wrong
+    (game/evaluate-answers! game-id)
+    (let [score-after-first (player-total game-id "P0")]
+      (game/evaluate-answers! game-id) ; concurrent re-trigger: CAS fails, swallowed
+      (is (= :show-answers (game/get-game-state game-id)))
+      (is (= 1.0 score-after-first))
+      (is (= score-after-first (player-total game-id "P0")))
+      (is (= 0.0 (player-total game-id "P1"))))))
+
+(deftest evaluate-answers!-exception-safe
+  ;; A malformed answer (out-of-range choice index) must not freeze the game.
+  (let [game-id (crypto/random-unguessable-uid)]
+    (create-question-game! game-id ["0" "99"]) ; P1's index is out of range
+    (game/evaluate-answers! game-id)
+    (is (= :show-answers (game/get-game-state game-id)))
+    (is (= 1.0 (player-total game-id "P0")))
+    (is (= 0.0 (player-total game-id "P1")))))
