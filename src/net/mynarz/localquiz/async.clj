@@ -17,7 +17,7 @@
 
 (defstate refresh-channel
   "Async channel for refresh signals."
-  :start (a/chan (a/dropping-buffer 1)))
+  :start (a/chan 64))
 
 (defstate refresh-pub
   "Publication of refresh signals for each session ID."

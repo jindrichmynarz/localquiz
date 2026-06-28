@@ -17,7 +17,7 @@
                            [?component :db/ident ?attr]
                            [?component :db/isComponent true]))
                    (or-join [?session-id ?game] ; Get session IDs of the clients in the game
-                      [?game :game/id ?session-id]
+                      [?game :game/moderator ?session-id]
                       (and [?game :game/players ?player]
                            [?player :player/id ?session-id]))))])
 
@@ -39,7 +39,7 @@
   "Given the database transaction report `tx-report`, publish refresh events for all affected sessions."
   [tx-report]
   (doseq [sid (find-updated-sessions tx-report)]
-    (a/>!! refresh-channel {:session-id sid})))
+    (a/put! refresh-channel {:session-id sid})))
 
 (defstate db-listener
   :start (d/listen db-conn :refresh refresh)

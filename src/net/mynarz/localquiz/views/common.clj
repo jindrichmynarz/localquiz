@@ -118,7 +118,11 @@
        header
        (lang-switch tr)]
       [:i.material-icons
-       {:data-on:click "$_menuOpen = !$_menuOpen"}
+       {:role "button"
+        :tabindex "0"
+        :aria-label (tr [:menu])
+        :data-on:click "$_menuOpen = !$_menuOpen"
+        :data-on:keydown "evt.key === 'Enter' && (evt.preventDefault(), $_menuOpen = !$_menuOpen)"}
        (svg "menu.svg")]]]
     [:main main]
     (footer tr)
@@ -176,7 +180,7 @@
         :headers (merge headers/default-headers
                         {"Content-Encoding" "br"
                          "ETag" (crypto/digest body)})
-        :body (brotli/compress body :quality 11)})
+        :body (brotli/compress body :quality 3)})
     ; No content
     {:headers {"Strict-Transport-Security" headers/strict-transport
                "Cache-Control" "no-store"}
@@ -186,10 +190,13 @@
   (comp view shim-page))
 
 (defn ->session-role
-  "Get the session role based on path parameters.
-  Player paths always contain the `game-id`."
-  [{{:keys [game-id]} :path-params}]
-  (if game-id :player :moderator))
+  "Session role: moderator when there is no game in the URL (the create form) or
+  the session owns the game; otherwise player."
+  [{{:keys [game-id]} :path-params
+    session-id :sid}]
+  (if (or (nil? game-id) (game/moderator? game-id session-id))
+    :moderator
+    :player))
 
 (defmulti game-view
   (juxt ->session-role (comp :state :game)))
@@ -198,11 +205,12 @@
   [{{:keys [game-id]} :path-params
     session-id :sid
     :as request}]
-  (let [state (game/get-game-state (or game-id session-id))
-        game {:session-role (if game-id :player :moderator)
+  (let [role (->session-role request)
+        state (when game-id (game/get-game-state game-id))
+        game {:session-role role
               :state state}]
-    ; If a player is not in the game, redirect to the home page.
-    (when (and game-id
+    ; If a player is not in a started game, redirect to the home page.
+    (when (and (= role :player)
                (not= state :new)
                (not (game/player-in-game? game-id session-id)))
       (refresh-session! request {:redirect "/"}))

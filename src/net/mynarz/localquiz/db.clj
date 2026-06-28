@@ -24,6 +24,11 @@
     :db/unique :db.unique/identity
     :db/index true
     :db/cardinality :db.cardinality/one}
+   {:db/ident :game/moderator
+    :db/doc "Session ID of the game's moderator."
+    :db/valueType :db.type/string
+    :db/index true
+    :db/cardinality :db.cardinality/one}
    {:db/ident :game/state
     :db/doc "State of a game"
     :db/valueType :db.type/keyword

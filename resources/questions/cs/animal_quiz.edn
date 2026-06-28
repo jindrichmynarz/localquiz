@@ -184,7 +184,7 @@
                :text [:div
                       [:audio {:src "https://cdn.freesound.org/previews/582/582938_1486333-lq.ogg"}]
                       [:p "Který živočich vydává tento zvuk?"]]
-               :choices [{:text "🐹 Myš" :correct? true}
+               :choices [{:text "🐹 Křeček" :correct? true}
                          {:text "🦦 Vydra"}
                          {:text "🐿️ Veverka"}
                          {:text "🐼 Panda"}]

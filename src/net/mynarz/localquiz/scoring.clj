@@ -15,45 +15,65 @@
       [scoring]
       [type scoring])))
 
+(defn- score-each
+  "Map per-answer scoring `f` over `answers`, isolating failures: if `f` throws for an
+  answer (e.g. a malformed value such as an out-of-range choice index), that answer is
+  marked incorrect with a zero score instead of aborting the whole batch."
+  [f answers]
+  (map (fn [answer]
+         (try
+           (f answer)
+           (catch Exception _
+             (assoc answer :correct? false :score 0.0))))
+       answers))
+
 (defmethod score-answers [:multiple nil]
   [{:keys [choices]} answers]
-  (for [answer answers
-        :let [correct? (->> answer
-                            :answer
-                            (nth choices)
-                            :correct?
-                            boolean)]]
-    (assoc answer :correct? correct?
-                  :score (boolean->score correct?))))
+  (score-each
+    (fn [answer]
+      (let [correct? (->> answer
+                          :answer
+                          (nth choices)
+                          :correct?
+                          boolean)]
+        (assoc answer :correct? correct?
+                      :score (boolean->score correct?))))
+    answers))
 
 (defmethod score-answers [:yesno nil]
   [{:keys [correct?]} answers]
-  (for [answer answers
-        :let [answer-correct? (= (:answer answer) correct?)]]
-    (assoc answer :correct? answer-correct?
-                  :score (boolean->score answer-correct?))))
+  (score-each
+    (fn [answer]
+      (let [answer-correct? (= (:answer answer) correct?)]
+        (assoc answer :correct? answer-correct?
+                      :score (boolean->score answer-correct?))))
+    answers))
 
 (defmethod score-answers [:open nil]
   [question answers]
   (let [expected (-> question :answer normalize-answer)]
-    (for [answer answers
-          :let [actual (-> answer :answer str normalize-answer)
-                correct? (> (jaro-winkler actual expected)
-                            (:similarity-threshold config))]]
-      (assoc answer :correct? correct?
-                    :score (boolean->score correct?)))))
+    (score-each
+      (fn [answer]
+        (let [actual (-> answer :answer str normalize-answer)
+              correct? (> (jaro-winkler actual expected)
+                          (:similarity-threshold config))]
+          (assoc answer :correct? correct?
+                        :score (boolean->score correct?))))
+      answers)))
 
 (defmethod score-answers [:percent-range nil]
   [{:keys [percentage threshold]
     :or {threshold 5}}
    answers]
-  (for [answer answers
-        :let [difference (Math/abs (- ^double (:answer answer) percentage))
-              correct? (<= difference threshold)]]
-    (assoc answer :correct? correct?
-                  :score (if correct?
-                           (- 1 (/ difference 100))
-                           0.0))))
+  (score-each
+    (fn [answer]
+      (let [difference (Math/abs (- ^double (:answer answer) percentage))
+            correct? (<= difference threshold)]
+        (assoc answer :correct? correct?
+                      :score (if correct?
+                               (- 1 (/ difference 100))
+                               0.0))))
+    answers))
 
 (defmethod score-answers [:sort nil]
   [{:keys [items]} answers]
@@ -62,10 +82,12 @@
                       (map vector (range))
                       (sort-by second)
                       (mapv first))]
-    (for [answer answers
-          :let [correct? (= (:answer answer) expected)]]
-      (assoc answer :correct? correct?
-                    :score (boolean->score correct?)))))
+    (score-each
+      (fn [answer]
+        (let [correct? (= (:answer answer) expected)]
+          (assoc answer :correct? correct?
+                        :score (boolean->score correct?))))
+      answers)))
 
 (defn consensus-scores
   "Build a map of answers to their scores based on consensus.
@@ -97,13 +119,13 @@
 (defmethod score-answers [:majority]
   [_ answers]
   (let [majority-threshold (/ (count answers) 2)
-        majority-answer (->> answers
+        majority-entry (->> answers
                             (keep :answer)
                             frequencies
                             (filter (comp (partial < majority-threshold) val))
-                            ffirst)]
+                            first)]
     (for [answer answers]
-      (assoc answer :score (if (and majority-answer (= (:answer answer) majority-answer))
+      (assoc answer :score (if (and majority-entry (= (:answer answer) (key majority-entry)))
                              1.0
                              0.0)))))
 

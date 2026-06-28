@@ -2,11 +2,11 @@
 
 ## Design summary
 
-localquiz is a **server-driven, real-time multiplayer quiz** with a strictly **unidirectional data flow**: actions travel client → server via HTTP POST; view updates travel server → client via SSE. These are two separate one-way channels — the server never requests anything from a client, and all domain state lives exclusively on the server in Datahike. Clients hold only **[Datastar reactive signals](https://data-star.dev/guide/reactive_signals)** — `$`-prefixed variables that automatically track and propagate changes to any HTML expression that references them. Signals cover ephemeral UI state (form values, loading indicators, dialog references), server-pushed feedback (`$error`, `$numberOfQuestions`), and user preferences (`$language`, `$_cookieAccepted`). The server can patch signals directly over SSE (`patch-signals!`) without regenerating the full view HTML and morphing the DOM, and the client can mutate them through `data-bind` and `data-on` event handlers. None of the signals carry domain state.
+localquiz is a **server-driven, real-time multiplayer quiz** with a strictly **unidirectional data flow**: actions travel client → server via HTTP POST; view updates travel server → client via SSE. These are two separate one-way channels — the server never requests anything from a client, and all domain state lives exclusively on the server in Datahike. Clients hold only **[Datastar reactive signals](https://data-star.dev/guide/reactive_signals)** — `$`-prefixed variables that automatically track and propagate changes to any HTML expression that references them. Signals cover ephemeral UI state (form values, loading indicators, dialog references), server-pushed feedback (`$error`, `$numberOfQuestions`), and user preferences (`$language`, `$_cookieAccepted`). The server can patch signals directly over SSE (`patch-signals!`) without regenerating the full view HTML and morphing the DOM, and the client can mutate them through `data-bind` and `data-on` event handlers.
 
 **Two roles:**
 
-- **Moderator** — identified by session ID, which doubles as the game ID. Controls quiz progression.
+- **Moderator** — identified by their (secret) session ID, stored on the game as `:game/moderator`; it authorizes control actions. The game has its own separate, random **public game ID** used in URLs.
 - **Player** — identified by session ID; associated with a game via the game ID in the URL path.
 
 **Four data paths:**
@@ -15,9 +15,9 @@ localquiz is a **server-driven, real-time multiplayer quiz** with a strictly **u
 
 2. **SSE view-update path** — every Datahike transaction triggers `db_listener`, which identifies all affected session IDs (the game's moderator and every current player) and publishes a refresh event per session ID onto `refresh-channel`. Each connected SSE handler is subscribed by its own session ID, receives the event, generates the **full view** HTML on a CPU thread pool, hashes it, and sends it via `patch-elements!` if the hash changed. Datastar morphs the received HTML into the existing DOM client-side (fat-morph approach — no server-side diffing or partial fragments). If view rendering detects a player is no longer in the game, it calls `refresh-session!` to redirect that session instead of rendering.
 
-3. **Direct signal/redirect path** — actions that need per-session feedback (validation errors, redirect after leaving) call `refresh-session!`, which puts an event with the session ID and a payload (`{:signals …}` or `{:redirect …}`) directly onto `refresh-channel`. The SSE handler for that session receives it, sends only signals or a redirect, and skips full view generation and morphing.
+3. **Direct signal/redirect path** — actions that need per-session feedback (validation errors, redirect after leaving) call `refresh-session!`, which puts an event with the session ID and a payload (`{:signals …}` or `{:redirect …}`) directly onto `refresh-channel`.
 
-4. **State machine** — the game progresses through `:new → :question → :show-answers → :leaderboard` and back (or terminates). State transitions are triggered by a single `POST /next` action; the `:show-answers` transition fires automatically when all players answer or the 45-second timeout expires.
+4. **State machine** — the game progresses through `:new → :question → :show-answers → :leaderboard` and back (or terminates). State transitions are triggered by a single `POST /next/:game-id` action; the `:show-answers` transition fires automatically when all players answer or the 45-second timeout expires.
 
 **CQRS:** the architecture follows Command Query Responsibility Segregation. Commands (HTTP POST → `actions/` → `d/transact`) mutate state and return HTTP 204 — no view data. Queries (DB listener → SSE → `views/`) read state and produce HTML; they never mutate. The `refresh-session!` path carries per-session command acknowledgements (validation errors, redirects) and is exclusively triggered by client commands — never by server-initiated processes. Server-initiated state changes (question timeout, idle-game sweeper) go through `d/transact` and are reflected on the query side via the same DB listener → SSE pipeline.
 
@@ -51,7 +51,7 @@ The dominant paradigm for interactive web applications is the **single-page appl
 
 ## Roles
 
-- **Moderator** — the quiz host. Identified by their session ID, which doubles as the game ID.
+- **Moderator** — the quiz host. Identified by their **session ID**, which is kept secret (cookie-only) and stored on the game as `:game/moderator`; it is what authorizes control actions. The game itself has a **separate, random public game ID** (`:game/id`) used in every URL, so the moderator's session ID is never exposed. After creating a game, the moderator is redirected to `/host/:game-id`.
 - **Player** — a participant. Identified by their session ID; associated with a game via the game ID in the URL path.
 
 ---
@@ -64,7 +64,7 @@ sequenceDiagram
     participant MW as Middleware
     participant V as views/shim-view
 
-    B->>MW: GET / (moderator) or GET /play/:game-id (player)
+    B->>MW: GET / (moderator create form), GET /host/:game-id (moderator hosting), or GET /play/:game-id (player)
     MW->>MW: Generate SID + CSRF token
     MW->>MW: Set __Host-sid and __Host-csrf cookies
     MW->>V: Forward request with :sid attached
@@ -123,7 +123,7 @@ flowchart LR
     RD --> B
 ```
 
-**DB listener detail:** `find-updated-sessions` queries `db-after` (for additions) and `db-before` (for retractions) to find session IDs for all affected sessions: the moderator (via `:game/id`) and all current players (via `:player/id`). It publishes `{:session-id sid}` for each. This means one transaction fans out to N separate channel puts — one per connected session.
+**DB listener detail:** `find-updated-sessions` queries `db-after` (for additions) and `db-before` (for retractions) to find session IDs for all affected sessions: the moderator (via `:game/moderator`) and all current players (via `:player/id`). It publishes `{:session-id sid}` for each. This means one transaction fans out to N separate channel puts — one per connected session.
 
 ---
 
@@ -132,14 +132,14 @@ flowchart LR
 ```mermaid
 stateDiagram-v2
     [*] --> new : POST /create
-    new --> question : POST /next
+    new --> question : POST /next/:game-id
     question --> show_answers : all answered or timeout (45 s)
-    show_answers --> leaderboard : POST /next (no questions remain)
-    leaderboard --> question : POST /next (next round)
-    leaderboard --> [*] : POST /end
+    show_answers --> leaderboard : POST /next/:game-id (no questions remain)
+    leaderboard --> question : POST /next/:game-id (next round)
+    leaderboard --> [*] : POST /end/:game-id
 ```
 
-The moderator advances the game via a single `POST /next` endpoint. `game/advance!` reads the current game state and dispatches to the appropriate transition function via the `transitions` map (`{:new next-question!, :show-answers leaderboard!, :leaderboard next-question!}`). The `:question → :show-answers` transition is never triggered by `POST /next`; it fires only when all players have answered or the timeout elapses.
+The moderator advances the game via a single `POST /next/:game-id` endpoint (which acts only if the requesting session owns the game). `game/advance!` reads the current game state and dispatches to the appropriate transition function via the `transitions` map (`{:new next-question!, :show-answers leaderboard!, :leaderboard next-question!}`). The `:question → :show-answers` transition is never triggered by `POST /next/:game-id`; it fires only when all players have answered or the timeout elapses.
 
 ---
 
@@ -160,17 +160,19 @@ sequenceDiagram
     B->>H: POST /create (question source + count)
     H->>A: create-game!
     A->>A: Parse + resolve $defs, shuffle questions, take N
-    A->>DB: transact {game/id, game/state :new, game/questions, game/questions-total, game/defs}
-    DB-->>B: (via SSE pipeline) Render lobby view
+    A->>A: Generate random public game ID
+    A->>DB: transact {game/id, game/moderator :sid, game/state :new, game/questions, game/questions-total, game/defs}
+    A->>A: refresh-session! {redirect: "/host/:game-id"}
+    DB-->>B: (via SSE pipeline) Redirect moderator to /host/:game-id, then render lobby view
 
-    B->>H: POST /next
-    H->>A: next!
+    B->>H: POST /next/:game-id
+    H->>A: next! (acts only if :sid == game's :game/moderator)
     A->>A: advance! — reads state, dispatches to next-question! or leaderboard!
     A->>DB: transact (state transition + current-question or leaderboard scores)
     DB-->>B: (via SSE pipeline) Render next view
 
-    B->>H: POST /end
-    H->>A: end-game!
+    B->>H: POST /end/:game-id
+    H->>A: end-game! (acts only if :sid == game's :game/moderator)
     A->>DB: retractEntity game
     DB-->>B: (via SSE pipeline) Render end view
 ```

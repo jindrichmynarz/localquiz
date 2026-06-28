@@ -1,12 +1,14 @@
 (ns net.mynarz.localquiz.game-sweeper
   (:require [net.mynarz.localquiz.config :refer [config]]
-            [net.mynarz.localquiz.db :refer [db-conn]]
+            [net.mynarz.localquiz.db :refer [db-config db-conn]]
             [datahike.api :as d]
             [mount.core :refer [defstate]]
+            [superv.async :refer [<?? S]]
             [taoensso.timbre :as log])
   (:import (java.time Instant)
            (java.time.temporal ChronoUnit)
-           (java.util.concurrent Executors ScheduledExecutorService TimeUnit)))
+           (java.util.concurrent Executors ScheduledExecutorService TimeUnit)
+           (java.util Date)))
 
 (defn current-games
   "Get current games."
@@ -19,7 +21,7 @@
   "Find when the game with `game-id` was last modified."
   [^String game-id]
   (->> game-id
-       (d/q '[:find ?game (max ?inst)
+       (d/q '[:find ?game (max ?ms)
               :keys game last-modified
               :in $ ?game-id
               :where [?game :game/id ?game-id]
@@ -28,7 +30,8 @@
                        [?game :game/players ?e]
                        [?game :game/answers ?e])
                      [?e _ _ ?tx true]
-                     [?tx :db/txInstant ?inst]]
+                     [?tx :db/txInstant ?inst]
+                     [(inst-ms ?inst) ?ms]]
             (d/history @db-conn))
        first))
 
@@ -44,21 +47,32 @@
                 [?session :session/id ?sid]]
        @db-conn eid))
 
+(defn db-in-memory?
+  "Does the database use in-memory back-end?"
+  []
+  (-> db-config :store :backend (= :memory)))
+
 (defn delete-idle-games!
   "Delete games that are idle for a configured time."
   []
-  (let [threshold (.minus (Instant/now) ^int (:game-idle-time config) ChronoUnit/HOURS)]
+  (let [threshold (inst-ms (.minus (Instant/now)
+                                   ^int (:game-idle-time config)
+                                   ChronoUnit/HOURS))]
     (log/infof "Deleting the games idle since %s." threshold)
     (->> (current-games)
          (map game-last-modified)
-         (filter (comp (partial < threshold) :last-modified))
+         (filter (comp (partial > threshold) :last-modified))
          (mapcat (fn [{:keys [game]}]
                    (let [session-purges (->> game
                                              session-eids-for-game
                                              (map (partial vector :db.purge/entity)))]
                      (concat session-purges [[:db.purge/entity game]]))))
          vec
-         (d/transact db-conn))))
+         (d/transact db-conn))
+    (when-not (db-in-memory?)
+      (->> (Date. ^int threshold)
+           (d/gc-storage db-conn)
+           (<?? S)))))
 
 (defstate game-sweeper
   :start (let [game-idle-time (:game-idle-time config)]

@@ -9,8 +9,8 @@
             [clojure.string :as string]
             [datahike.api :as d]
             [fast-edn.core :as edn]
-            [taoensso.timbre :as log]
-            [spec-tools.core :as st]))
+            [spec-tools.core :as st]
+            [taoensso.timbre :as log]))
 
 (defn get-game-state
   "Get game state for the given `game-id`."
@@ -21,6 +21,19 @@
                 [?game :game/state ?state]]
        @db-conn
        game-id))
+
+(defn moderator?
+  "Test if `session-id` is the moderator (owner) of the game with `game-id`."
+  [^String game-id
+   ^String session-id]
+  (and session-id
+       (= session-id
+          (d/q '[:find ?moderator .
+                 :in $ ?game-id
+                 :where [?game :game/id ?game-id]
+                        [?game :game/moderator ?moderator]]
+               @db-conn
+               game-id))))
 
 (defn player-in-game?
   "Test if the player with `player-id` is in the game with `game-id`."
@@ -257,23 +270,37 @@
         (dissoc timeouts game-id))
     timeouts))
 
+(defn cas-failed?
+  "Test if `ex` was thrown due to a failure of :db/cas."
+  [ex]
+  (->> ex
+       (iterate ex-cause)
+       (take-while some?)
+       (some #(= :transact/cas (:error (ex-data %))))
+       boolean))
+
 (defn evaluate-answers!
+  "Score the current question's answers and reveal them. Idempotent: a compare-and-swap on
+  :game/state ensures at most one of the concurrent triggers commits, so scores are never
+  applied twice. Exception-safe: if scoring throws, the answers are still revealed unscored
+  rather than freezing the game (individual malformed answers already score 0)."
   [^String game-id]
   (swap! timeouts cancel-timeout! game-id)
-  ; FIXME: Is it possible that this is evaluated more than once for the same question?
-  ;        Shall we store a "lock" indicating if the question was already evaluated? Don't evaluate answers if they were evaluated before.
   (log/infof "Evaluating answers for game %s." game-id)
   (let [{:keys [scoring]
          :as question} (current-question game-id)
-        scores (cond-> (->> game-id
-                            get-answers
-                            (scoring/score-answers question))
-                  (not= scoring :consensus) scoring/scale-scores-by-answer-times)]
-    (->> [(store-scores scores)
-          (add-scores scores)
-          [[:db/add [:game/id game-id] :game/state :show-answers]]]
-         (reduce into)
-         (d/transact db-conn))))
+        reveal [:db/cas [:game/id game-id] :game/state :question :show-answers]
+        tx (let [scores (cond-> (->> game-id
+                                     get-answers
+                                     (scoring/score-answers question))
+                          (nil? scoring) scoring/scale-scores-by-answer-times)]
+             (reduce into [[reveal] (store-scores scores) (add-scores scores)]))]
+    (try
+      (d/transact db-conn tx)
+      (catch Exception ex
+        (if (cas-failed? ex)
+          (log/debugf "Game %s already evaluated. Skipping duplicate." game-id)
+          (throw ex))))))
 
 (defn get-answer-ids
   [^String game-id]
@@ -335,15 +362,18 @@
             (evaluate-answers! game-id)))))
 
 (defn create-game!
-  "Create a game with `game-id` from the given `questions` and optional `defs`."
+  "Create a game `game-id` owned by moderator session `moderator-id` from `questions` and optional `defs`."
   ([^String game-id
+    ^String moderator-id
     questions]
-   (create-game! game-id questions []))
+   (create-game! game-id moderator-id questions []))
   ([^String game-id
+    ^String moderator-id
     questions
     defs]
    (log/infof "Creating a new game %s." game-id)
    (d/transact db-conn [(cond-> {:game/id game-id
+                                 :game/moderator moderator-id
                                  :game/state :new
                                  :game/questions questions
                                  :game/questions-total (-> questions count long)}
@@ -354,10 +384,11 @@
   [^String game-id]
   (let [sessions (d/q '[:find [?session ...]
                         :in $ ?game-id
-                        :where (or-join [?game-id ?session]
-                                  [?session :session/id ?game-id]
-                                  (and [?game :game/id ?game-id]
-                                       [?game :game/players ?player]
+                        :where [?game :game/id ?game-id]
+                               (or-join [?game ?session]
+                                  (and [?game :game/moderator ?moderator-id]
+                                       [?session :session/id ?moderator-id])
+                                  (and [?game :game/players ?player]
                                        [?player :player/id ?player-id]
                                        [?session :session/id ?player-id]))]
                       @db-conn
@@ -417,13 +448,8 @@
   (let [current-params (some-> (d/entity db [:session/id session-id])
                                :session/params
                                edn/read-string)
-<<<<<<< HEAD
         merged-params (util/deep-merge current-params params)]
-    [{:session/id session-id
-=======
-        merged-params  (merge current-params params)]
     [{:session/id     session-id
->>>>>>> develop
       :session/params (pr-str merged-params)}]))
 
 (defn merge-session-params!
@@ -456,8 +482,6 @@
                def-id)
           edn/read-string))
 
-=======
->>>>>>> develop
 (defn game-progress
   [^String game-id]
   (-> '[:find (pull ?game [:game/questions :game/questions-total]) .

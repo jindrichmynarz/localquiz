@@ -21,8 +21,9 @@
     ["/validate" {:post {:handler (comp views/view moderator-actions/validate-questions!)
                          :parameters {:form ::spec/question-form-params
                                       :multipart ::spec/question-file-params}}}]]
-   ["/next" {:post (comp views/view moderator-actions/next!)}]
-   ["/end" {:post (comp views/view moderator-actions/end-game!)}]
+   ["/host/:game-id" {:get views/shim-view}]
+   ["/next/:game-id" {:post (comp views/view moderator-actions/next!)}]
+   ["/end/:game-id" {:post (comp views/view moderator-actions/end-game!)}]
 
    ; Players' routes
    ["/play/:game-id" {:get views/shim-view}]

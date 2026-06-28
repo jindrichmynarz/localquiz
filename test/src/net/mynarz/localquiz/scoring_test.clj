@@ -34,6 +34,23 @@
         {:answer "Jákô dóma"}]
        [1.0 1.0 1.0]))
 
+(deftest malformed-answers-are-isolated
+  ;; A malformed answer (out-of-range choice index, non-numeric percent) scores 0
+  ;; instead of throwing and aborting the whole batch.
+  (are [question answers scores] (= (map :score (scoring/score-answers question answers)) scores)
+       {:type :multiple
+        :choices [{:correct? true} {}]}
+       [{:answer 0}
+        {:answer 99}
+        {:answer "x"}]
+       [1.0 0.0 0.0]
+
+       {:type :percent-range
+        :percentage 50}
+       [{:answer 48}
+        {:answer "not-a-number"}]
+       [0.98 0.0]))
+
 (deftest consensus-scoring
   (are [answers scores] (= (map :score (scoring/score-answers {:scoring :consensus} answers)) scores)
        [{:answer 1} {:answer 1} {:answer 3}]
@@ -51,7 +68,31 @@
        [0.0 0.0]
 
        [{:answer 1} {:answer 0} {:answer 1}]
-       [1.0 0.0 1.0]))
+       [1.0 0.0 1.0]
+
+       [{:answer 1} {:answer 0}]
+       [0.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer 1}]
+       [1.0 1.0 1.0]
+
+       [{:answer 1} {:answer 1} {:answer 2} {:answer 2}]
+       [0.0 0.0 0.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer 2} {:answer 3}]
+       [0.0 0.0 0.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer 1} {:answer 2} {:answer 2}]
+       [1.0 1.0 1.0 0.0 0.0]
+
+       [{:answer false} {:answer false} {:answer true}]
+       [1.0 1.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer nil}]
+       [1.0 1.0 0.0]
+
+       [{:answer 1} {:answer 1} {:answer nil} {:answer nil}]
+       [0.0 0.0 0.0 0.0]))
 
 (deftest scale-scores-by-answer-times
   (are [scores scaled-scores] (= (map :score (scoring/scale-scores-by-answer-times scores)) scaled-scores)
