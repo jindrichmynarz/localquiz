@@ -440,47 +440,6 @@
   (log/infof "Disconnecting player %s." player-id)
   (d/transact db-conn [[:db/retractEntity [:player/id player-id]]]))
 
-(defn merge-session-params
-  "Transaction function that merges `params` into :session/params for `session-id`."
-  [db
-   ^String session-id
-   params]
-  (let [current-params (some-> (d/entity db [:session/id session-id])
-                               :session/params
-                               edn/read-string)
-        merged-params (util/deep-merge current-params params)]
-    [{:session/id     session-id
-      :session/params (pr-str merged-params)}]))
-
-(defn merge-session-params!
-  "Merge `params` into :session/params for `session-id`."
-  [^String session-id
-   params]
-  (d/transact db-conn [[:db.fn/call merge-session-params session-id params]]))
-
-(defn get-session-params
-  "Return the session params map for `session-id`, or nil if absent."
-  [^String session-id]
-  (some-> @db-conn
-          (d/entity [:session/id session-id])
-          :session/params
-          edn/read-string))
-
-(defn get-session-def
-  "Return the parsed def value for `def-id` in the game whose :game/id equals `session-id`."
-  [^String session-id
-   def-id]
-  (some-> (d/q '[:find ?value .
-                 :in $ ?session-id ?def-id
-                 :where [?game :game/id ?session-id]
-                        [?game :game/defs ?def]
-                        [?def :def/id ?def-id]
-                        [?def :def/value ?value]]
-               @db-conn
-               session-id
-               def-id)
-          edn/read-string))
-
 (defn game-progress
   [^String game-id]
   (-> '[:find (pull ?game [:game/questions :game/questions-total]) .
