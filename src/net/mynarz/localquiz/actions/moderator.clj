@@ -5,7 +5,6 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.question-spec :as qs]
-            [net.mynarz.localquiz.sanitize :as sanitize]
             [net.mynarz.localquiz.spec :as s]
             [clojure.java.io :as io]
             [fast-edn.core :as edn])
@@ -79,7 +78,7 @@
       (let [game-id (crypto/random-unguessable-uid)
             defs (mapv (fn [[id value]]
                          {:def/id id
-                          :def/value (pr-str (sanitize/sanitize-hiccup value))})
+                          :def/value (pr-str value)})
                        (:defs success))]
         (game/create-game! game-id
                            sid
@@ -87,7 +86,7 @@
                                 :questions
                                 shuffle
                                 (take number-of-questions)
-                                (map (comp pr-str sanitize/sanitize-hiccup)))
+                                (map pr-str))
                            defs)
         (refresh-session! request {:redirect (str "/host/" game-id)})))))
 

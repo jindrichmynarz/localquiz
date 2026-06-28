@@ -1,12 +1,61 @@
 (ns net.mynarz.localquiz.question-spec
   (:require [clojure.spec.alpha :as s]
+            [clojure.string :as string]
             [clojure.walk :as walk])
   (:import (java.net URL)))
 
+(def disallowed-tags
+  "Hiccup element tags rejected in question content: they can run scripts, load
+  external resources, redirect the page, or phish. Media and formatting tags
+  (e.g. :audio, :video, :img) are intentionally allowed."
+  #{"script" "iframe" "object" "embed" "applet"
+    "base" "meta" "link" "style"
+    "frame" "frameset" "form" "svg"})
+
+(defn safe-tag?
+  "A Hiccup tag keyword whose element name is not in `disallowed-tags`
+  (case-insensitive, ignoring #id/.class shorthand)."
+  [tag]
+  (and (keyword? tag)
+       (-> tag name string/lower-case (string/split #"[#.]") first disallowed-tags nil?)))
+
+(def url-attrs
+  "Attribute names whose value is a URL, where a javascript: scheme would execute."
+  #{"href" "src" "action" "formaction" "xlink:href"
+    "cite" "poster" "background" "ping" "longdesc"})
+
+(defn- code-attr?
+  "True if attribute key `k` runs code on an event — a native on* handler or a
+  Datastar data-* attribute (case-insensitive)."
+  [k]
+  (let [attr (string/lower-case (name k))]
+    (or (string/starts-with? attr "on")
+        (string/starts-with? attr "data"))))
+
+(defn- javascript-url?
+  "True if string `v` is a javascript: URL, tolerating leading or embedded
+  whitespace, control characters, and case."
+  [v]
+  (and (string? v)
+       (-> v
+           (string/replace #"[\x00-\x20]+" "")
+           string/lower-case
+           (string/starts-with? "javascript:"))))
+
+(defn safe-attrs?
+  "An attribute map with no event/data-* keys and no javascript: URL values."
+  [m]
+  (and (map? m)
+       (not-any? (fn [[k v]]
+                   (or (code-attr? k)
+                       (and (contains? url-attrs (string/lower-case (name k)))
+                            (javascript-url? v))))
+                 m)))
+
 (s/def ::hiccup
   (s/or :string string?
-        :element (s/cat :tag keyword?
-                        :attrs (s/? map?)
+        :element (s/cat :tag safe-tag?
+                        :attrs (s/? safe-attrs?)
                         :content (s/* ::hiccup))))
 
 (s/def ::text ::hiccup)
