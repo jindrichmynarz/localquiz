@@ -10,14 +10,12 @@
   "Defense-in-depth backstop for XSS. Datastar evaluates reactive expressions via
   the Function constructor, so 'unsafe-eval' is required; the policy still forbids
   'unsafe-inline', so injected <script>, on* event handlers and javascript: URLs
-  are blocked. Datastar itself is loaded from the jsDelivr CDN."
+  are blocked."
   (string/join "; "
-               ["default-src 'self'"
-                "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net"
+               ["script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net"
                 "style-src 'self' 'unsafe-inline'"
                 "img-src 'self' https: data:"
                 "media-src 'self' https:"
-                "connect-src 'self'"
                 "base-uri 'none'"
                 "object-src 'none'"
                 "form-action 'self'"
