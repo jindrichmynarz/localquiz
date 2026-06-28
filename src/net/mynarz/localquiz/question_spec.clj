@@ -95,7 +95,7 @@
   (s/keys :req-un [::answer]))
 
 (s/def ::threshold
-  (s/and number? pos?))
+  (s/and number? (comp not neg?)))
 
 (defmethod question :percent-range [_]
   (s/keys :req-un [::percentage]
