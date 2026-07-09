@@ -36,4 +36,4 @@
                          :parameters {:form ::spec/player-params}}}]]
    ["/answer/:game-id" (comp views/view player-actions/answer-question!)]
    ["/leave/:game-id" (comp views/view player-actions/leave-game!)]
-   ["/autocomplete/:def-id" {:post (comp views/view actions/autocomplete-handler)}]])
+   ["/autocomplete" {:post (comp views/view player-actions/autocomplete-handler)}]])

@@ -31,6 +31,13 @@
         (when (= (:error (ex-data e)) :game-already-started)
           (refresh-session! request {:signals {:error (tr [:errors/game-not-joinable])}}))))))
 
+(defn autocomplete-handler
+  "Stores the player's typed autocomplete fragment (the `answer` form field, sent
+  by the `post` helper as form data) under :autocomplete in their session params."
+  [{{answer "answer"} :form-params
+    :keys [sid]}]
+  (game/merge-session-params! sid {:autocomplete answer}))
+
 (defn answer-question!
   [{{answer "answer"} :form-params
     {:keys [game-id]} :path-params
