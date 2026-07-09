@@ -296,6 +296,41 @@
            {:max answer-count
             :value frequency}]]])]]))
 
+(defn autocomplete
+  "Autocomplete text input feeding the enclosing answer form's `answer` field,
+  with a custom, stylable suggestion list rendered below the input instead of a
+  native (unstylable) `<datalist>`. `options` are filtered server-side by the
+  fragment the player has typed, stored in their session params under
+  `session-id`."
+  [session-id options]
+  (let [search-fragment (:autocomplete (game/get-session-params session-id))
+        labels          (map #(or (:text %) (:label %)) options)
+        fragment        (some-> search-fragment string/trim not-empty)
+        matches         (when fragment
+                          (filter #(string/includes? (string/lower-case %)
+                                                     (string/lower-case fragment))
+                                  labels))
+        ;; Hide the list once the fragment exactly matches an option, i.e. once a
+        ;; suggestion has been picked.
+        show-list?      (and (seq matches)
+                             (not (some #(= % search-fragment) labels)))
+        update-handler  (post "/autocomplete")]
+    [:div.autocomplete
+     [:input
+      {:autocomplete "off"
+       :data-bind "_autocomplete"
+       :data-on:input update-handler
+       :name "answer"
+       :type "text"}]
+     (when show-list?
+       [:ul.autocomplete-list
+        (for [label matches]
+          ;; Picking a suggestion fills the input (its bound signal) and re-posts
+          ;; so the server-rendered list updates to reflect the selection.
+          [:li
+           {:data-on:click (format "$_autocomplete = %s; %s" (charred/write-json-str label) update-handler)}
+           label])])]))
+
 (defmulti answers-view
   (fn [& args]
     (-> args
@@ -487,24 +522,18 @@
         (answer-frequency answers index)]])]
    (note-view answer-revealed? note)])
 
-(defn autocomplete
-  "Autocomplete input for `def-id`, filtering options by the search fragment
-  stored in session params for `session-id`."
-  [session-id def-id]
-  (let [search-fragment (get-in (game/get-session-params session-id) [:autocomplete def-id])
-        options         (cond->> (game/get-session-def session-id def-id)
-                          search-fragment
-                          (filter #(string/includes? (string/lower-case %)
-                                                     (string/lower-case search-fragment))))
-        input-id        (name def-id)
-        list-id         (str "autocomplete-" input-id)]
-    [:div
-     [:input
-      {:data-bind input-id
-       :data-on:input (format "@post('/autocomplete/%s')" input-id)
-       :list list-id
-       :type "text"}]
-     [:datalist
-      {:id list-id}
-      (for [option options]
-        [:option {:value option}])]]))
+(defmethod answers-view :autocomplete
+  [tr
+   ^Boolean disabled?
+   {:keys [answer-revealed?]
+    :as answers}
+   ^String game-id
+   ^Boolean mark-correct?
+   {:keys [choices note session-id]}]
+  [:form#answers
+   (when-not disabled?
+     [:p
+      (autocomplete session-id choices)
+      (submit-button tr game-id)])
+   (open-answers tr answers)
+   (note-view answer-revealed? note)])

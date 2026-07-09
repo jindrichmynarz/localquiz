@@ -105,7 +105,10 @@
                              answer-revealed?
                              game-id
                              false
-                             current-question)))]))
+                             ;; The autocomplete widget needs the player's session
+                             ;; to read their typed fragment back; other question
+                             ;; types ignore the extra key.
+                             (assoc current-question :session-id player-id))))]))
 
 (defmethod views/game-view [:player :show-answers]
   [{{:keys [game-id]} :path-params

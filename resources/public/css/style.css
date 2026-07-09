@@ -329,6 +329,40 @@ input[type="number"] {
   width: 3em;
 }
 
+.autocomplete {
+  position: relative;
+  display: inline-block;
+}
+
+.autocomplete-list {
+  position: absolute;
+  /* Offsets the -5px that input[type="text"] is nudged up, so the list sits
+     flush against the bottom of the input. */
+  top: calc(100% - 5px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: 0;
+  padding: 0;
+  max-height: 40vh;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--offwhite);
+  color: var(--dark);
+  border: 3px solid var(--darker);
+  border-top: none;
+
+  li {
+    padding: .5em;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--orange);
+      color: var(--offwhite);
+    }
+  }
+}
+
 label {
   padding: .5em;
 }

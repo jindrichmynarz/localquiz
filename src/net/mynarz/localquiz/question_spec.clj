@@ -67,12 +67,22 @@
 (s/def ::percentage
   (s/and number? #(<= 0 % 100)))
 
+(s/def ::label string?)
+
+(s/def ::description ::hiccup)
+
 (s/def ::choice
-  (s/keys :req-un [::text]
-          :opt-un [::correct?]))
+  (s/or ;; A multiple-choice option (see the :multiple question).
+        :choice (s/keys :req-un [::text]
+                        :opt-un [::correct?])
+        ;; A labelled option (e.g. an :autocomplete suggestion).
+        :option (s/keys :req-un [::label]
+                        :opt-un [::description])))
 
 (s/def ::choices
-  (s/and
+  ;; Non-conforming so the raw choice maps survive conformation (the ::choice
+  ;; s/or would otherwise tag them), letting predicates like :multiple's read them.
+  (s/nonconforming
     (s/coll-of ::choice
                :min-count 2
                :distinct true)))
@@ -89,7 +99,9 @@
   (s/keys :opt-un [::correct?]))
 
 (defmethod question :multiple [_]
-  (s/keys :req-un [::choices]))
+  (s/and (s/keys :req-un [::choices])
+         ;; Multiple-choice options are rendered by their :text.
+         #(every? :text (:choices %))))
 
 (defmethod question :open [_]
   (s/keys :req-un [::answer]))
@@ -103,6 +115,12 @@
 
 (defmethod question :player-choice [_]
   (comp #{:consensus} :scoring))
+
+(defmethod question :autocomplete [_]
+  ;; Suggestions come from :choices; the typed-or-picked answer is scored across
+  ;; players (consensus/majority), since there is no per-question correct value.
+  (s/and (s/keys :req-un [::choices])
+         (comp #{:consensus :majority} :scoring)))
 
 (s/def ::sort-value
   number?)
