@@ -2,7 +2,7 @@
  :deps {org.clojure/clojure            {:mvn/version "1.12.5"}
         org.clojure/core.async         {:mvn/version "1.9.865"}
         clj-fuzzy/clj-fuzzy            {:mvn/version "0.4.1"}
-        com.cnuernber/charred          {:mvn/version "1.041"}
+        com.cnuernber/charred          {:mvn/version "1.042"}
         com.taoensso/tempura           {:mvn/version "1.5.4"}
         com.taoensso/timbre            {:mvn/version "6.8.0"}
         dev.data-star.clojure/brotli   {:mvn/version "1.0.0-RC11"}
@@ -13,11 +13,11 @@
         io.github.tonsky/fast-edn      {:mvn/version "1.2.0"}
         io.nayuki/qrcodegen            {:mvn/version "1.8.0"}
         io.replikativ/datahike-lmdb    {:git/url "https://github.com/replikativ/datahike-lmdb"
-                                        :git/sha "bc9f024b791c30ea8fcf48b1dbba7c1abe00f3de"}
+                                        :git/sha "0a59595a33634406af7b875a0ee9c7cc1207926b"}
         metosin/reitit                 {:mvn/version "0.10.1"}
         mount/mount                    {:mvn/version "0.1.24"}
         ring/ring-devel                {:mvn/version "1.15.0-beta1"}}
- :aliases {:dev {:extra-deps {com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.7.0"}
+ :aliases {:dev {:extra-deps {com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.8.0"}
                               criterium/criterium                      {:mvn/version "0.4.6"}
                               org.slf4j/slf4j-nop                      {:mvn/version "2.0.18"}}
                  :jvm-opts ["-Dapp.env=dev"
@@ -30,7 +30,7 @@
                    :ns-default build}
            :repl {:extra-paths ["dev"]
                   :extra-deps  {nrepl/nrepl                 {:mvn/version "1.7.0"}
-                                cider/cider-nrepl           {:mvn/version "0.62.0"}
+                                cider/cider-nrepl           {:mvn/version "0.62.2"}
                                 io.github.tonsky/clj-reload {:mvn/version "1.0.0"}}
                   :main-opts ["--main" "nrepl.cmdline"
                               "--middleware" "[cider.nrepl/cider-middleware]"

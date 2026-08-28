@@ -36,6 +36,8 @@ Every question is a map sharing these keys:
 | `:note`    | No       | Extra context revealed after the answers, as a string or Hiccup.        |
 | `:scoring` | No       | Overrides the default scoring with `:consensus` or `:majority` (see [Scoring](#scoring)). |
 
+If a question contains `<audio>`, it is played when the question appears.
+
 ### Question types
 
 #### `:multiple`: multiple choice
