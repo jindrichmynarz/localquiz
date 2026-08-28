@@ -47,7 +47,10 @@
 
 (defn validate
   "Validate `data` according to a Clojure `spec`.
-  Returns a validation report as a string if the validation fails."
+  Returns a validation report as a string if the validation fails.
+  Long collections are elided: expound prints the whole value as context for every
+  problem, which on a question set with its refs resolved runs into megabytes."
   [spec data]
   (when-not (s/valid? spec data)
-    (e/expound-str spec data)))
+    (binding [*print-length* 10]
+      (e/expound-str spec data))))
