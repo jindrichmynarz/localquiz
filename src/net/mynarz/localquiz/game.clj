@@ -376,7 +376,12 @@
                                  :game/moderator moderator-id
                                  :game/state :new
                                  :game/questions questions
-                                 :game/questions-total (-> questions count long)}
+                                 :game/questions-total (-> questions count long)
+                                 ;; Checks the :game spec. Only creation can do this:
+                                 ;; :db.entity/attrs is satisfied by the attributes a single
+                                 ;; transaction asserts, and later updates assert only what
+                                 ;; they change.
+                                 :db/ensure :game}
                           (seq defs) (assoc :game/defs defs))])))
 
 (defn end-game-sessions!
@@ -426,7 +431,8 @@
                     {:error :game-already-started})))
   [{:db/id [:game/id game-id]
     :game/players [{:player/id player-id
-                    :player/name player-name}]}])
+                    :player/name player-name
+                    :db/ensure :player}]}])
 
 (defn join-game!
   "Add a player with `player-id` and `player-name` to the game with `game-id`."

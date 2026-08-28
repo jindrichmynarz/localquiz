@@ -162,6 +162,14 @@
     (-create-game! game-id)
     (is (= (game/get-game-state game-id) :new))))
 
+(deftest create-game!-ensures-game-spec
+  ;; :db/ensure :game must reject a game missing an attribute the :game spec requires.
+  (let [game-id (crypto/random-unguessable-uid)]
+    (is (thrown-with-msg? Exception
+                          #"missing attributes"
+                          (game/create-game! game-id (crypto/random-unguessable-uid) [])))
+    (is (game-deleted? game-id))))
+
 (deftest end-game!
   (let [game-id (crypto/random-unguessable-uid)]
     (-create-game! game-id)
