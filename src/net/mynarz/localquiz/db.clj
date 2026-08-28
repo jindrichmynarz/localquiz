@@ -117,9 +117,7 @@
    {:db/ident :session/params
     :db/doc "Session parameters stored as an EDN string"
     :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one}
-   {:db/ident :session
-    :db.entity/attrs [:session/id]}])
+    :db/cardinality :db.cardinality/one}])
 
 (defstate db-config
   :start {:initial-tx schema
