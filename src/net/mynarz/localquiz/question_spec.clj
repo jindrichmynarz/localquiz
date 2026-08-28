@@ -1,7 +1,8 @@
 (ns net.mynarz.localquiz.question-spec
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as string]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [datahike.config :as datahike])
   (:import (java.net URL)))
 
 (def disallowed-tags
@@ -52,6 +53,12 @@
                             (javascript-url? v))))
                  m)))
 
+(defn valid-question-length?
+  "Test if `question` serialized to EDN fits within the maximum string length Datahike can store."
+  [question]
+  (let [question-length (-> question pr-str count)]
+    (<= question-length (:max-string-length datahike/default-value-caps))))
+
 (s/def ::hiccup
   (s/or :string string?
         :element (s/cat :tag safe-tag?
@@ -80,8 +87,10 @@
 (s/def ::note ::hiccup)
 
 (s/def ::question-base
-  (s/keys :req-un [::text]
-          :opt-un [::note]))
+  (s/and
+    (s/keys :req-un [::text]
+            :opt-un [::note])
+    valid-question-length?))
 
 (defmulti question :type)
 

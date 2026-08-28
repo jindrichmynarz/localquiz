@@ -121,7 +121,8 @@
   :start {:initial-tx schema
           :keep-history? true
           :schema-flexibility :write
-          :store (:db-store config)})
+          :store (:db-store config)
+          :value-caps :default})
 
 (defstate ^{:on-reload :noop} db-conn
   :start (do (when-not (d/database-exists? db-config)

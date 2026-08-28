@@ -18,20 +18,20 @@
         session-ids (-> player-ids
                         set
                         (conj fixtures/moderator-id))]
+    ;; Datahike 0.8 no longer reports datoms whose value is already present, so every
+    ;; transaction below has to change something for it to show up in the tx-report.
     (testing "Game updates"
       (are [tx-data] (let [tx-report (d/transact db-conn tx-data)]
                        (is (= (set (db-listener/find-updated-sessions tx-report)) session-ids)))
-        [{:game/id fixtures/game-id
-          :game/players [{:player/id (first player-ids)}]}]
         [{:player/id (first player-ids)
-          :player/score 1.0}]
+          :player/score 42.0}]
         [{:game/id fixtures/game-id
           :game/state :question}]))
 
     (testing "Session update"
       (let [session-id (first session-ids)
             tx-report (d/transact db-conn [{:session/id session-id
-                                            :session/params (pr-str {})}])]
+                                            :session/params (pr-str {:page 1})}])]
         (is (= (set (db-listener/find-updated-sessions tx-report)) #{session-id}))))
 
     (testing "Retraction updates"
