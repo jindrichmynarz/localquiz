@@ -22,6 +22,24 @@
        @db-conn
        game-id))
 
+(defn merge-session-params
+  "Transaction function that merges `params` into :session/params for `session-id`."
+  [db
+   ^String session-id
+   params]
+  (let [current-params (some-> (d/entity db [:session/id session-id])
+                               :session/params
+                               edn/read-string)
+        merged-params (util/deep-merge current-params params)]
+    [{:session/id     session-id
+      :session/params (pr-str merged-params)}]))
+
+(defn merge-session-params!
+  "Merge `params` into :session/params for `session-id`."
+  [^String session-id
+   params]
+  (d/transact db-conn [[:db.fn/call merge-session-params session-id params]]))
+
 (defn moderator?
   "Test if `session-id` is the moderator (owner) of the game with `game-id`."
   [^String game-id
@@ -354,7 +372,8 @@
         (and (some? answer) (not (player-answered? player-id)))
         (do
           (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
-          (d/transact db-conn [{:game/id game-id
+          (d/transact db-conn [[:db.fn/call merge-session-params player-id {:autocomplete nil}]
+                               {:game/id game-id
                                 :game/answers [{:answer/player [:player/id player-id]
                                                 :answer/answer (str answer)}]}])
           (when (all-players-answered? game-id)
@@ -399,7 +418,7 @@
                       @db-conn
                       game-id)]
     (->> sessions
-         (mapv (fn [session] [:db/retractEntity {:db/id session}]))
+         (mapv (fn [session] [:db/retractEntity session]))
          (d/transact db-conn))))
 
 (defn end-game!
@@ -445,24 +464,6 @@
   [^String player-id]
   (log/infof "Disconnecting player %s." player-id)
   (d/transact db-conn [[:db/retractEntity [:player/id player-id]]]))
-
-(defn merge-session-params
-  "Transaction function that merges `params` into :session/params for `session-id`."
-  [db
-   ^String session-id
-   params]
-  (let [current-params (some-> (d/entity db [:session/id session-id])
-                               :session/params
-                               edn/read-string)
-        merged-params (util/deep-merge current-params params)]
-    [{:session/id     session-id
-      :session/params (pr-str merged-params)}]))
-
-(defn merge-session-params!
-  "Merge `params` into :session/params for `session-id`."
-  [^String session-id
-   params]
-  (d/transact db-conn [[:db.fn/call merge-session-params session-id params]]))
 
 (defn get-session-params
   "Return the session params map for `session-id`, or nil if absent."
