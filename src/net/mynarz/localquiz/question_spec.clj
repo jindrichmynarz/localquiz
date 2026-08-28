@@ -1,8 +1,7 @@
 (ns net.mynarz.localquiz.question-spec
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as string]
-            [clojure.walk :as walk]
-            [datahike.config :as datahike])
+            [clojure.walk :as walk])
   (:import (java.net URL)))
 
 (def disallowed-tags
@@ -53,11 +52,11 @@
                             (javascript-url? v))))
                  m)))
 
-(defn valid-question-length?
-  "Test if `question` serialized to EDN fits within the maximum string length Datahike can store."
-  [question]
-  (let [question-length (-> question pr-str count)]
-    (<= question-length (:max-string-length datahike/default-value-caps))))
+(def max-string-length
+  "Maximum length of an EDN string holding a question or a def. Datahike caps strings at
+  4096 characters by default, which a def shared across questions easily outgrows, so the
+  attributes storing these get this bound via `:db/maxLength` instead (see `db/schema`)."
+  65536)
 
 (s/def ::hiccup
   (s/or :string string?
@@ -97,10 +96,8 @@
 (s/def ::note ::hiccup)
 
 (s/def ::question-base
-  (s/and
-    (s/keys :req-un [::text]
-            :opt-un [::note])
-    valid-question-length?))
+  (s/keys :req-un [::text]
+          :opt-un [::note]))
 
 (defmulti question :type)
 
@@ -186,6 +183,21 @@
 (s/def ::data
   (s/keys :req-un [::questions]
           :opt-un [::creators ::defs]))
+
+(defn oversized-report
+  "Report the parts of `data` too long to store in Datahike, or nil when they all fit.
+  Questions and defs are stored as EDN strings with their refs left unresolved, so this
+  takes the data as read, not the resolved data."
+  [{:keys [defs questions]}]
+  (let [oversized (for [value (concat questions (vals defs))
+                        :let [edn (pr-str value)]
+                        :when (> (count edn) max-string-length)]
+                    (str "  " (subs edn 0 100) "… (" (count edn) " characters)"))]
+    (when (seq oversized)
+      (string/join \newline
+                   (cons (str "Too long to store. Each question and each def must fit in "
+                              max-string-length " characters:")
+                         oversized)))))
 
 (defn resolve-refs
   "Walk `data`, replacing each {:ref id} node with the value from `defs`.

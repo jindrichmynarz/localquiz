@@ -7,7 +7,8 @@
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.spec :as s]
             [clojure.java.io :as io]
-            [fast-edn.core :as edn])
+            [fast-edn.core :as edn]
+            [taoensso.timbre :as log])
   (:import (java.io File)))
 
 (defn parse-questions-file
@@ -17,7 +18,8 @@
     (let [data (edn/read-once {:readers {}} ; Disable readers for security
                               questions-file)
           resolved (qs/resolve-refs (:defs data) data)]
-      (if-let [validation-report (s/validate ::qs/data resolved)]
+      (if-let [validation-report (or (s/validate ::qs/data resolved)
+                                     (qs/oversized-report data))]
         {:error validation-report}
         {:success data}))
     (catch clojure.lang.ExceptionInfo ex

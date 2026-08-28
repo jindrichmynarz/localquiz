@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.db
   (:require [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.question-spec :as qs]
             [datahike.api :as d]
             [datahike-lmdb.core]
             [mount.core :refer [defstate]]))
@@ -36,10 +37,12 @@
    {:db/ident :game/questions
     :db/doc "Questions in a game stored as EDN strings"
     :db/valueType :db.type/string
+    :db/maxLength qs/max-string-length
     :db/cardinality :db.cardinality/many}
    {:db/ident :game/current-question
     :db/doc "Current question of a game stored as an EDN string"
     :db/valueType :db.type/string
+    :db/maxLength qs/max-string-length
     :db/cardinality :db.cardinality/one}
    {:db/ident :game/questions-total
     :db/doc "Number of questions in the game"
@@ -92,6 +95,7 @@
    {:db/ident :def/value
     :db/doc "$def value as an EDN string"
     :db/valueType :db.type/string
+    :db/maxLength qs/max-string-length
     :db/cardinality :db.cardinality/one}
    {:db/ident :game/defs
     :db/doc "defs of a game"
