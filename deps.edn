@@ -16,6 +16,10 @@
                                         :git/sha "0a59595a33634406af7b875a0ee9c7cc1207926b"}
         metosin/reitit                 {:mvn/version "0.10.1"}
         mount/mount                    {:mvn/version "0.1.24"}
+        ; Overrides the 0.8.1777 that datahike-lmdb pulls in. Datahike 0.8.1723 through
+        ; 0.8.1780 deref the connection after `d/release` marked it released, so every
+        ; shutdown printed a :connection-has-been-released stack trace. Fixed in 0.8.1781.
+        org.replikativ/datahike        {:mvn/version "0.8.1828"}
         ring/ring-devel                {:mvn/version "1.15.0-beta1"}}
  :aliases {:dev {:extra-deps {com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.8.0"}
                               criterium/criterium                      {:mvn/version "0.4.6"}
