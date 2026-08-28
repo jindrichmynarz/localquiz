@@ -1,6 +1,5 @@
 (ns net.mynarz.localquiz.routes
-  (:require [net.mynarz.localquiz.actions.common :as actions]
-            [net.mynarz.localquiz.actions.moderator :as moderator-actions]
+  (:require [net.mynarz.localquiz.actions.moderator :as moderator-actions]
             [net.mynarz.localquiz.actions.player :as player-actions]
             [net.mynarz.localquiz.spec :as spec]
             [net.mynarz.localquiz.sse :as sse]
