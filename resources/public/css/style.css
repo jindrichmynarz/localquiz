@@ -353,6 +353,7 @@ input[type="number"] {
   border-top: none;
 
   li {
+    text-align: left;
     padding: .5em;
     cursor: pointer;
 
