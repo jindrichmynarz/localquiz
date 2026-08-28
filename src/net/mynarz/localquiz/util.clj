@@ -62,6 +62,13 @@
                           :bufsize buf-size
                           :key-fn keyword}))
 
+(defn safe-div
+  "Division that avoids division by zero when the numerator is also zero."
+  [n d]
+  (if (zero? n)
+    n
+    (/ n d)))
+
 (defmacro svg
   "Load SVG `resource`."
   [^String resource]
