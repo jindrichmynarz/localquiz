@@ -333,6 +333,30 @@ input[type="number"] {
   position: relative;
   display: inline-block;
 
+  input[type="text"] {
+    /* Keeps the typed text clear of the reveal control. */
+    padding-right: 1.8em;
+  }
+
+  .reveal-options {
+    position: absolute;
+    right: .5em;
+    /* The -5px matches the nudge that input[type="text"] carries. */
+    top: calc(50% - 5px);
+    transform: translateY(-50%);
+    display: flex;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--dark);
+    cursor: pointer;
+
+    svg {
+      width: 1.5em;
+      height: 1.5em;
+    }
+  }
+
   ul {
     position: absolute;
     /* Offsets the -5px that input[type="text"] is nudged up, so the list sits

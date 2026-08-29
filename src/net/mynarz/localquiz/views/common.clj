@@ -307,35 +307,40 @@
 (defn search-options
   "The `options` whose label contains `fragment`, compared with case, punctuation and
   diacritics normalized away, as :open answers are. Options whose label starts with the
-  fragment come first, each group in the order the question lists them. Nil when
-  `fragment` is blank."
+  fragment come first, each group in the order the question lists them. All `options` when
+  `fragment` is empty (the player asked to see them), nil when it is missing (the player
+  has not opened the list)."
   [options
    ^String fragment]
-  (when-some [needle (some-> fragment
+  (when (some? fragment)
+    (if-some [needle (some-> fragment
                              normalize-answer
                              not-empty)]
-    (->> options
-         (keep (fn [option]
-                 (when-some [index (-> option
-                                       option-label
-                                       normalize-answer
-                                       (string/index-of needle))]
-                   ; A prefix match is at index 0, so false sorts it before the rest.
-                   [(pos? index) option])))
-         (sort-by first)
-         (map second))))
+      (->> options
+           (keep (fn [option]
+                   (when-some [index (-> option
+                                         option-label
+                                         normalize-answer
+                                         (string/index-of needle))]
+                     ; A prefix match is at index 0, so false sorts it before the rest.
+                     [(pos? index) option])))
+           (sort-by first)
+           (map second))
+      options)))
 
 (defn autocomplete
   "Autocomplete text input feeding the enclosing answer form's `answer` field,
   with a custom, stylable suggestion list rendered below the input instead of a
   native (unstylable) `<datalist>`. `options` are filtered server-side by the
   fragment the player has typed, stored in :session/search-fragment for
-  `session-id` and retracted when the game moves on to the next question."
-  [game-id session-id options]
+  `session-id` and retracted when the game moves on to the next question. Revealing all
+  the options empties the fragment, which is what tells the server to stop filtering."
+  [tr game-id session-id options]
   (let [matches (search-options options (game/get-search-fragment session-id))
         ; queueMicrotask() is needed to propagate the $autocomplete signal as the value of the answer form field.
         pick    (format "$autocomplete = el.dataset.option; queueMicrotask(() => %s)"
-                        (answer-handler game-id))]
+                        (answer-handler game-id))
+        reveal  "$autocomplete = ''; @post('/autocomplete')"]
     [:div.autocomplete
      [:input
       {:autocomplete "off"
@@ -347,6 +352,12 @@
        :maxlength qs/max-answer-length
        :name "answer"
        :type "text"}]
+     ; A real button, so that Enter and Space activate it without a keydown handler.
+     [:button.reveal-options
+      {:type "button"
+       :aria-label (tr [:show-all-options])
+       :data-on:click reveal}
+      (svg "arrow_drop_down.svg")]
      (when (seq matches)
        [:ul.autocomplete-list
         (for [{:keys [description]
@@ -560,6 +571,6 @@
    {:keys [choices note session-id]}]
   [:form#answers
    (when-not disabled?
-     [:p (autocomplete game-id session-id choices)])
+     [:p (autocomplete tr game-id session-id choices)])
    (open-answers tr answers)
    (note-view answer-revealed? note)])

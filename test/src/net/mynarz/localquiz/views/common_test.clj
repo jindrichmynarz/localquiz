@@ -22,17 +22,24 @@
          ; No prefix match, so the question's own order is kept
          "r"      ["Nové Vinohrady" "Vinohrady" "Karlín"]
          "bork"   []
-         "  "     []
+         ; An empty fragment is the player asking to see everything
+         ""       ["Nové Vinohrady" "Žižkov" "Vinohrady" "Karlín"]
+         "  "     ["Nové Vinohrady" "Žižkov" "Vinohrady" "Karlín"]
+         ; A missing fragment means the list was never opened
          nil      [])))
 
 (defn render-autocomplete
-  "Render the autocomplete widget for a player who has typed `fragment`."
-  [^String fragment]
-  (let [session-id (crypto/random-unguessable-uid)
-        options [{:label "Ambient" :description "Slow and atmospheric"}
-                 {:label "Techno"}]]
-    (game/set-search-fragment! session-id fragment)
-    (h/html (views/autocomplete fixtures/game-id session-id options))))
+  "Render the autocomplete widget for a player who has typed `fragment`,
+  or has not opened the list at all when it is not given."
+  ([]
+   (render-autocomplete nil))
+  ([^String fragment]
+   (let [session-id (crypto/random-unguessable-uid)
+         options [{:label "Ambient" :description "Slow and atmospheric"}
+                  {:label "Techno"}]]
+     (when fragment
+       (game/set-search-fragment! session-id fragment))
+     (h/html (views/autocomplete fixtures/tr fixtures/game-id session-id options)))))
 
 (deftest autocomplete
   (testing "A matching suggestion shows its label and its description"
@@ -44,5 +51,12 @@
     (let [html (render-autocomplete "tech")]
       (is (string/includes? html "data-option=\"Techno\""))
       (is (not (string/includes? html "description")))))
-  (testing "Nothing typed, no suggestions"
-    (is (not (string/includes? (render-autocomplete "") "<ul")))))
+  (testing "The list is closed until the player opens it"
+    (is (not (string/includes? (render-autocomplete) "<ul"))))
+  (testing "Revealing the options lists them all"
+    (let [html (render-autocomplete "")]
+      (is (string/includes? html "data-option=\"Ambient\""))
+      (is (string/includes? html "data-option=\"Techno\""))))
+  (testing "The reveal control is always offered"
+    (is (every? #(string/includes? % "class=\"reveal-options\"")
+                [(render-autocomplete) (render-autocomplete "amb")]))))
