@@ -7,8 +7,7 @@
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.spec :as s]
             [clojure.java.io :as io]
-            [fast-edn.core :as edn]
-            [taoensso.timbre :as log])
+            [fast-edn.core :as edn])
   (:import (java.io File)))
 
 (defn parse-questions-file
