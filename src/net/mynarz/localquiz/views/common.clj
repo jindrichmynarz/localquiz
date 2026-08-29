@@ -302,33 +302,33 @@
   native (unstylable) `<datalist>`. `options` are filtered server-side by the
   fragment the player has typed, stored in their session params under
   `session-id`."
-  [session-id options]
+  [game-id session-id options]
   (let [search-fragment (:autocomplete (game/get-session-params session-id))
         labels          (map #(or (:text %) (:label %)) options)
         fragment        (some-> search-fragment string/trim not-empty)
         matches         (when fragment
                           (filter #(string/includes? (string/lower-case %)
                                                      (string/lower-case fragment))
-                                  labels))
-        ;; Hide the list once the fragment exactly matches an option, i.e. once a
-        ;; suggestion has been picked.
-        show-list?      (and (seq matches)
-                             (not (some #(= % search-fragment) labels)))
-        update-handler  (post "/autocomplete")]
-    [:div.autocomplete
+                                  labels))]
+    [:div.autocomplete ; TODO: Should this have an ID for faster morph?
      [:input
       {:autocomplete "off"
-       :data-bind "_autocomplete"
-       :data-on:input update-handler
+       :autofocus true
+       :data-bind "autocomplete"
+       :data-init "$autocomplete = ''" ; Reset
+       :data-on:input "@post('/autocomplete')"
+       :minlength 1
+       :maxlength 100
        :name "answer"
        :type "text"}]
-     (when show-list?
+     (when (seq matches)
        [:ul.autocomplete-list
+        ; TODO: queueMicrotask() is needed to propagate the $autocomplete signal as the value of the answer form field.
+        {:data-on:click (format "$autocomplete = evt.target.dataset.option; queueMicrotask(() => %s)"
+                                (answer-handler game-id))}
         (for [label matches]
-          ;; Picking a suggestion fills the input (its bound signal) and re-posts
-          ;; so the server-rendered list updates to reflect the selection.
           [:li
-           {:data-on:click (format "$_autocomplete = %s; %s" (charred/write-json-str label) update-handler)}
+           {:data-option label}
            label])])]))
 
 (defmulti answers-view
@@ -528,12 +528,10 @@
    {:keys [answer-revealed?]
     :as answers}
    ^String game-id
-   ^Boolean mark-correct?
+   _
    {:keys [choices note session-id]}]
   [:form#answers
    (when-not disabled?
-     [:p
-      (autocomplete session-id choices)
-      (submit-button tr game-id)])
+     [:p (autocomplete game-id session-id choices)])
    (open-answers tr answers)
    (note-view answer-revealed? note)])
