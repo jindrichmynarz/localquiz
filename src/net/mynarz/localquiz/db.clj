@@ -114,9 +114,12 @@
     :db/unique :db.unique/identity
     :db/index true
     :db/cardinality :db.cardinality/one}
-   {:db/ident :session/params
-    :db/doc "Session parameters stored as an EDN string"
+   {:db/ident :session/search-fragment
+    :db/doc "Text the player has typed into an autocomplete input. Used to filter the
+             question's choices server-side. Retracted when the game moves on to the
+             next question."
     :db/valueType :db.type/string
+    :db/maxLength qs/max-answer-length
     :db/cardinality :db.cardinality/one}])
 
 (defstate db-config

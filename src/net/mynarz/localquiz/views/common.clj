@@ -3,6 +3,7 @@
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
+            [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :as util :refer [svg]]
             [charred.api :as charred]
@@ -300,10 +301,10 @@
   "Autocomplete text input feeding the enclosing answer form's `answer` field,
   with a custom, stylable suggestion list rendered below the input instead of a
   native (unstylable) `<datalist>`. `options` are filtered server-side by the
-  fragment the player has typed, stored in their session params under
-  `session-id`."
+  fragment the player has typed, stored in :session/search-fragment for
+  `session-id` and retracted when the game moves on to the next question."
   [game-id session-id options]
-  (let [search-fragment (:autocomplete (game/get-session-params session-id))
+  (let [search-fragment (game/get-search-fragment session-id)
         labels          (map #(or (:text %) (:label %)) options)
         fragment        (some-> search-fragment string/trim not-empty)
         matches         (when fragment
@@ -318,7 +319,7 @@
        :data-init "$autocomplete = ''" ; Reset
        :data-on:input__debounce.200ms "@post('/autocomplete')"
        :minlength 1
-       :maxlength 100
+       :maxlength qs/max-answer-length
        :name "answer"
        :type "text"}]
      (when (seq matches)
@@ -450,7 +451,7 @@
       [:input
        {:autofocus true
         :minlength 1
-        :maxlength 100
+        :maxlength qs/max-answer-length
         :name "answer"
         :type "text"}]
       (submit-button tr game-id)])

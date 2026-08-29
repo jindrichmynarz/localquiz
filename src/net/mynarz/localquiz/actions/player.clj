@@ -32,10 +32,10 @@
           (refresh-session! request {:signals {:error (tr [:errors/game-not-joinable])}}))))))
 
 (defn autocomplete-handler
-  "Stores the player's typed autocomplete fragment under :autocomplete in their session params."
+  "Stores the autocomplete fragment the player has typed."
   [{{:keys [autocomplete]} :signals
     :keys [sid]}]
-  (game/merge-session-params! sid {:autocomplete autocomplete}))
+  (game/set-search-fragment! sid autocomplete))
 
 (defn answer-question!
   [{{answer "answer"} :form-params

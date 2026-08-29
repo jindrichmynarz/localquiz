@@ -34,8 +34,7 @@
                     :player/score 0.0
                     :db/ensure :player}]
     :db/ensure :game}
-   {:session/id moderator-id
-    :session/params (pr-str {})}])
+   {:session/id moderator-id}])
 
 (defn test-config
   [f]

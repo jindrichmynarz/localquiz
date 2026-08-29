@@ -31,7 +31,7 @@
     (testing "Session update"
       (let [session-id (first session-ids)
             tx-report (d/transact db-conn [{:session/id session-id
-                                            :session/params (pr-str {:page 1})}])]
+                                            :session/search-fragment "amb"}])]
         (is (= (set (db-listener/find-updated-sessions tx-report)) #{session-id}))))
 
     (testing "Retraction updates"

@@ -22,23 +22,35 @@
        @db-conn
        game-id))
 
-(defn merge-session-params
-  "Transaction function that merges `params` into :session/params for `session-id`."
-  [db
-   ^String session-id
-   params]
-  (let [current-params (some-> (d/entity db [:session/id session-id])
-                               :session/params
-                               edn/read-string)
-        merged-params (util/deep-merge current-params params)]
-    [{:session/id     session-id
-      :session/params (pr-str merged-params)}]))
-
-(defn merge-session-params!
-  "Merge `params` into :session/params for `session-id`."
+(defn set-search-fragment!
+  "Store the autocomplete `fragment` typed by the player with `session-id`.
+  Truncated to the length the answer inputs cap at, so that a POST bypassing the
+  input's `maxlength` cannot exceed the attribute's :db/maxLength."
   [^String session-id
-   params]
-  (d/transact db-conn [[:db.fn/call merge-session-params session-id params]]))
+   ^String fragment]
+  (let [trimmed-fragment (subs fragment 0 (min (count fragment) qs/max-answer-length))]
+    (d/transact db-conn [{:session/id session-id
+                          :session/search-fragment trimmed-fragment}])))
+
+(defn get-search-fragment
+  "Return the autocomplete fragment typed by `session-id`, or nil if there is none."
+  [^String session-id]
+  (:session/search-fragment (d/entity @db-conn [:session/id session-id])))
+
+(defn clear-search-fragments
+  "Transaction function retracting the autocomplete fragments of players in `game-id`."
+  [db
+   ^String game-id]
+  (->> (d/q '[:find [?session ...]
+              :in $ ?game-id
+              :where [?game :game/id ?game-id]
+                     [?game :game/players ?player]
+                     [?player :player/id ?player-id]
+                     [?session :session/id ?player-id]
+                     [?session :session/search-fragment _]]
+            db
+            game-id)
+       (mapv (fn [session] [:db/retract session :session/search-fragment]))))
 
 (defn moderator?
   "Test if `session-id` is the moderator (owner) of the game with `game-id`."
@@ -356,7 +368,8 @@
          (mapv (partial vector :db/retractEntity))
          (into [[:db/add [:game/id game-id] :game/state :question]
                 [:db/add [:game/id game-id] :game/current-question question]
-                [:db/retract [:game/id game-id] :game/questions question]])
+                [:db/retract [:game/id game-id] :game/questions question]
+                [:db.fn/call clear-search-fragments game-id]])
          (d/transact db-conn))
     (schedule-timeout game-id)))
 
@@ -372,8 +385,7 @@
         (and (some? answer) (not (player-answered? player-id)))
         (do
           (log/infof "Player %s in game %s answers '%s'." player-id game-id answer)
-          (d/transact db-conn [[:db.fn/call merge-session-params player-id {:autocomplete nil}]
-                               {:game/id game-id
+          (d/transact db-conn [{:game/id game-id
                                 :game/answers [{:answer/player [:player/id player-id]
                                                 :answer/answer (str answer)}]}])
           (when (all-players-answered? game-id)
@@ -464,14 +476,6 @@
   [^String player-id]
   (log/infof "Disconnecting player %s." player-id)
   (d/transact db-conn [[:db/retractEntity [:player/id player-id]]]))
-
-(defn get-session-params
-  "Return the session params map for `session-id`, or nil if absent."
-  [^String session-id]
-  (some-> @db-conn
-          (d/entity [:session/id session-id])
-          :session/params
-          edn/read-string))
 
 (defn game-progress
   [^String game-id]

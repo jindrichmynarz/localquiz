@@ -58,6 +58,12 @@
   attributes storing these get this bound via `:db/maxLength` instead (see `db/schema`)."
   65536)
 
+(def max-answer-length
+  "Maximum length of a text answer, shared by the `maxlength` of the text answer inputs
+  and the `:db/maxLength` of :session/search-fragment (see `db/schema`). Not applied to
+  :answer/answer, which also holds the JSON index lists that :sort answers submit."
+  100)
+
 (s/def ::hiccup
   (s/or :string string?
         :element (s/cat :tag safe-tag?

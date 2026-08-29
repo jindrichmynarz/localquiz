@@ -2,6 +2,7 @@
   (:require [net.mynarz.localquiz.db :as db]
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
+            [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
             [clojure.test :refer [are deftest is testing use-fixtures]]
             [datahike.api :as d]))
@@ -115,6 +116,25 @@
   (with-redefs [game/schedule-timeout (fn [_])]
     (game/next-question! fixtures/game-id))
   (is (= (game/current-question fixtures/game-id) fixtures/question)))
+
+(deftest search-fragments
+  (let [game-id (crypto/random-unguessable-uid)
+        alice (crypto/random-unguessable-uid)
+        bob (crypto/random-unguessable-uid)]
+    (-create-game! game-id)
+    (game/join-game! game-id alice "Alice")
+    (game/join-game! game-id bob "Bob")
+    (game/set-search-fragment! alice "ambient")
+    (game/set-search-fragment! bob "techno")
+    (is (= (game/get-search-fragment alice) "ambient"))
+    (testing "Moving on to the next question clears every player's search fragment"
+      (with-redefs [game/schedule-timeout (fn [_])]
+        (game/next-question! game-id))
+      (is (nil? (game/get-search-fragment alice)))
+      (is (nil? (game/get-search-fragment bob))))
+    (testing "A fragment is truncated to the maximum answer length"
+      (game/set-search-fragment! alice (apply str (repeat (* 2 qs/max-answer-length) "x")))
+      (is (= (count (game/get-search-fragment alice)) qs/max-answer-length)))))
 
 (deftest add-score!
   (let [get-score (fn [player]
