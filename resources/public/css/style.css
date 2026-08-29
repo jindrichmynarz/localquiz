@@ -1095,15 +1095,20 @@ body:has(.winner) {
 }
 
 #open-answers {
-  background-color: var(--dark);
   border: 3px solid var(--darker);
+  background-color: var(--dark);
 
   caption {
+    margin: 0;
+    padding: 0 1ch;
+    font-size: .8em;
+    line-height: 1.8;
+    color: rgb(from var(--offwhite) r g b / 55%);
   }
 
   td, th {
     text-align: left;
-    padding: .5ex 1ch;
+    padding: 1ch;
   }
 }
 
