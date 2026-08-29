@@ -123,7 +123,7 @@
   (comp #{:consensus} :scoring))
 
 (defmethod question :autocomplete [_]
-  ;; Suggestions come from :choices; the typed-or-picked answer is scored across
+  ;; Suggestions come from :choices; the picked answer is scored across
   ;; players (consensus/majority), since there is no per-question correct value.
   (s/and (s/keys :req-un [::choices])
          (comp #{:consensus :majority} :scoring)))
