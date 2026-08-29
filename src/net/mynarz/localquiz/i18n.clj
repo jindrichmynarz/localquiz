@@ -95,6 +95,7 @@
                     Je možné zvolit si sebe."]]
         :score "Skóre"
         :scoring "Hodnocení"
+        :search "Vyhledávat..."
         :show-all-options "Zobrazit všechny možnosti"
         :start-game "Zahájit hru"
         :submit "Odeslat"
@@ -199,6 +200,7 @@
                      Picking oneself is allowed."]]
         :score "Score"
         :scoring "Scoring"
+        :search "Search..."
         :show-all-options "Show all options"
         :start-game "Start the game"
         :submit "Submit"

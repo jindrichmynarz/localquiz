@@ -351,6 +351,7 @@
        :minlength 1
        :maxlength qs/max-answer-length
        :name "answer"
+       :placeholder (tr [:search])
        :type "text"}]
      ; A real button, so that Enter and Space activate it without a keydown handler.
      [:button.reveal-options
