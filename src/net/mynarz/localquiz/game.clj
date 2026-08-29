@@ -1,6 +1,7 @@
 (ns net.mynarz.localquiz.game
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.db :refer [db-conn]]
+            [net.mynarz.localquiz.normalize :refer [normalize-answer]]
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.scoring :as scoring]
             [net.mynarz.localquiz.spec :as spec]
@@ -147,6 +148,21 @@
                 @db-conn)
            edn/read-string
            (qs/resolve-refs (get-defs game-id))))
+
+(defn option-label
+  "The label of a choice `option`: :text in a multiple-choice option, :label in a
+  labelled one (see ::choice in question-spec)."
+  [option]
+  (or (:text option) (:label option)))
+
+(defn search-options
+  "The `options` whose label contains `fragment`, compared with case, punctuation and
+  diacritics normalized away, as :open answers are. Nil when `fragment` is blank."
+  [options
+   ^String fragment]
+  (when-some [needle (some-> fragment normalize-answer not-empty)]
+    (filter #(-> % option-label normalize-answer (string/includes? needle))
+            options)))
 
 (defn parse-answer
   "Parse `answer` to Clojure data types."

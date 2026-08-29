@@ -3,6 +3,7 @@
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
+            [net.mynarz.localquiz.normalize :refer [normalize-answer]]
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :as util :refer [svg]]
@@ -297,6 +298,26 @@
            {:max answer-count
             :value frequency}]]])]]))
 
+(defn option-label
+  "The label of a choice `option`: :text in a multiple-choice option, :label in a
+  labelled one (see ::choice in question-spec)."
+  [option]
+  (or (:text option) (:label option)))
+
+(defn search-options
+  "The `options` whose label contains `fragment`, compared with case, punctuation and
+  diacritics normalized away, as :open answers are. Nil when `fragment` is blank."
+  [options
+   ^String fragment]
+  (when-some [needle (some-> fragment
+                             normalize-answer
+                             not-empty)]
+    (filter #(-> %
+                 option-label
+                 normalize-answer
+                 (string/includes? needle))
+            options)))
+
 (defn autocomplete
   "Autocomplete text input feeding the enclosing answer form's `answer` field,
   with a custom, stylable suggestion list rendered below the input instead of a
@@ -304,17 +325,11 @@
   fragment the player has typed, stored in :session/search-fragment for
   `session-id` and retracted when the game moves on to the next question."
   [game-id session-id options]
-  (let [search-fragment (game/get-search-fragment session-id)
-        label-of        #(or (:text %) (:label %))
-        fragment        (some-> search-fragment string/trim not-empty)
-        matches         (when fragment
-                          (filter #(string/includes? (string/lower-case (label-of %))
-                                                     (string/lower-case fragment))
-                                  options))
+  (let [matches (search-options options (game/get-search-fragment session-id))
         ; queueMicrotask() is needed to propagate the $autocomplete signal as the value of the answer form field.
-        pick            (format "$autocomplete = el.dataset.option; queueMicrotask(() => %s)"
-                                (answer-handler game-id))]
-    [:div.autocomplete ; TODO: Should this have an ID for faster morph?
+        pick    (format "$autocomplete = el.dataset.option; queueMicrotask(() => %s)"
+                        (answer-handler game-id))]
+    [:div.autocomplete
      [:input
       {:autocomplete "off"
        :autofocus true
@@ -329,7 +344,7 @@
        [:ul.autocomplete-list
         (for [{:keys [description]
                :as option} matches
-              :let [label (label-of option)]]
+              :let [label (option-label option)]]
           [:li
            {:data-on:click pick
             :data-option label}
