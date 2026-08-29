@@ -10,15 +10,17 @@
 (use-fixtures :once fixtures/test-db)
 
 (deftest search-options
-  (let [options [{:label "Žižkov" :description "Prague 3"}
+  (let [options [{:label "Nové Vinohrady"}
+                 {:label "Žižkov" :description "Prague 3"}
                  {:label "Vinohrady"}
                  {:text "Karlín"}]]
-    (are [fragment labels] (= (map game/option-label (views/search-options options fragment)) labels)
-         "vino"   ["Vinohrady"]
+    (are [fragment labels] (= (map views/option-label (views/search-options options fragment)) labels)
+         "vino"   ["Vinohrady" "Nové Vinohrady"] ; Prefix matches come first
          "ZIZ"    ["Žižkov"]      ; Case and diacritics are normalized away
          "zizkov" ["Žižkov"]
          "karlin" ["Karlín"]      ; A :text option is labelled by its :text
-         "r"      ["Vinohrady" "Karlín"]
+         ; No prefix match, so the question's own order is kept
+         "r"      ["Nové Vinohrady" "Vinohrady" "Karlín"]
          "bork"   []
          "  "     []
          nil      [])))

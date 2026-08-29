@@ -306,17 +306,24 @@
 
 (defn search-options
   "The `options` whose label contains `fragment`, compared with case, punctuation and
-  diacritics normalized away, as :open answers are. Nil when `fragment` is blank."
+  diacritics normalized away, as :open answers are. Options whose label starts with the
+  fragment come first, each group in the order the question lists them. Nil when
+  `fragment` is blank."
   [options
    ^String fragment]
   (when-some [needle (some-> fragment
                              normalize-answer
                              not-empty)]
-    (filter #(-> %
-                 option-label
-                 normalize-answer
-                 (string/includes? needle))
-            options)))
+    (->> options
+         (keep (fn [option]
+                 (when-some [index (-> option
+                                       option-label
+                                       normalize-answer
+                                       (string/index-of needle))]
+                   ; A prefix match is at index 0, so false sorts it before the rest.
+                   [(pos? index) option])))
+         (sort-by first)
+         (map second))))
 
 (defn autocomplete
   "Autocomplete text input feeding the enclosing answer form's `answer` field,
