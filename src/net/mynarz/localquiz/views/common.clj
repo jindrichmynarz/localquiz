@@ -316,7 +316,7 @@
        :autofocus true
        :data-bind "autocomplete"
        :data-init "$autocomplete = ''" ; Reset
-       :data-on:input "@post('/autocomplete')"
+       :data-on:input__debounce.200ms "@post('/autocomplete')"
        :minlength 1
        :maxlength 100
        :name "answer"
