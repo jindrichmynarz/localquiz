@@ -305,12 +305,15 @@
   `session-id` and retracted when the game moves on to the next question."
   [game-id session-id options]
   (let [search-fragment (game/get-search-fragment session-id)
-        labels          (map #(or (:text %) (:label %)) options)
+        label-of        #(or (:text %) (:label %))
         fragment        (some-> search-fragment string/trim not-empty)
         matches         (when fragment
-                          (filter #(string/includes? (string/lower-case %)
+                          (filter #(string/includes? (string/lower-case (label-of %))
                                                      (string/lower-case fragment))
-                                  labels))]
+                                  options))
+        ; queueMicrotask() is needed to propagate the $autocomplete signal as the value of the answer form field.
+        pick            (format "$autocomplete = el.dataset.option; queueMicrotask(() => %s)"
+                                (answer-handler game-id))]
     [:div.autocomplete ; TODO: Should this have an ID for faster morph?
      [:input
       {:autocomplete "off"
@@ -324,13 +327,15 @@
        :type "text"}]
      (when (seq matches)
        [:ul.autocomplete-list
-        ; TODO: queueMicrotask() is needed to propagate the $autocomplete signal as the value of the answer form field.
-        {:data-on:click (format "$autocomplete = evt.target.dataset.option; queueMicrotask(() => %s)"
-                                (answer-handler game-id))}
-        (for [label matches]
+        (for [{:keys [description]
+               :as option} matches
+              :let [label (label-of option)]]
           [:li
-           {:data-option label}
-           label])])]))
+           {:data-on:click pick
+            :data-option label}
+           label
+           (when description
+             [:span.description description])])])]))
 
 (defmulti answers-view
   (fn [& args]
