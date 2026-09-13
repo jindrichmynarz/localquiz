@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.question-spec
-  (:require [clojure.spec.alpha :as s]
+  (:require [net.mynarz.localquiz.network :as network]
+            [clojure.spec.alpha :as s]
             [clojure.string :as string]
             [clojure.walk :as walk])
   (:import (java.net URL)))
@@ -83,13 +84,16 @@
 
 (s/def ::description ::hiccup)
 
+(s/def ::related (s/coll-of string? :kind vector?))
+
 (s/def ::choice
   (s/or ;; A multiple-choice option (see the :multiple question).
         :choice (s/keys :req-un [::text]
                         :opt-un [::correct?])
-        ;; A labelled option (e.g. an :autocomplete suggestion).
+        ;; A labelled option (e.g. an :autocomplete suggestion), :related to its parents
+        ;; in the network of a :network question.
         :option (s/keys :req-un [::label]
-                        :opt-un [::description])))
+                        :opt-un [::description ::related])))
 
 (s/def ::choices
   ;; Non-conforming so the raw choice maps survive conformation (the ::choice
@@ -133,6 +137,15 @@
   ;; players (consensus/majority), since there is no per-question correct value.
   (s/and (s/keys :req-un [::choices])
          (comp #{:consensus :majority} :scoring)))
+
+(defmethod question :network [_]
+  ;; Players pick one of the :choices from the network their :related describe, a DAG
+  ;; drawn around its root. Scored across players, like :autocomplete.
+  (s/and (s/keys :req-un [::choices])
+         (comp #{:consensus :majority} :scoring)
+         (comp network/single-root? :choices)
+         (comp network/acyclic? :choices)
+         (comp network/within-max-nodes? :choices)))
 
 (s/def ::sort-value
   number?)

@@ -7,6 +7,7 @@
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :as util :refer [svg]]
+            [net.mynarz.localquiz.views.network :refer [network-map]]
             [charred.api :as charred]
             [clojure.string :as string]
             [dev.onionpancakes.chassis.compiler :as cc]
@@ -151,6 +152,10 @@
       {:as "script"
        :href "/js/sortable.js"
        :rel "modulepreload"}]
+     [:link
+      {:as "script"
+       :href "/js/network.js"
+       :rel "modulepreload"}]
      [:script
       {:crossorigin "anonymous"
        :defer true
@@ -158,6 +163,9 @@
        :type "module"}]
      [:script
       {:src "/js/sortable.js"
+       :type "module"}]
+     [:script
+      {:src "/js/network.js"
        :type "module"}]
      ; Enables responsiveness on mobile devices
      [:meta {:name "viewport"
@@ -573,5 +581,27 @@
   [:form#answers
    (when-not disabled?
      [:p (autocomplete tr game-id session-id choices)])
+   (open-answers tr answers)
+   (note-view answer-revealed? note)])
+
+(defmethod answers-view :network
+  [tr
+   ^Boolean disabled?
+   {:keys [answer-revealed?]
+    :as answers}
+   ^String game-id
+   _
+   {:keys [choices note]}]
+  [:form#answers
+   (when-not disabled?
+     [:div
+      {:data-signals:_answer "''"
+       :data-on:network-select "$_answer = evt.detail"}
+      (network-map choices)
+      [:input
+       {:data-attr:value "$_answer"
+        :name "answer"
+        :type "hidden"}]
+      [:p (assoc-in (submit-button tr game-id) [1 :data-attr:disabled] "!$_answer")]])
    (open-answers tr answers)
    (note-view answer-revealed? note)])

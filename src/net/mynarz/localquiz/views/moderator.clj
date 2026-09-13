@@ -39,14 +39,30 @@
   {:data-on:input "$_formValid = el.checkValidity()"
    :data-on:change "$_formValid = el.checkValidity()"})
 
+(def ^:private ready
+  "Whether the questions are valid, so that a game can be created from them."
+  "$questionsValidated && $_formValid")
+
 (defn create-button
+  "Button to create a game, hidden until the questions are valid. Loading them and creating
+  the game can take a while, so a spinner shows meanwhile: on its own where the button is
+  to appear, then in the button."
   [{:tempura/keys [tr]}]
-  [:button.btn.btn-primary
-   {:data-attr:disabled "$_creating || $_validating"
-    :data-indicator "_creating"
-    :data-on:click (views/post "/create")
-    :data-show "$questionsValidated && $_formValid"}
-   (tr [:create-game])])
+  (list
+    [:span.spinner
+     {:aria-hidden "true"
+      :data-show (str "$_validating && !(" ready ")")}]
+    [:button.btn.btn-primary
+     ;; A string, as ARIA reads the empty attribute that Datastar renders for true as false.
+     {:data-attr:aria-busy "String($_validating || $_creating)"
+      :data-attr:disabled "$_validating || $_creating"
+      :data-indicator "_creating"
+      :data-on:click (views/post "/create")
+      :data-show ready}
+     [:span.spinner
+      {:aria-hidden "true"
+       :data-show "$_validating || $_creating"}]
+     (tr [:create-game])]))
 
 (defn end-game
   [tr

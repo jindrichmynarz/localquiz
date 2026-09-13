@@ -312,6 +312,30 @@ select {
   }
 }
 
+/* A ring that turns while something slow runs, e.g. inside a button. */
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: .5ch;
+  vertical-align: -.15em;
+  border: .15em solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: .8s linear infinite spin;
+
+  /* Slower, but still turning, so that it still reads as busy. */
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 3s;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 input[type="text"], input[type="number"] {
   background: var(--offwhite);
   color: var(--dark);
@@ -323,10 +347,6 @@ input[type="text"], input[type="number"] {
   &:focus-visible {
     outline: none;
   }
-}
-
-input[type="number"] {
-  width: 3em;
 }
 
 .autocomplete {
@@ -394,6 +414,155 @@ input[type="number"] {
           color: rgb(from var(--offwhite) r g b / 75%);
         }
       }
+    }
+  }
+}
+
+/* Zoom of the network map, which network.js sets. Registered, so that it can transition. */
+@property --k {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+/* Sizes are in screen pixels, mirrored by network.js and network.clj, since glyphs are
+   scaled back by the zoom to keep their size. */
+.network-map {
+  width: min(92vw, 640px);
+  /* One frame around the drawing and the cell under it. */
+  border: 3px solid var(--darker);
+  border-radius: 5px;
+  background: rgb(from var(--darker) r g b / 50%);
+  overflow: hidden;
+
+  svg {
+    display: block;
+    width: 100%;
+    /* Leaves room for the cell and Submit on a phone. */
+    height: min(60vh, 560px);
+    transition: --k .4s ease-out;
+    /* Dragging and pinching pan and zoom the map, not the page. */
+    touch-action: none;
+    cursor: grab;
+    /* Hidden until network.js first fits it. */
+    visibility: hidden;
+
+    &.nm-ready {
+      visibility: visible;
+    }
+
+    /* Transitions would lag behind a gesture. */
+    &.nm-panning,
+    &.nm-panning .nm-viewport {
+      transition: none;
+      cursor: grabbing;
+    }
+  }
+
+  .nm-info {
+    border-top: 3px solid var(--darker);
+    padding: .5em 1em;
+    text-align: left;
+
+    strong {
+      color: var(--orange);
+      font-size: 1.2em;
+    }
+
+    .description {
+      font-size: .8em;
+      color: rgb(from var(--offwhite) r g b / 75%);
+    }
+  }
+
+  .nm-viewport {
+    transition: transform .4s ease-out;
+  }
+
+  .nm-glyph {
+    transform-origin: 0 0;
+    scale: calc(1 / var(--k));
+  }
+
+  .nm-hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .nm-edge,
+  .nm-node {
+    transition: opacity .3s ease-out, visibility .3s ease-out;
+  }
+
+  .nm-edge {
+    stroke: rgb(from var(--offwhite) r g b / 30%);
+    stroke-width: 1.5px;
+    vector-effect: non-scaling-stroke;
+
+    /* The way back to the root: fainter than the focus's own edges. */
+    &.nm-trail {
+      stroke: rgb(from var(--orange) r g b / 60%);
+    }
+
+    &.nm-adjacent {
+      stroke: var(--orange);
+    }
+  }
+
+  .nm-node,
+  .nm-pin {
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: none;
+
+      circle:not(.nm-target) {
+        stroke: var(--offwhite);
+        stroke-width: 2px;
+      }
+    }
+
+    .nm-target {
+      fill: transparent;
+    }
+
+    circle:not(.nm-target) {
+      fill: var(--orange);
+    }
+
+    text {
+      font-size: 16px;
+      fill: var(--offwhite);
+      /* A halo keeps labels legible across edges. */
+      stroke: var(--darker);
+      stroke-width: 3px;
+      paint-order: stroke;
+      user-select: none;
+    }
+
+    &.nm-root circle:not(.nm-target) {
+      fill: var(--red);
+    }
+
+    &.nm-focus text {
+      font-weight: bold;
+    }
+
+    &.nm-selected circle:not(.nm-target) {
+      fill: var(--offwhite);
+      stroke: var(--orange);
+      stroke-width: 2px;
+    }
+  }
+
+  /* An off-screen parent, pinned to the edge: hollow, as it stands in for a node. */
+  .nm-pin {
+    animation: .4s ease-out fade-in;
+
+    circle:not(.nm-target) {
+      fill: var(--darker);
+      stroke: var(--orange);
+      stroke-width: 2px;
     }
   }
 }

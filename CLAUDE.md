@@ -40,6 +40,7 @@ There is no single-test command; use the REPL to run individual tests.
 | `middleware` | CSRF, session, language, Datastar signals parsing |
 | `game` | Core game mechanics: state transitions, player/answer management |
 | `scoring` | Multimethod dispatch on question type for score calculation |
+| `network` | Planar layout of the DAGs behind `:network` questions (JGraphT), memoized, computed on game creation |
 | `question_spec` | Clojure spec definitions for question EDN format |
 | `db` | Datahike schema and connection |
 | `db_listener` | Database transaction listener → async pub |
@@ -47,11 +48,11 @@ There is no single-test command; use the REPL to run individual tests.
 | `sse` | SSE handler, view hashing/diffing, Brotli compression |
 | `actions/moderator` | Game creation, question flow control |
 | `actions/player` | Player joining, answer submission |
-| `views/` | Hiccup HTML generation (common, moderator, player) |
+| `views/` | Hiccup HTML generation (common, moderator, player, network) |
 
 ### Question types
 
-Six types supported: `:multiple` (multiple choice), `:yesno`, `:open` (fuzzy text match via Jaro-Winkler), `:percent-range` (numeric with tolerance), `:sort` (order items), `:consensus` (crowd-based correctness). Each has a scoring multimethod in `scoring.clj`.
+Six types supported: `:multiple` (multiple choice), `:yesno`, `:open` (fuzzy text match via Jaro-Winkler), `:percent-range` (numeric with tolerance), `:sort` (order items), `:consensus` (crowd-based correctness). Each has a scoring multimethod in `scoring.clj`. `:network` questions let players pick one of the `:choices` from the DAG their `:related` describe, drawn by `views/network.clj` and revealed a neighbourhood at a time by `resources/public/js/network.js`; they are scored by `:consensus` or `:majority`.
 
 ## Configuration
 

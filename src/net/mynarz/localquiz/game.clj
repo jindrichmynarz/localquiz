@@ -309,6 +309,16 @@
        (some #(= :transact/cas (:error (ex-data %))))
        boolean))
 
+(defn- player-count
+  "Number of players in the game with `game-id`, answering or not."
+  [^String game-id]
+  (d/q '[:find (count ?player) .
+         :in $ ?game-id
+         :where [?game :game/id ?game-id]
+                [?game :game/players ?player]]
+       @db-conn
+       game-id))
+
 (defn evaluate-answers!
   "Score the current question's answers and reveal them. Idempotent: a compare-and-swap on
   :game/state ensures at most one of the concurrent triggers commits, so scores are never
@@ -320,6 +330,8 @@
   (let [{:keys [scoring]
          :as question} (current-question game-id)
         reveal [:db/cas [:game/id game-id] :game/state :question :show-answers]
+        ; Consensus is measured among all players, answering or not.
+        question (assoc question :player-count (player-count game-id))
         tx (let [scores (cond-> (->> game-id
                                      get-answers
                                      (scoring/score-answers question))
@@ -506,30 +518,24 @@
    ^String player-id]
   (let [query '[:find (pull ?answer [:answer/score :answer/correct?])
                       ?current-question
-                      (count-distinct ?other-answer)
-                      (count-distinct ?other-player)
                 :in $ ?game-id ?player-id
-                :keys answer current-question same-answer-count player-count
+                :keys answer current-question
                 :where [?game :game/id ?game-id]
                        [?game :game/players ?player]
                        [?player :player/id ?player-id]
                        [?game :game/answers ?answer]
                        [?game :game/current-question ?current-question]
-                       [?answer :answer/player ?player]
-                       [?answer :answer/answer ?value]
-                       [?other-answer :answer/answer ?value]
-                       [?game :game/players ?other-player]]
+                       [?answer :answer/player ?player]]
         {{:keys [scoring]} :current-question
          {:answer/keys [score]} :answer
-         :keys [answer
-                player-count
-                same-answer-count]} (-> query
-                                        (d/q @db-conn game-id player-id)
-                                        first
-                                        (update :current-question edn/read-string))]
+         :keys [answer]} (-> query
+                             (d/q @db-conn game-id player-id)
+                             first
+                             (update :current-question edn/read-string))]
     (cond-> answer
+      ; The score is the consensus, measured among all players.
       (= scoring :consensus)
-      (assoc :answer/consensus (* (/ (dec same-answer-count) (dec player-count)) 100))
+      (assoc :answer/consensus (* (or score 0) 100))
 
       (= scoring :majority)
       (assoc :answer/majority (pos? score)))))

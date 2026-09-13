@@ -7,4 +7,7 @@
   (are [questions-file key?] (let [questions (-> questions-file io/resource io/as-file)]
                                (key? (moderator/parse-questions-file questions)))
        "questions/empty.edn" :error
-       "questions/questions.edn" :success))
+       "questions/questions.edn" :success
+       "questions/network.edn" :success
+       ; The :related of a network must not form a cycle.
+       "questions/network_cycle.edn" :error))

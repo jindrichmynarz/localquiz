@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.scoring
   (:require [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.network :as network]
             [net.mynarz.localquiz.normalize :refer [normalize-answer]]
             [clj-fuzzy.jaro-winkler :refer [jaro-winkler]]))
 
@@ -11,9 +12,11 @@
   "Mark if given answers are correct for the given question by adding the boolean :correct? flag
   and give them numeric :score from <0, 1>."
   (fn [{:keys [type scoring]} _]
-    (if (#{:consensus :majority} scoring)
-      [scoring]
-      [type scoring])))
+    (cond
+      ; Consensus on a network credits near answers too.
+      (= [type scoring] [:network :consensus]) [:network :consensus]
+      (#{:consensus :majority} scoring) [scoring]
+      :else [type scoring])))
 
 (defn- score-each
   "Map per-answer scoring `f` over `answers`, isolating failures: if `f` throws for an
@@ -90,12 +93,12 @@
       answers)))
 
 (defn consensus-scores
-  "Build a map of answers to their scores based on consensus.
-  No consensus gets the score of 0, complete consensus the score of 1."
-  [answers]
-  (let [answer-count (count answers)
-        increment (if (> answer-count 1)
-                    (double (/ 1 (dec answer-count)))
+  "Build a map of answers to their scores based on consensus among `player-count` players,
+  answering or not. No consensus gets the score of 0, complete consensus the score of 1."
+  [answers
+   ^long player-count]
+  (let [increment (if (> player-count 1)
+                    (double (/ 1 (dec player-count)))
                     0)]
     (->> answers
         (reduce (fn [scores answer]
@@ -106,15 +109,47 @@
                 (transient {}))
         persistent!)))
 
+(defn- player-count
+  "Players in the game of `question`, answering or not, which consensus is measured among.
+  Without the count, only the answering ones."
+  [question answers]
+  (or (:player-count question) (count answers)))
+
 (defmethod score-answers [:consensus]
-  [_ answers]
-  (let [answer->score (->> answers
-                           (map :answer)
-                           consensus-scores)]
+  [question answers]
+  (let [answer->score (consensus-scores (map :answer answers)
+                                        (player-count question answers))]
     (for [answer answers]
       (assoc answer :score (-> answer
                                :answer
                                answer->score)))))
+
+(def ^:private max-hops
+  "Farthest apart that two answers to a :network question may be to credit each other."
+  2)
+
+(defmethod score-answers [:network :consensus]
+  ; Each other answer within `max-hops` of this one adds 1/((d + 1)(n - 1)), d being the
+  ; hops between them and n the number of players, answering or not. An exact match adds
+  ; 1/(n - 1), so the score still peaks at 1.0, when all agree, and with only exact matches
+  ; it is plain consensus.
+  [{:keys [choices]
+    :as   question}
+   answers]
+  (let [others    (dec (player-count question answers))
+        answered  (frequencies (map :answer answers))
+        score     (memoize
+                    (fn [value]
+                      (if (pos? others)
+                        (let [near (network/nearby choices value max-hops)]
+                          (/ (reduce + (for [[other n] answered
+                                             :let  [hops (near other)]
+                                             :when hops]
+                                         ; Not this answer itself.
+                                         (/ (if (= other value) (dec n) n) (inc hops))))
+                             (double others)))
+                        0.0)))]
+    (score-each #(assoc % :score (score (:answer %))) answers)))
 
 (defmethod score-answers [:majority]
   [_ answers]

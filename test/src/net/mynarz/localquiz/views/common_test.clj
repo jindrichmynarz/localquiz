@@ -60,3 +60,28 @@
   (testing "The reveal control is always offered"
     (is (every? #(string/includes? % "class=\"reveal-options\"")
                 [(render-autocomplete) (render-autocomplete "amb")]))))
+
+(defn- occurrences
+  [^String s ^String part]
+  (count (re-seq (re-pattern (java.util.regex.Pattern/quote part)) s)))
+
+(deftest network-answers
+  (let [choices [{:label "House" :related ["Genre"]}
+                 {:label "Techno" :related ["Genre"] :description "Detroit, emerged mid 80s."}
+                 {:label "Acid House" :related ["House" "Techno"]}]
+        html (h/html (views/answers-view fixtures/tr false {} fixtures/game-id false
+                                         {:type :network :choices choices}))]
+    (testing "The map survives morphs, which would reset what it reveals"
+      (is (string/includes? html "class=\"network-map\" data-ignore-morph")))
+    (testing "Every arc is drawn"
+      (is (= 4 (occurrences html "class=\"nm-edge"))))
+    (testing "Choices are selectable, and the root, which is none, is not"
+      (is (= 3 (occurrences html "nm-choice")))
+      (is (string/includes? html "class=\"nm-node nm-root\"")))
+    (testing "Only the root and its children show at first"
+      (is (string/includes? html "class=\"nm-node nm-choice nm-hidden\" data-id=\"Acid House\"")))
+    (testing "The cell under the map hides until a choice is chosen, then shows it with its description"
+      (is (string/includes? html "<div class=\"nm-info\" hidden>"))
+      (is (= 3 (occurrences html "class=\"nm-chosen\"")))
+      (is (string/includes? html (str "data-for=\"Techno\" hidden><strong>Techno</strong>"
+                                      "<div class=\"description\">Detroit, emerged mid 80s.</div>"))))))

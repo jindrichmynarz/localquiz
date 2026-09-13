@@ -3,6 +3,7 @@
             [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
+            [net.mynarz.localquiz.network :as network]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.spec :as s]
@@ -64,6 +65,16 @@
                    :numberOfQuestions (count questions)})]
     (refresh-session! request {:signals signals})))
 
+(defn- lay-out-networks!
+  "Lay out the network of each :network question in `data` now, rather than on the first
+  render of each, which would stall it and every render racing it."
+  [{:keys [defs questions]}]
+  (->> questions
+       (filter (comp #{:network} :type))
+       (map :choices)
+       distinct
+       (run! (comp network/layout (partial qs/resolve-refs defs)))))
+
 (defn create-game!
   "Create a game with a fresh, random public ID, owned by the requesting session."
   [{{:keys [form multipart]} :parameters
@@ -81,6 +92,7 @@
                          {:def/id id
                           :def/value (pr-str value)})
                        (:defs success))]
+        (lay-out-networks! success)
         (game/create-game! game-id
                            sid
                            (->> success

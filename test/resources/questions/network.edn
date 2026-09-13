@@ -1,0 +1,8 @@
+{:defs {:genres [{:label "House" :related ["Genre"]}
+                 {:label "Techno" :related ["Genre"]}
+                 {:label "Acid House" :related ["House" "Techno"]}
+                 {:label "Deep House" :related ["House"]}]}
+ :questions #{{:type :network
+               :scoring :consensus
+               :text "Which genre is this?"
+               :choices {:ref :genres}}}}

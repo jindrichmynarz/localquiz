@@ -1,7 +1,7 @@
 (ns net.mynarz.localquiz.scoring-test
   (:require [net.mynarz.localquiz.scoring :as scoring]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
-            [clojure.test :refer [are deftest use-fixtures]]))
+            [clojure.test :refer [are deftest is testing use-fixtures]]))
 
 (use-fixtures :once fixtures/test-config)
 
@@ -60,7 +60,44 @@
        [0.0 0.0]
 
        [{:answer 1} {:answer 1}]
-       [1.0 1.0]))
+       [1.0 1.0])
+  (testing "Consensus is measured among all players, answering or not"
+    (is (= [0.5 0.5]
+           (map :score (scoring/score-answers {:scoring :consensus :player-count 3}
+                                              [{:answer 1} {:answer 1}]))))))
+
+(deftest network-consensus-scoring
+  ; root -> A, B; A -> A1, A2; B -> B1
+  (let [question {:type :network
+                  :scoring :consensus
+                  :choices [{:label "A" :related ["root"]}
+                            {:label "B" :related ["root"]}
+                            {:label "A1" :related ["A"]}
+                            {:label "A2" :related ["A"]}
+                            {:label "B1" :related ["B"]}]}
+        scores (fn [& answers]
+                 (map :score (scoring/score-answers question (map #(hash-map :answer %) answers))))
+        close? (fn [xs ys]
+                 (and (= (count xs) (count ys))
+                      (every? true? (map #(< (abs (- %1 %2)) 1e-9) xs ys))))]
+    (testing "An exact match adds 1/(n - 1), and a sibling two hops away a third of that"
+      (is (close? [(/ 2 3) (/ 2 3) (/ 1 3)] (scores "A1" "A1" "A2"))))
+    (testing "A parent is one hop away, so it adds a half"
+      (is (close? [0.5 0.5] (scores "A" "A1"))))
+    (testing "The root, which is no choice, links no answers"
+      (is (close? [0.0 0.0] (scores "A" "B"))))
+    (testing "Agreement scores 1.0 at most"
+      (is (close? [1.0 1.0] (scores "A1" "A1"))))
+    (testing "Answers more than two hops apart credit nothing"
+      (is (close? [0.0 0.0] (scores "A1" "B1"))))
+    (testing "An answer that is no node only matches exactly"
+      (is (close? [0.0 0.0] (scores "A1" "bogus"))))
+    (testing "A lone answer has none to agree with"
+      (is (close? [0.0] (scores "A1"))))
+    (testing "Players who did not answer count too"
+      (is (close? [0.5 0.5]
+                  (map :score (scoring/score-answers (assoc question :player-count 3)
+                                                     [{:answer "A1"} {:answer "A1"}])))))))
 
 (deftest majority-scoring
   (are [answers scores] (= (map :score (scoring/score-answers {:scoring :majority} answers)) scores)
