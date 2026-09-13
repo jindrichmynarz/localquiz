@@ -134,6 +134,10 @@
       (is (nil? (game/get-search-fragment bob))))
     (testing "A fragment is truncated to the maximum answer length"
       (game/set-search-fragment! alice (apply str (repeat (* 2 qs/max-answer-length) "x")))
+      (is (= (count (game/get-search-fragment alice)) qs/max-answer-length)))
+    (testing "A missing or malformed fragment is ignored"
+      (game/set-search-fragment! alice nil)
+      (game/set-search-fragment! alice 42)
       (is (= (count (game/get-search-fragment alice)) qs/max-answer-length)))))
 
 (deftest add-score!

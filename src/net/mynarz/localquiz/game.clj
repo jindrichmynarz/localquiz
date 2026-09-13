@@ -25,12 +25,14 @@
 (defn set-search-fragment!
   "Store the autocomplete `fragment` typed by the player with `session-id`.
   Truncated to the length the answer inputs cap at, so that a POST bypassing the
-  input's `maxlength` cannot exceed the attribute's :db/maxLength."
+  input's `maxlength` cannot exceed the attribute's :db/maxLength. Does nothing when
+  `fragment` is not a string, e.g. when a POST lacks the signal."
   [^String session-id
-   ^String fragment]
-  (let [trimmed-fragment (subs fragment 0 (min (count fragment) qs/max-answer-length))]
-    (d/transact db-conn [{:session/id session-id
-                          :session/search-fragment trimmed-fragment}])))
+   fragment]
+  (when (string? fragment)
+    (let [trimmed-fragment (subs fragment 0 (min (count fragment) qs/max-answer-length))]
+      (d/transact db-conn [{:session/id session-id
+                            :session/search-fragment trimmed-fragment}]))))
 
 (defn get-search-fragment
   "Return the autocomplete fragment typed by `session-id`, or nil if there is none."
