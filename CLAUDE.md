@@ -52,7 +52,7 @@ There is no single-test command; use the REPL to run individual tests.
 
 ### Question types
 
-Six types supported: `:multiple` (multiple choice), `:yesno`, `:open` (fuzzy text match via Jaro-Winkler), `:percent-range` (numeric with tolerance), `:sort` (order items), `:consensus` (crowd-based correctness). Each has a scoring multimethod in `scoring.clj`. `:network` questions let players pick one of the `:choices` from the DAG their `:related` describe, drawn by `views/network.clj` and revealed a neighbourhood at a time by `resources/public/js/network.js`; they are scored by `:consensus` or `:majority`.
+Eight types supported: `:multiple` (multiple choice), `:yesno`, `:open` (fuzzy text match via Jaro-Winkler), `:percent-range` (numeric with tolerance), `:sort` (order items), `:player-choice` (pick a player), `:autocomplete` (search one of many `:choices`), and `:network` (pick one of the `:choices` on the DAG their `:related` describe, drawn by `views/network.clj` and revealed a neighbourhood at a time by `resources/public/js/network.js`). Each has a scoring multimethod in `scoring.clj`, which dispatches on the type, or on the `:scoring` method for crowd-scored questions (`:consensus`, `:majority`, measured among all players). `:network` consensus also credits answers up to 2 hops apart.
 
 ## Configuration
 
