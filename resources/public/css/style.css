@@ -438,7 +438,7 @@ input[type="text"], input[type="number"] {
   svg {
     display: block;
     width: 100%;
-    /* Leaves room for the cell and Submit on a phone. */
+    /* Where the page cannot size it to the viewport (see below). */
     height: min(60vh, 560px);
     transition: --k .4s ease-out;
     /* Dragging and pinching pan and zoom the map, not the page. */
@@ -564,6 +564,41 @@ input[type="text"], input[type="number"] {
       stroke: var(--orange);
       stroke-width: 2px;
     }
+  }
+}
+
+/* A page showing a network map fits the viewport, so that the cell under the map and
+   Submit stay in view: the map shrinks for them, down to 240px, below which the page
+   scrolls instead. `svh` is the viewport with the mobile URL bar shown, so the page fits
+   either way and does not jump as the bar hides. Each container on the way to the map
+   passes the height down, and the footer makes way. */
+#morph:has(.network-map) {
+  height: 100svh;
+  min-height: 0;
+
+  footer {
+    display: none;
+  }
+
+  main,
+  #content {
+    flex: 1;
+  }
+
+  main,
+  #content,
+  #answers,
+  #answers > div,
+  .network-map {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .network-map svg {
+    flex: 0 1 auto;
+    height: 640px;
+    min-height: 240px;
   }
 }
 
