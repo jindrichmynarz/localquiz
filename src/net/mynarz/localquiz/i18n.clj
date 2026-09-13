@@ -92,7 +92,12 @@
                      Rozdíly do 5 % jsou tolerovány, pokud je odpověď skórována dle správnosti."]
                 [:h4 "Volba hráče"]
                 [:p "Hráči musí vybrat jednoho z hráčů jako svou odpověď.
-                    Je možné zvolit si sebe."]]
+                    Je možné zvolit si sebe."]
+                [:h4 "Vyhledávání"]
+                [:p "Hráči musí vybrat jednu z vyhledatelných odpovědí."]
+                [:h4 "Síť"]
+                [:p "Hráči musí vybrat jeden z propojených bodů sítě.
+                     Pokud hráči vyberou body vzdálené 1-2 kroky v síti, počítá se jim to jako částečná shoda."]]
         :score "Skóre"
         :scoring "Hodnocení"
         :search "Vyhledávat..."
@@ -197,7 +202,12 @@
                      Differences up to 5 % are ignored when scoring by correctness."]
                 [:h4 "Player choice"]
                 [:p "The players must pick one of the players as their answer.
-                     Picking oneself is allowed."]]
+                     Picking oneself is allowed."]
+                [:h4 "Autocomplete"]
+                [:p "The players must pick one of the choices available via search as their answer."]
+                [:h4 "Network"]
+                [:p "The players must pick one node from a connected network.
+                     If the players pick nodes up to 1-2 hops apart, it counts as a partial match."]]
         :score "Score"
         :scoring "Scoring"
         :search "Search..."
