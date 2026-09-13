@@ -3,7 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.qrcode :refer [url->qrcode-svg]]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
-            [net.mynarz.localquiz.util :refer [decimal-format safe-div svg]]
+            [net.mynarz.localquiz.util :refer [decimal-format fraction-of svg]]
             [net.mynarz.localquiz.views.common :as views]
             [clojure.math :as math]
             [charred.api :as charred]))
@@ -117,8 +117,8 @@
       [:tbody
        (for [{:keys [index player-name score total-score winner?]} leaderboard-data
              :let [score-style (format "--former-score: %s; --score: %s;"
-                                       (decimal-format (safe-div (- total-score score) max-score))
-                                       (decimal-format (safe-div total-score max-score)))]]
+                                       (decimal-format (fraction-of (- total-score score) max-score))
+                                       (decimal-format (fraction-of total-score max-score)))]]
          [:tr
           [:td index]
           [:td player-name
