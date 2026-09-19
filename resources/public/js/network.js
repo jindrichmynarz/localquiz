@@ -1,15 +1,27 @@
 // Progressive disclosure of the network of a :network question, drawn by
-// views/network.clj. The viewport and the label placement mirror those that
-// network.clj's layout-report measures, so keep the two in step.
+// views/network.clj. Each view is laid out afresh for the screen, around the
+// directions in the network's radial layout that network.clj computes.
 
-const PADDING = 24;
+// A view's nodes sit on an ellipse that keeps this far from the sides of the
+// screen, leaving room for labels facing outward, and from its top and bottom.
+// ponytail: hand-tuned on a portrait phone.
+const SIDE_MARGIN = 60;
+const END_MARGIN = 36;
+// Widest gap between neighbours on the ellipse, so that a few nodes stay near
+// the directions they lie in rather than spreading around it.
+const MAX_GAP = 120;
+// Below this gap, every other node moves onto an inner ellipse this much smaller.
+const MIN_GAP = 44;
+const INNER = 0.6;
+// How long nodes take to move to their places in a new view.
+const GLIDE_MS = 400;
+const TAU = 2 * Math.PI;
 const NODE_RADIUS = 8;
 // 44 px across, the usual minimum for touch.
 const TARGET_RADIUS = 22;
 const LABEL_OFFSET = 12;
 const LABEL_HEIGHT = 19;
 const CHAR_WIDTH = 8.9;
-const MAX_ZOOM = 1.6;
 // How far pinching and the wheel may zoom in, and how far a pointer may move
 // before a tap becomes a drag.
 const GESTURE_MAX_ZOOM = 5;
@@ -17,6 +29,23 @@ const DRAG_THRESHOLD = 6;
 // Distance of pinned parents from the edge of the screen.
 const PIN_INSET = 12;
 const SVG = "http://www.w3.org/2000/svg";
+
+// Which way the turn a -> b -> c bends: 1, -1, or 0 if it doesn't.
+const ccw = ([ax, ay], [bx, by], [cx, cy]) => Math.sign((by - ay) * (cx - ax) - (bx - ax) * (cy - ay));
+
+// How many pairs of `edges` cross, drawn straight between the points `at` gives.
+function crossings(edges, at) {
+  let n = 0;
+  for (let i = 0; i < edges.length; i++) {
+    for (let j = i + 1; j < edges.length; j++) {
+      const [a, b, c, d] = [edges[i].from, edges[i].to, edges[j].from, edges[j].to];
+      if (a === c || a === d || b === c || b === d) continue;
+      const [p, q, r, t] = [a, b, c, d].map(at);
+      n += ccw(p, q, r) !== ccw(p, q, t) && ccw(r, t, p) !== ccw(r, t, q);
+    }
+  }
+  return n;
+}
 
 const overlapArea = (a, b) =>
   Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) *
@@ -55,8 +84,14 @@ function createNetworkMap(container) {
     nodes.set(el.dataset.id, {
       el,
       text: el.querySelector("text"),
-      x: parseFloat(el.dataset.x),
-      y: parseFloat(el.dataset.y),
+      // Where the node is in the network's layout.
+      gx: parseFloat(el.dataset.x),
+      gy: parseFloat(el.dataset.y),
+      // Where it goes in the view, and where it is drawn while it moves there.
+      x: 0,
+      y: 0,
+      px: undefined,
+      py: undefined,
       children: [],
       parents: [],
     });
@@ -82,7 +117,6 @@ function createNetworkMap(container) {
   let shown = new Set();
   let frame = [];
   let view = null;
-  let minZoom = 0;
 
   let focus = root;
   // Whether the focus shows its children.
@@ -124,6 +158,7 @@ function createNetworkMap(container) {
 
   function setLabel(text, side, lines) {
     const x = side === "left" ? -LABEL_OFFSET : LABEL_OFFSET;
+    text.removeAttribute("display");
     text.setAttribute("x", x);
     text.setAttribute("text-anchor", side === "left" ? "end" : "start");
     if (lines.length === 1) {
@@ -180,16 +215,18 @@ function createNetworkMap(container) {
 
   // The trail and the parents of the focus that lie off screen, each pinned where
   // the line towards it leaves the screen, so that the way back stays in reach.
-  // Their labels face the middle.
+  // Their labels face the middle. Where pins would pile up, the one nearest the
+  // focus along the trail shows.
   function pinOffScreen(at, width, height) {
     const inside = ([x, y]) =>
       x >= PIN_INSET && x <= width - PIN_INSET && y >= PIN_INSET && y <= height - PIN_INSET;
     pins.replaceChildren();
-    const away = new Set([...trail, ...nodes.get(focus).parents]);
+    const away = new Set([...nodes.get(focus).parents, ...[...trail].reverse()]);
     away.delete(focus);
+    const placed = [];
     return [...away].flatMap((id) => {
       const [px, py] = at(id);
-      if (inside([px, py])) return [];
+      if (px >= 0 && px <= width && py >= 0 && py <= height) return [];
       // Aim from the next node on the trail that is on screen, so that the pin
       // sits on the edge that leads to it, else from the focus, else from the
       // middle of the screen, when panning has taken the focus away.
@@ -206,6 +243,8 @@ function createNetworkMap(container) {
         py > height - PIN_INSET ? (height - PIN_INSET - fy) / dy : 1,
       );
       const [x, y] = [fx + t * dx, fy + t * dy];
+      if (placed.some(([qx, qy]) => Math.hypot(qx - x, qy - y) < 2 * TARGET_RADIUS)) return [];
+      placed.push([x, y]);
       const pin = document.createElementNS(SVG, "g");
       pin.setAttribute("class", "nm-pin");
       pin.setAttribute("data-id", id);
@@ -226,24 +265,150 @@ function createNetworkMap(container) {
     });
   }
 
-  // Fits `ids` on screen, as a view.
-  function fit(ids, width, height, maxZoom) {
-    const xs = ids.map((id) => nodes.get(id).x);
-    const ys = ids.map((id) => nodes.get(id).y);
-    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-    const zoom = Math.min(
-      maxZoom,
-      (width - 2 * PADDING) / Math.max(1e-9, x1 - x0),
-      (height - 2 * PADDING) / Math.max(1e-9, y1 - y0),
-    );
-    return { zoom, dx: width / 2 - (zoom * (x0 + x1)) / 2, dy: height / 2 - (zoom * (y0 + y1)) / 2 };
+  // Places the shown nodes for the view: the focus in the middle, and its
+  // parents and, while open, its children around an ellipse that fills the
+  // screen, each in the direction it lies from the focus in the network's layout
+  // and spread apart where they crowd. The rest of the trail goes beyond, off
+  // screen, where it is pinned.
+  function arrange(width, height) {
+    const f = nodes.get(focus);
+    const [cx, cy] = [width / 2, height / 2];
+    const [a, b] = [Math.max(1, cx - SIDE_MARGIN), Math.max(1, cy - END_MARGIN)];
+    Object.assign(f, { x: cx, y: cy });
+    const direction = (id) => Math.atan2(nodes.get(id).gy - f.gy, nodes.get(id).gx - f.gx);
+    // Arc length along the ellipse, at points evenly spaced in its parameter.
+    const steps = 720;
+    const lengths = [0];
+    for (let k = 1; k <= steps; k++) {
+      const [t0, t1] = [((k - 1) / steps) * TAU, (k / steps) * TAU];
+      lengths.push(lengths[k - 1] + Math.hypot(a * (Math.cos(t1) - Math.cos(t0)), b * (Math.sin(t1) - Math.sin(t0))));
+    }
+    const perimeter = lengths[steps];
+    // How far along the ellipse the ray at `angle` from the middle meets it.
+    const along = (angle) => {
+      const u = (((Math.atan2(Math.sin(angle) / b, Math.cos(angle) / a) + TAU) % TAU) / TAU) * steps;
+      const k = Math.min(steps - 1, Math.floor(u));
+      return lengths[k] + (u - k) * (lengths[k + 1] - lengths[k]);
+    };
+    // The point that far along the ellipse, scaled by `scale` from the middle.
+    const point = (s, scale) => {
+      s = ((s % perimeter) + perimeter) % perimeter;
+      let k = 0;
+      while (k < steps - 1 && lengths[k + 1] < s) k++;
+      const t = ((k + (s - lengths[k]) / (lengths[k + 1] - lengths[k])) / steps) * TAU;
+      return [cx + scale * a * Math.cos(t), cy + scale * b * Math.sin(t)];
+    };
+    const ring = [...new Set([...f.parents, ...(open ? f.children : [])])];
+    const items = ring
+      .map((id) => ({ id, s: along(direction(id)) }))
+      .sort((p, q) => p.s - q.s || (p.id < q.id ? -1 : 1));
+    const n = items.length;
+    const gap = Math.min(MAX_GAP, perimeter / Math.max(1, n));
+    if (n * MAX_GAP >= perimeter) {
+      // As many as fill the ellipse: evenly spaced, turned to sit nearest their places.
+      const turn = Math.atan2(
+        ...[Math.sin, Math.cos].map((trig) =>
+          items.reduce((sum, { s }, i) => sum + trig(((s - i * gap) / perimeter) * TAU), 0)),
+      );
+      items.forEach((item, i) => (item.s = (turn / TAU) * perimeter + i * gap));
+    } else {
+      // Fewer: neighbours pushed apart, in order, until they are `gap` apart.
+      for (let round = 0, moved = n > 1; round < 100 && moved; round++) {
+        moved = false;
+        for (let i = 0; i < n; i++) {
+          const [p, q] = [items[i], items[(i + 1) % n]];
+          const d = q.s - p.s + (i === n - 1 ? perimeter : 0);
+          if (d < gap - 0.5) {
+            p.s -= (gap - d) / 2;
+            q.s += (gap - d) / 2;
+            moved = true;
+          }
+        }
+      }
+    }
+    const crowded = gap < MIN_GAP;
+    const slots = items.map(({ s }, i) => point(s, crowded && i % 2 ? INNER : 1));
+    // Nodes move to other places on the ellipse, the rest shifting along, while
+    // that uncrosses the edges among the focus and the nodes around it.
+    const local = edges.filter(({ from, to }) =>
+      [from, to].every((id) => id === focus || ring.includes(id)));
+    const count = (order) => {
+      const placed = new Map([[focus, [cx, cy]], ...order.map((id, i) => [id, slots[i]])]);
+      return crossings(local, (id) => placed.get(id));
+    };
+    let order = items.map(({ id }) => id);
+    let least = local.length > 1 ? count(order) : 0;
+    for (let improved = least > 0; improved; ) {
+      improved = false;
+      for (let i = 0; i < n && least > 0; i++) {
+        for (let k = 0; k < n && least > 0; k++) {
+          if (k === i) continue;
+          const moved = [...order];
+          moved.splice(k, 0, ...moved.splice(i, 1));
+          const c = count(moved);
+          if (c < least) {
+            [order, least, improved] = [moved, c, true];
+          }
+        }
+      }
+    }
+    order.forEach((id, i) => (items[i].id = id));
+    items.forEach(({ id }, i) => {
+      const [x, y] = slots[i];
+      Object.assign(nodes.get(id), { x, y });
+    });
+    // The rest of the trail leads on from the parent it came through, outward,
+    // so that its edges run off screen rather than across the view.
+    const via = items.find(({ id }) => id === trail[trail.length - 2]);
+    trail.slice(0, -2).forEach((id, i, rest) => {
+      if (via && !ring.includes(id)) {
+        const [x, y] = point(via.s, 3 + rest.length - i);
+        Object.assign(nodes.get(id), { x, y });
+      }
+    });
   }
 
-  // Shows what the focus reveals, fitted to its neighbourhood.
+  // Moves the shown nodes and their edges to their places. Those shown before go
+  // from where they were, the rest from where the focus was.
+  let gliding = 0;
+  function glide(was, width, height) {
+    const f = nodes.get(focus);
+    const origin = was.has(focus) ? [f.px, f.py] : [width / 2, height / 2];
+    const start = new Map([...shown].map((id) => {
+      const node = nodes.get(id);
+      return [id, was.has(id) ? [node.px, node.py] : origin];
+    }));
+    const t0 = performance.now();
+    const instant = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    cancelAnimationFrame(gliding);
+    const step = (now) => {
+      const t = instant ? 1 : Math.min(1, (now - t0) / GLIDE_MS);
+      const eased = 1 - (1 - t) ** 3;
+      for (const [id, [x0, y0]] of start) {
+        const node = nodes.get(id);
+        node.px = x0 + (node.x - x0) * eased;
+        node.py = y0 + (node.y - y0) * eased;
+        node.el.setAttribute("transform", `translate(${node.px} ${node.py})`);
+      }
+      for (const { el, from, to } of edges) {
+        if (start.has(from) && start.has(to)) {
+          el.setAttribute("x1", nodes.get(from).px);
+          el.setAttribute("y1", nodes.get(from).py);
+          el.setAttribute("x2", nodes.get(to).px);
+          el.setAttribute("y2", nodes.get(to).py);
+        }
+      }
+      if (t < 1) gliding = requestAnimationFrame(step);
+    };
+    step(t0);
+  }
+
+  // Shows what the focus reveals, laid out for the screen.
   function render() {
     const width = svg.clientWidth;
     const height = svg.clientHeight;
     if (!width || !height) return;
+    const was = shown;
     shown = visible();
     for (const [id, node] of nodes) {
       node.el.classList.toggle("nm-hidden", !shown.has(id));
@@ -258,10 +423,11 @@ function createNetworkMap(container) {
       edge.el.classList.toggle("nm-trail", onTrail(edge));
     }
     frame = framed();
-    view = fit(frame, width, height, MAX_ZOOM);
-    // Zooming out stops at the whole network.
-    minZoom = Math.min(view.zoom, fit([...nodes.keys()], width, height, MAX_ZOOM).zoom);
+    arrange(width, height);
+    // Gestures may zoom in from the view, and it fills the screen, so not out.
+    view = { zoom: 1, dx: 0, dy: 0 };
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    glide(was, width, height);
     draw();
     svg.classList.add("nm-ready");
   }
@@ -275,16 +441,18 @@ function createNetworkMap(container) {
     viewport.style.transform = `translate(${dx}px, ${dy}px) scale(${zoom})`;
 
     const at = (id) => [dx + zoom * nodes.get(id).x, dy + zoom * nodes.get(id).y];
+    // Pins go first, so that the way back is labelled clearly.
+    const pinned = pinOffScreen(at, width, height);
     const rest = [...shown].filter((id) => !frame.includes(id)).sort(byDegree);
     const onScreen = [...frame, ...rest].flatMap((id) => {
       const [x, y] = at(id);
       const node = nodes.get(id);
       return x >= 0 && x <= width && y >= 0 && y <= height
-        ? [{ id, x, y, text: node.text, left: node.x < 0 }]
+        ? [{ id, x, y, text: node.text, left: node.x < width / 2 }]
         : [];
     });
-    // Pins go first, so that the way back is labelled clearly.
-    const pinned = pinOffScreen(at, width, height);
+    // Labels not placed, off screen, would linger where they were.
+    for (const id of shown) nodes.get(id).text.setAttribute("display", "none");
     placeLabels([...pinned, ...onScreen], width, height);
     drawn = [...pinned, ...onScreen];
   }
@@ -301,7 +469,7 @@ function createNetworkMap(container) {
 
   // Zooms by `factor` around the screen point [x, y], which stays put.
   function zoomAt([x, y], factor) {
-    const zoom = Math.min(GESTURE_MAX_ZOOM, Math.max(minZoom, view.zoom * factor));
+    const zoom = Math.min(GESTURE_MAX_ZOOM, Math.max(1, view.zoom * factor));
     const scale = zoom / view.zoom;
     view = { zoom, dx: x - scale * (x - view.dx), dy: y - scale * (y - view.dy) };
   }

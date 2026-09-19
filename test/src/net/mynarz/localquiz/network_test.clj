@@ -23,44 +23,36 @@
                          j (range 3)]
                      [(str "g" i "-" j) (str "g" i "-" (inc j))]))))
 
-(def ^:private k33
-  "A network that is not planar: the root above K3,3."
-  (choices (concat (for [i (range 3)]
-                     ["root" (str "a" i)])
-                   (for [i (range 3)
-                         j (range 3)]
-                     [(str "a" i) (str "b" j)]))))
-
 (deftest validation
   (testing "A network needs one root"
     (is (network/single-root? fans))
     (is (not (network/single-root? (choices [["a" "b"] ["c" "d"]])))))
-  (testing "A network must not have cycles"
-    (is (network/acyclic? fans))
-    (is (not (network/acyclic? (choices [["root" "a"] ["a" "b"] ["b" "a"]])))))
+  (testing "A network may loop, but every node must be reachable from its root"
+    (is (network/connected? fans))
+    (is (network/connected? (choices [["root" "a"] ["a" "b"] ["b" "a"]])))
+    (is (not (network/connected? (choices [["root" "a"] ["b" "c"] ["c" "b"]])))))
   (testing "A network is capped in size"
     (is (network/within-max-nodes? fans))
     (is (not (network/within-max-nodes? (choices (for [i (range network/max-nodes)]
                                                    ["root" (str i)])))))))
 
-(defn- edge
-  [[a b]]
-  (hash-set a b))
-
 (deftest layout
-  (testing "A planar network is drawn around its root without crossings"
-    (let [positions (network/layout fans)
-          arcs      (:arcs (network/network fans))]
-      (is (= [0.0 0.0] (positions "root")))
-      (is (= (count positions) (count (set (vals positions)))))
-      (is (empty? (network/crossings arcs positions)))))
-  (testing "Of a network that is not planar, only edges left out of its planar backbone cross"
-    (let [positions (network/layout k33)
-          {:keys [arcs nodes]} (network/network k33)
-          backbone  (set (map edge (#'network/backbone nodes arcs "root")))]
-      (is (seq (network/crossings arcs positions)))
-      (is (every? (fn [pair] (some (comp not backbone edge) pair))
-                  (network/crossings arcs positions)))))
-  (testing "A network too small to triangulate"
+  (let [positions (network/layout fans)
+        radius    (fn [node] (apply #(Math/hypot %1 %2) (positions node)))]
+    (testing "The root sits in the middle"
+      (is (= [0.0 0.0] (positions "root"))))
+    (testing "Every arc points outward"
+      (is (every? (fn [[a b]] (< (radius a) (radius b)))
+                  (:arcs (network/network fans)))))
+    (testing "No two nodes share a place"
+      (is (= (count positions) (count (set (vals positions)))))))
+  (testing "Of a network that loops, every arc but the one closing the loop points outward"
+    (let [looped    (choices [["root" "a"] ["a" "b"] ["b" "c"] ["c" "a"]])
+          positions (network/layout looped)
+          radius    (fn [node] (apply #(Math/hypot %1 %2) (positions node)))]
+      (is (= #{"root" "a" "b" "c"} (set (keys positions))))
+      (is (every? (fn [[a b]] (< (radius a) (radius b)))
+                  (remove #{["c" "a"]} (:arcs (network/network looped)))))))
+  (testing "A network of the root and a single child"
     (is (= {"root" [0.0 0.0] "a" [100.0 0.0]}
            (network/layout (choices [["root" "a"]]))))))

@@ -139,12 +139,13 @@
          (comp #{:consensus :majority} :scoring)))
 
 (defmethod question :network [_]
-  ;; Players pick one of the :choices from the network their :related describe, a DAG
-  ;; drawn around its root. Scored across players, like :autocomplete.
+  ;; Players pick one of the :choices from the network their :related describe, which may
+  ;; loop but must all be reachable from its single root, around which it is drawn.
+  ;; Scored across players, like :autocomplete.
   (s/and (s/keys :req-un [::choices])
          (comp #{:consensus :majority} :scoring)
          (comp network/single-root? :choices)
-         (comp network/acyclic? :choices)
+         (comp network/connected? :choices)
          (comp network/within-max-nodes? :choices)))
 
 (s/def ::sort-value
