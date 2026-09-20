@@ -644,6 +644,60 @@ input[type="text"], input[type="number"] {
   }
 }
 
+/* The tree of the answers to a :network question, drawn on the reveal. Deliberately not
+   sharing the .nm- classes or the .network-map wrapper: that one is claimed by
+   `#morph:has(.network-map)` below for the full-viewport interactive layout, and its svg
+   stays `visibility: hidden` until network.js adds .nm-ready, which never comes to a
+   drawing the server finished. Sizes come from the drawing's own units, so they hold
+   whether the answers landed together or far apart. */
+.nt {
+  display: block;
+  width: 100%;
+  /* What the reveal has left once the question, the note and Next have taken theirs. The
+     projection is height-locked, so this is what keeps Next on the screen. */
+  max-height: min(34vh, 22em);
+  margin: .5em auto;
+  overflow: visible;
+}
+
+.nt-edge {
+  stroke: rgb(from var(--offwhite) r g b / 55%);
+  stroke-width: 2px;
+  /* Held at 2px however far the tree had to be scaled to fit. */
+  vector-effect: non-scaling-stroke;
+}
+
+.nt-node circle {
+  /* A node nobody picked, drawn only because it joins two that were. Dimmer and smaller
+     than an answer, but still solid: on a wall it is what explains the distance. */
+  fill: rgb(from var(--offwhite) r g b / 60%);
+}
+
+.nt-picked circle {
+  fill: var(--orange);
+}
+
+.nt-root circle {
+  fill: var(--red);
+}
+
+.nt-label {
+  /* Dimmer for a node between the answers, matching its circle: the tree names it because
+     it explains the distance, not because anyone picked it. */
+  fill: rgb(from var(--offwhite) r g b / 65%);
+  /* A halo, so a label crossing an edge stays readable. Held at 3 screen px like the
+     edges: a stroke width is in user units, which the fit to the box scales along with
+     everything else, and on a small drawing 3 of those swallow the letters whole. */
+  stroke: var(--darker);
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+  paint-order: stroke;
+}
+
+.nt-picked .nt-label {
+  fill: var(--offwhite);
+}
+
 /* A page showing a network map fits the viewport, so that the cell under the map and
    Submit stay in view: the map shrinks for them, down to 240px, below which the page
    scrolls instead. `svh` is the viewport with the mobile URL bar shown, so the page fits

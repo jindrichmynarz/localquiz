@@ -87,3 +87,90 @@
       (is (= 3 (occurrences html "class=\"nm-chosen\"")))
       (is (string/includes? html (str "data-for=\"Techno\" hidden><strong>Techno</strong>"
                                       "<div class=\"description\">Detroit, emerged mid 80s.</div>"))))))
+
+(def ^:private revealed-choices
+  [{:label "House" :related ["Genre"]}
+   {:label "Techno" :related ["Genre"] :description "Detroit, emerged mid 80s."}
+   {:label "Acid House" :related ["House"]}
+   {:label "Deep House" :related ["House"]}])
+
+(defn- render-revealed
+  "The moderator's revealed view of a :network question answered per `frequencies`."
+  [frequencies]
+  (h/html (views/answers-view fixtures/tr true
+                              {:answer-count       (reduce + (vals frequencies))
+                               :answer-frequencies frequencies
+                               :answer-revealed?   true}
+                              fixtures/game-id false
+                              {:type :network :choices revealed-choices})))
+
+(deftest network-result-tree
+  (testing "The tree replaces the ranked list every other crowd-scored type gets"
+    (let [html (render-revealed {"Acid House" 2 "Deep House" 1})]
+      (is (not (string/includes? html "open-answers")))
+      (is (string/includes? html "<svg class=\"nt\""))))
+  (testing "It is fitted to its box, which a viewBox is what does"
+    (is (string/includes? (render-revealed {"Acid House" 2 "Deep House" 1}) "viewBox=")))
+  (testing "Nothing of the interactive map comes along"
+    (let [html (render-revealed {"Acid House" 2 "Deep House" 1})]
+      (is (not (string/includes? html "nm-")))
+      (is (not (string/includes? html "network-map")))
+      (is (not (string/includes? html "data-init")))))
+  (testing "How many took an answer shows as the size of its circle, not as a number"
+    (let [html (render-revealed {"Acid House" 2 "Deep House" 1})
+          radius (fn [label]
+                   (->> (re-seq (re-pattern (str "r=\"([0-9.]+)\"[^>]*></circle><text[^>]*>"
+                                                 label))
+                                html)
+                        first second parse-double))]
+      (is (not (string/includes? html "nt-count")))
+      (testing "the label carries the name and nothing after it"
+        (is (string/includes? html ">Acid House</text>")))
+      (testing "the answer two took is drawn larger than the one only one took"
+        (is (> (radius "Acid House") (radius "Deep House"))))))
+  (testing "A node joining two answers is drawn and named: it is why they are apart"
+    (let [html (render-revealed {"Acid House" 1 "Deep House" 1})]
+      (is (= 3 (occurrences html "class=\"nt-node")))
+      (is (= 2 (occurrences html "class=\"nt-edge")))
+      ;; House holds the two together, so it is drawn, labelled, but not marked an answer.
+      (is (string/includes? html ">House</text>"))
+      (is (= 2 (occurrences html "nt-picked")))))
+  (testing "Branches nobody picked are left out altogether"
+    (let [html (render-revealed {"Acid House" 1 "Deep House" 1})]
+      (is (not (string/includes? html "Techno")))
+      ;; Genre is the root, and these two reach each other without it.
+      (is (not (string/includes? html "Genre")))))
+  (testing "The root is drawn, and labelled, when it is what holds the answers together"
+    (let [html (render-revealed {"Techno" 1 "Deep House" 1})]
+      (is (string/includes? html "Genre"))
+      (is (string/includes? html "nt-root"))))
+  (testing "One answer draws that answer alone, with no arcs"
+    (let [html (render-revealed {"Techno" 3})]
+      (is (= 1 (occurrences html "class=\"nt-node")))
+      (is (zero? (occurrences html "class=\"nt-edge")))
+      (is (string/includes? html ">Techno</text>"))))
+  (testing "Everyone answering the same leaves a tree with no extent of its own"
+    ;; It still has to be drawn at the size a node is drawn at anywhere else: sizes are a
+    ;; fraction of the drawing, so a box collapsed onto the one node renders it as a speck.
+    (let [html      (render-revealed {"Techno" 3})
+          number    (fn [attribute]
+                      (some-> (re-find (re-pattern (str attribute "=\"(-?[0-9.]+)\"")) html)
+                              second parse-double))
+          [_ _ w h] (map parse-double
+                         (string/split (second (re-find #"viewBox=\"([^\"]+)\"" html)) #" "))]
+      (testing "the box is the size a single ring of the layout is, and not square"
+        (is (<= 100.0 w))
+        (is (< h w)))
+      (testing "the node and its label are drawn at the scale any other tree draws them"
+        (is (< 1.0 (number "r")))
+        (is (< 1.0 (number "font-size"))))))
+  (testing "Nothing is drawn before the answers are in, or when nobody answered"
+    (is (not (string/includes? (render-revealed {}) "<svg")))
+    (is (not (string/includes?
+               (h/html (views/answers-view fixtures/tr true
+                                           {:answer-count 2
+                                            :answer-frequencies {"Techno" 2}
+                                            :answer-revealed? false}
+                                           fixtures/game-id false
+                                           {:type :network :choices revealed-choices}))
+               "<svg")))))

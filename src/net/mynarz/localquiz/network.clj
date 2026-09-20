@@ -163,6 +163,122 @@
                  (into distance (map #(vector % (inc hops))) ring)
                  (inc hops)))))))
 
+(defn- shortest-paths
+  "Breadth-first from `source` over the undirected `adjacent`, as
+  `{node [distance predecessor]}`, the predecessor being the step back toward `source`."
+  [adjacent source]
+  (loop [ring [source]
+         seen {source [0 nil]}
+         hops 0]
+    (if (empty? ring)
+      seen
+      (let [step  (inc hops)
+            ; Reached from several nodes at once, the first predecessor wins: any of them
+            ; lies on a path of the same length, and taking one keeps the result a tree.
+            found (reduce (fn [found node]
+                            (reduce (fn [found neighbour]
+                                      (if (or (seen neighbour) (found neighbour))
+                                        found
+                                        (assoc found neighbour [step node])))
+                                    found
+                                    (adjacent node)))
+                          {}
+                          ring)]
+        (recur (vec (keys found)) (into seen found) step)))))
+
+(defn- walk-back
+  "The nodes from the source of `paths` to `target`, inclusive."
+  [paths target]
+  (loop [node target
+         path (list target)]
+    (if-let [predecessor (second (paths node))]
+      (recur predecessor (conj path predecessor))
+      path)))
+
+(defn- spanning-tree
+  "Edges of `edges` that reach a node not yet reached, so that a subgraph carrying a loop
+  comes back as a tree. `edges` must be connected, which a union of paths between the same
+  terminals is."
+  [edges]
+  (let [adjacent (adjacency edges)
+        start    (first (sort (keys adjacent)))]
+    (loop [queue [start]
+           seen  #{start}
+           kept  []]
+      (if-let [node (first queue)]
+        (let [fresh (remove seen (sort (adjacent node)))]
+          (recur (into (subvec queue 1) fresh)
+                 (into seen fresh)
+                 (into kept (map #(vector node %)) fresh)))
+        kept))))
+
+(defn- trim
+  "Drops leaves that are not terminals, and keeps dropping: a shortest path may overshoot
+  past the terminal it was aiming at, and the stub it leaves says nothing."
+  [edges terminals]
+  (loop [edges (set edges)]
+    (let [degree (frequencies (mapcat identity edges))
+          stubs  (set (for [[node connections] degree
+                            :when (and (= 1 connections) (not (terminals node)))]
+                        node))]
+      (if (empty? stubs)
+        edges
+        (recur (into #{} (remove #(some stubs %)) edges))))))
+
+(defn answer-tree
+  "Smallest tree connecting `terminals` in the network `choices` describe, as
+  `{:nodes :arcs}`. Nodes other than the terminals appear only where one is needed to join
+  them, the root included: unlike `nearby`, which drops a root that is not a choice, the
+  drawing needs whatever actually holds the answers together.
+
+  Connecting a subset of a graph's nodes as cheaply as possible is the Steiner tree
+  problem, so this is its usual approximation: shortest paths between every pair of
+  terminals, a minimum spanning tree over those distances, then each of its edges expanded
+  back into the path it stands for. With every node picked it reduces to that spanning tree
+  alone. Not memoized, as it turns on the answers rather than the choices."
+  [choices terminals]
+  (let [{:keys [nodes arcs]} (network choices)
+        known                (set nodes)
+        terminals            (filterv known (distinct terminals))
+        picked               (set terminals)]
+    (if (< (count terminals) 2)
+      {:nodes (vec terminals)
+       :arcs  []}
+      (let [adjacent (adjacency arcs)
+            paths    (into {} (map (juxt identity (partial shortest-paths adjacent))) terminals)
+            ; Prim over the terminals alone, the distances standing in for edges. Ties break
+            ; on the labels, so the same answers always draw the same tree.
+            chosen   (loop [joined #{(first terminals)}
+                            apart  (set (rest terminals))
+                            chosen []]
+                       (if (empty? apart)
+                         chosen
+                         (let [[_ a b] (->> (for [a     joined
+                                                  b     apart
+                                                  :let  [[distance] (get-in paths [a b])]
+                                                  :when distance]
+                                              [distance a b])
+                                            sort
+                                            first)]
+                           (if b
+                             (recur (conj joined b) (disj apart b) (conj chosen [a b]))
+                             chosen))))
+            arc-set  (set arcs)
+            orient   (fn [[a b]] (if (arc-set [a b]) [a b] [b a]))
+            expanded (into #{}
+                           (mapcat (fn [[a b]]
+                                     (let [path (walk-back (paths a) b)]
+                                       (map orient (map vector path (rest path))))))
+                           chosen)
+            ; Back to the network's own direction: both the walk out from a terminal and
+            ; the sweep in `spanning-tree` run over undirected edges, so either may hand
+            ; back an arc the wrong way round for `arcs` to recognise.
+            kept     (into #{} (map orient) (trim (spanning-tree expanded) picked))
+            reached  (into picked (mapcat identity) kept)]
+        ; Both in the network's own order, so the drawing is stable across reveals.
+        {:nodes (filterv reached nodes)
+         :arcs  (filterv kept arcs)}))))
+
 (defn- ccw
   "Which way the turn `a` -> `b` -> `c` bends: 1 counter-clockwise, -1 clockwise,
   0 collinear. The `^double` hints are not decoration: without them this runs on boxed

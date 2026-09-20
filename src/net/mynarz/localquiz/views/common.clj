@@ -7,7 +7,7 @@
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.session :as session]
             [net.mynarz.localquiz.util :as util :refer [svg]]
-            [net.mynarz.localquiz.views.network :refer [network-map]]
+            [net.mynarz.localquiz.views.network :refer [network-map result-tree]]
             [charred.api :as charred]
             [clojure.string :as string]
             [dev.onionpancakes.chassis.compiler :as cc]
@@ -604,16 +604,21 @@
    ^String game-id
    _
    {:keys [choices note]}]
-  [:form#answers
-   (when-not disabled?
-     [:div
-      {:data-signals:_answer "''"
-       :data-on:network-select "$_answer = evt.detail"}
-      (network-map tr choices)
-      [:input
-       {:data-attr:value "$_answer"
-        :name "answer"
-        :type "hidden"}]
-      [:p (assoc-in (submit-button tr game-id) [1 :data-attr:disabled] "!$_answer")]])
-   (open-answers tr answers)
-   (note-view answer-revealed? note)])
+  (let [{:keys [answer-count answer-frequencies]} answers]
+    [:form#answers
+     (when-not disabled?
+       [:div
+        {:data-signals:_answer "''"
+         :data-on:network-select "$_answer = evt.detail"}
+        (network-map tr choices)
+        [:input
+         {:data-attr:value "$_answer"
+          :name "answer"
+          :type "hidden"}]
+        [:p (assoc-in (submit-button tr game-id) [1 :data-attr:disabled] "!$_answer")]])
+     ;; The tree stands in for the ranked list every other crowd-scored type gets: this is
+     ;; the one question type where how far apart the answers were is the result, which is
+     ;; also what the scoring measures, and a list of labels cannot show it.
+     (when (and answer-revealed? (pos? (or answer-count 0)))
+       (result-tree choices answer-frequencies answer-count))
+     (note-view answer-revealed? note)]))
