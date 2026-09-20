@@ -338,6 +338,10 @@ select {
   }
 }
 
+.btn-next {
+  padding: .25lh 1ch;
+}
+
 .btn, .btn::before, .btn::after {
   transition: all var(--transition);
 }

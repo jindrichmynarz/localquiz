@@ -142,7 +142,7 @@
     ^String next-action
     ^clojure.lang.Keyword label-key
     icon]
-   [:button.btn.btn-primary
+   [:button.btn.btn-primary.btn-next
     {:data-on:click next-action
      :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
     (tr [label-key])
