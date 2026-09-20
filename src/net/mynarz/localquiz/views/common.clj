@@ -97,6 +97,8 @@
     {:data-on:click "$error = ''; $errorPreformatted = false"}
     (tr [:close])]])
 
+(declare ->session-role)
+
 (defn morph-body
   ([request]
    (morph-body request nil nil nil))
@@ -104,33 +106,43 @@
    (morph-body request nil nil main))
   ([request header main]
    (morph-body request nil header main))
-  ([{:tempura/keys [tr]}
+  ([{:tempura/keys [tr]
+     :as request}
     center
     header
     main]
-   [:div#morph
-    {:data-signals:error__ifmissing ""
-     :data-signals:error-preformatted__ifmissing false}
-    [:header
-     [:h1 "Localquiz"]
-     [:div#header-center center]
-     [:div#menu-trigger
-      {:data-signals:_menu-open "false"}
-      [:div#top-menu
-       {:data-class:open "$_menuOpen"}
-       header
-       (lang-switch tr)]
-      [:i.material-icons
-       {:role "button"
-        :tabindex "0"
-        :aria-label (tr [:menu])
-        :data-on:click "$_menuOpen = !$_menuOpen"
-        :data-on:keydown "evt.key === 'Enter' && (evt.preventDefault(), $_menuOpen = !$_menuOpen)"}
-       (svg "menu.svg")]]]
-    [:main main]
-    (footer tr)
-    (cookie-warning tr)
-    (error-dialog tr)]))
+   ;; The moderator's view of a running game is projected and read across a room, so it
+   ;; gets a type scale that keeps growing with the display (see --font-size-projected in
+   ;; style.css) and drops the credits, which would otherwise sit on the wall for the
+   ;; length of the game and take the line the answers need. The create form is
+   ;; moderator-only too, but it is filled in at a keyboard, so it keeps the hand-held
+   ;; scale and the credits.
+   (let [projected? (boolean (and (= :moderator (->session-role request))
+                                  (-> request :path-params :game-id)))]
+     [:div#morph
+      {:class (when projected? "projected")
+       :data-signals:error__ifmissing ""
+       :data-signals:error-preformatted__ifmissing false}
+      [:header
+       [:h1 "Localquiz"]
+       [:div#header-center center]
+       [:div#menu-trigger
+        {:data-signals:_menu-open "false"}
+        [:div#top-menu
+         {:data-class:open "$_menuOpen"}
+         header
+         (lang-switch tr)]
+        [:i.material-icons
+         {:role "button"
+          :tabindex "0"
+          :aria-label (tr [:menu])
+          :data-on:click "$_menuOpen = !$_menuOpen"
+          :data-on:keydown "evt.key === 'Enter' && (evt.preventDefault(), $_menuOpen = !$_menuOpen)"}
+         (svg "menu.svg")]]]
+      [:main main]
+      (when-not projected? (footer tr))
+      (cookie-warning tr)
+      (error-dialog tr)])))
 
 (defn shim-page
   "A basic HTML page with Datastar setup."
