@@ -1387,6 +1387,15 @@ body:has(.winner) {
   }
 }
 
+/* Decorative loops only; the spinner keeps turning, slower, via its own rule. */
+@media (prefers-reduced-motion: reduce) {
+  body:has(.winner),
+  .waiting-icon svg,
+  .waiting-icon .shadow {
+    animation: none;
+  }
+}
+
 #game-url {
   display: flex;
 
