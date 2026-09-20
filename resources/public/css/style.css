@@ -1109,6 +1109,7 @@ label {
   li {
     display: flex;
     justify-content: space-between;
+    gap: 1em;
     background-color: var(--dark);
     border: 3px solid var(--darker);
     list-style-type: none;
