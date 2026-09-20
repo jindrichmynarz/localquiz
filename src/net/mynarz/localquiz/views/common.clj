@@ -77,7 +77,7 @@
     :role "dialog"}
    [:p (tr [:cookie-warning])]
    [:div.buttons
-    [:button.btn.btn-primary
+    [:button.btn
      {:data-on:click "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
      (tr [:accept])]]])
 
@@ -260,7 +260,7 @@
 (defn submit-button
   [tr
    ^String game-id]
-  [:button.btn#submit
+  [:button.btn.btn-primary#submit
    {:data-on:click (answer-handler game-id)}
    (tr [:submit])])
 

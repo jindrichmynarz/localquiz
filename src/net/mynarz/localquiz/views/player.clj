@@ -42,7 +42,7 @@
         :required true
         :type "text"}]
       views/lang-input
-      [:button.btn#submit
+      [:button.btn.btn-primary#submit
        {:data-attr:aria-disabled "!!$error"
         :data-attr:disabled "!!$error"
         :data-on:click (long-str "$_controller.abort();"
