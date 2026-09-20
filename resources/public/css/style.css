@@ -9,6 +9,19 @@
 
   /* Fonts */
   --font-size: clamp(16px, 4vw, 28px);
+  /* The moderator's view is projected and read from across the room, so its type keeps
+     growing with the display instead of stopping at a hand-held size.
+
+     Height leads, because height is what a question runs out of. Nothing measures the
+     content, so the coefficient is set from the tallest question worth designing for — a
+     three-line question, four answers of two lines each, a note and the control under
+     them — which is what fits exactly at 3.4vh. Anything longer than that scrolls inside
+     main rather than pushing the control off the screen. Width caps it for a display wide
+     out of proportion to its height.
+
+     ~37px on a 1080p projection and 56px from 1440p up, against the 28px a phone caps
+     at. */
+  --font-size-projected: clamp(20px, min(2.6vw, 3.4vh), 56px);
 
   /* Motion */
   --transition: 0.2s ease-out;
@@ -34,6 +47,41 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
+
+  /* The moderator's projected view of a running game. The room takes the question, its
+     answers and the control under them in one glance, so the projection is exactly the
+     screen: never taller, never a page scroll. The credits are gone from the markup
+     rather than hidden here — see morph-body. */
+  &.projected {
+    --font-size: var(--font-size-projected);
+
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+
+    > main {
+      /* A flex child will not shrink below its content without this, which is what
+         pushed the control below the fold. The scroll is the last resort, for the rare
+         question too long for any readable size. */
+      min-height: 0;
+      overflow: auto;
+    }
+
+    /* The 800px column is a reading measure, meant for a question held at arm's length.
+       On a wall it leaves two thirds of the screen empty and wraps the question into the
+       height that then overflows — the width buys back more room than shrinking the type
+       would, and keeps the type large. */
+    #content {
+      max-width: min(1500px, 84vw);
+    }
+
+    /* The chips carry the game's state — answered, scoring, the clock — so they grow
+       with the question rather than staying at the 16px the header otherwise inherits.
+       Kept well below the question's size, which still leads. */
+    #header-center {
+      font-size: calc(var(--font-size) * .6);
+    }
+  }
 }
 
 header {
