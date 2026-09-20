@@ -95,13 +95,24 @@
         :option (s/keys :req-un [::label]
                         :opt-un [::description ::related])))
 
+(s/def ::choice-list
+  (s/coll-of ::choice
+             :min-count 2
+             :distinct true))
+
+(def ^:private choice-list-valid?
+  "Whether ::choice-list holds for `choices`. Memoized, as every question sharing the
+  choices is validated against them, and walking them dominates validating a large set."
+  (memoize (partial s/valid? ::choice-list)))
+
 (s/def ::choices
   ;; Non-conforming so the raw choice maps survive conformation (the ::choice
   ;; s/or would otherwise tag them), letting predicates like :multiple's read them.
   (s/nonconforming
-    (s/coll-of ::choice
-               :min-count 2
-               :distinct true)))
+    ;; The memoized check comes first, so shared choices are walked once. ::choice-list
+    ;; walks invalid choices again, to report what is wrong with them.
+    (s/or :cached choice-list-valid?
+          :report ::choice-list)))
 
 (s/def ::note ::hiccup)
 

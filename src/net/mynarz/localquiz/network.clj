@@ -83,8 +83,7 @@
   [choices]
   (= 1 (count (:roots (network choices)))))
 
-(defn connected?
-  "Whether every node can be reached from the root, so that there is a way to it."
+(defn- connected?*
   [choices]
   (let [{:keys [nodes arcs roots]} (network choices)
         children                   (group-by first arcs)]
@@ -95,6 +94,11 @@
                   (let [kids (remove seen (map second (children node)))]
                     (recur (into seen kids) (into (subvec queue 1) kids)))
                   seen))))))
+
+(def connected?
+  "Whether every node can be reached from the root, so that there is a way to it.
+  Memoized, like `network`, as every question sharing the choices asks for it."
+  (memoize connected?*))
 
 (defn within-max-nodes?
   [choices]
