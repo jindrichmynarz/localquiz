@@ -428,6 +428,7 @@ input[type="text"], input[type="number"] {
 /* Sizes are in screen pixels, mirrored by network.js and network.clj, since glyphs are
    scaled back by the zoom to keep their size. */
 .network-map {
+  position: relative;
   width: min(92vw, 640px);
   /* One frame around the drawing and the cell under it. */
   border: 3px solid var(--darker);
@@ -456,6 +457,28 @@ input[type="text"], input[type="number"] {
     &.nm-panning .nm-viewport {
       transition: none;
       cursor: grabbing;
+    }
+  }
+
+  /* Says that the map pans, there being no cursor on touch. It floats over the drawing,
+     at its top, clear of the cell below, and never takes a tap meant for a node. */
+  .nm-hint {
+    position: absolute;
+    top: .5em;
+    /* Centred, and free to grow to the width of the frame rather than to half of it. */
+    inset-inline: 1em;
+    width: fit-content;
+    margin-inline: auto;
+    padding: .25em .75em;
+    border-radius: 1em;
+    background: rgb(from var(--darker) r g b / 80%);
+    font-size: .8em;
+    text-align: center;
+    pointer-events: none;
+    transition: opacity .4s ease-out;
+
+    &.nm-gone {
+      opacity: 0;
     }
   }
 

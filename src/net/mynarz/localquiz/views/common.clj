@@ -597,7 +597,7 @@
      [:div
       {:data-signals:_answer "''"
        :data-on:network-select "$_answer = evt.detail"}
-      (network-map choices)
+      (network-map tr choices)
       [:input
        {:data-attr:value "$_answer"
         :name "answer"

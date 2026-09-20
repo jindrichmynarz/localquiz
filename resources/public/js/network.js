@@ -2,15 +2,16 @@
 // views/network.clj. Each view is laid out afresh for the screen, around the
 // directions in the network's radial layout that network.clj computes.
 
-// A view's nodes sit on an ellipse that keeps this far from the sides of the
-// screen, leaving room for labels facing outward, and from its top and bottom.
+// A view's nodes sit on a circle that keeps at least this far from the sides of
+// the screen, leaving room for labels facing outward, and from its top and
+// bottom, whichever of the two leaves it smaller.
 // ponytail: hand-tuned on a portrait phone.
 const SIDE_MARGIN = 60;
 const END_MARGIN = 36;
-// Widest gap between neighbours on the ellipse, so that a few nodes stay near
+// Widest gap between neighbours on the circle, so that a few nodes stay near
 // the directions they lie in rather than spreading around it.
 const MAX_GAP = 120;
-// Below this gap, every other node moves onto an inner ellipse this much smaller.
+// Below this gap, every other node moves onto an inner circle this much smaller.
 const MIN_GAP = 44;
 const INNER = 0.6;
 // How long nodes take to move to their places in a new view.
@@ -26,8 +27,11 @@ const CHAR_WIDTH = 8.9;
 // before a tap becomes a drag.
 const GESTURE_MAX_ZOOM = 5;
 const DRAG_THRESHOLD = 6;
-// Distance of pinned parents from the edge of the screen.
+// Distance of pinned parents from the edge of the screen, and of the focus, which a pan
+// keeps on screen so that the map cannot be dragged away.
 const PIN_INSET = 12;
+// How long the hint that the map pans stays, unheeded.
+const HINT_MS = 8000;
 const SVG = "http://www.w3.org/2000/svg";
 
 // Which way the turn a -> b -> c bends: 1, -1, or 0 if it doesn't.
@@ -107,6 +111,16 @@ function createNetworkMap(container) {
   const chosen = new Map(
     [...container.querySelectorAll(".nm-chosen")].map((el) => [el.dataset.for, el]),
   );
+  // Nothing else says that the map pans, there being no cursor on touch, so a hint shows
+  // until it is heeded, it times out, or it was heeded on an earlier question.
+  const hint = container.querySelector(".nm-hint");
+  const hide = () => hint.classList.add("nm-gone");
+  const panned = () => {
+    sessionStorage.nmPanned = 1;
+    hide();
+  };
+  if (sessionStorage.nmPanned) hide();
+  else setTimeout(hide, HINT_MS);
   const degree = (id) => nodes.get(id).children.length + nodes.get(id).parents.length;
   const byDegree = (a, b) => degree(b) - degree(a) || (a < b ? -1 : a > b ? 1 : 0);
 
@@ -266,38 +280,22 @@ function createNetworkMap(container) {
   }
 
   // Places the shown nodes for the view: the focus in the middle, and its
-  // parents and, while open, its children around an ellipse that fills the
-  // screen, each in the direction it lies from the focus in the network's layout
-  // and spread apart where they crowd. The rest of the trail goes beyond, off
+  // parents and, while open, its children around a circle that fills the screen,
+  // each in the direction it lies from the focus in the network's layout and
+  // spread apart where they crowd. The rest of the trail goes beyond, off
   // screen, where it is pinned.
   function arrange(width, height) {
     const f = nodes.get(focus);
     const [cx, cy] = [width / 2, height / 2];
-    const [a, b] = [Math.max(1, cx - SIDE_MARGIN), Math.max(1, cy - END_MARGIN)];
+    const r = Math.max(1, Math.min(cx - SIDE_MARGIN, cy - END_MARGIN));
     Object.assign(f, { x: cx, y: cy });
     const direction = (id) => Math.atan2(nodes.get(id).gy - f.gy, nodes.get(id).gx - f.gx);
-    // Arc length along the ellipse, at points evenly spaced in its parameter.
-    const steps = 720;
-    const lengths = [0];
-    for (let k = 1; k <= steps; k++) {
-      const [t0, t1] = [((k - 1) / steps) * TAU, (k / steps) * TAU];
-      lengths.push(lengths[k - 1] + Math.hypot(a * (Math.cos(t1) - Math.cos(t0)), b * (Math.sin(t1) - Math.sin(t0))));
-    }
-    const perimeter = lengths[steps];
-    // How far along the ellipse the ray at `angle` from the middle meets it.
-    const along = (angle) => {
-      const u = (((Math.atan2(Math.sin(angle) / b, Math.cos(angle) / a) + TAU) % TAU) / TAU) * steps;
-      const k = Math.min(steps - 1, Math.floor(u));
-      return lengths[k] + (u - k) * (lengths[k + 1] - lengths[k]);
-    };
-    // The point that far along the ellipse, scaled by `scale` from the middle.
-    const point = (s, scale) => {
-      s = ((s % perimeter) + perimeter) % perimeter;
-      let k = 0;
-      while (k < steps - 1 && lengths[k + 1] < s) k++;
-      const t = ((k + (s - lengths[k]) / (lengths[k + 1] - lengths[k])) / steps) * TAU;
-      return [cx + scale * a * Math.cos(t), cy + scale * b * Math.sin(t)];
-    };
+    // Places go by arc length, which on a circle is the angle times the radius.
+    const perimeter = TAU * r;
+    // How far along the circle the ray at `angle` from the middle meets it.
+    const along = (angle) => (((angle % TAU) + TAU) % TAU) * r;
+    // The point that far along the circle, scaled by `scale` from the middle.
+    const point = (s, scale) => [cx + scale * r * Math.cos(s / r), cy + scale * r * Math.sin(s / r)];
     const ring = [...new Set([...f.parents, ...(open ? f.children : [])])];
     const items = ring
       .map((id) => ({ id, s: along(direction(id)) }))
@@ -305,7 +303,7 @@ function createNetworkMap(container) {
     const n = items.length;
     const gap = Math.min(MAX_GAP, perimeter / Math.max(1, n));
     if (n * MAX_GAP >= perimeter) {
-      // As many as fill the ellipse: evenly spaced, turned to sit nearest their places.
+      // As many as fill the circle: evenly spaced, turned to sit nearest their places.
       const turn = Math.atan2(
         ...[Math.sin, Math.cos].map((trig) =>
           items.reduce((sum, { s }, i) => sum + trig(((s - i * gap) / perimeter) * TAU), 0)),
@@ -328,7 +326,7 @@ function createNetworkMap(container) {
     }
     const crowded = gap < MIN_GAP;
     const slots = items.map(({ s }, i) => point(s, crowded && i % 2 ? INNER : 1));
-    // Nodes move to other places on the ellipse, the rest shifting along, while
+    // Nodes move to other places on the circle, the rest shifting along, while
     // that uncrosses the edges among the focus and the nodes around it.
     const local = edges.filter(({ from, to }) =>
       [from, to].every((id) => id === focus || ring.includes(id)));
@@ -467,11 +465,23 @@ function createNetworkMap(container) {
     });
   }
 
+  // A view with the focus kept on screen, so that no gesture can take the map away.
+  function clamped({ zoom, dx, dy }) {
+    const f = nodes.get(focus);
+    const on = (d, at, extent) =>
+      Math.min(extent - PIN_INSET - zoom * at, Math.max(PIN_INSET - zoom * at, d));
+    return {
+      zoom,
+      dx: on(dx, f.x, svg.clientWidth),
+      dy: on(dy, f.y, svg.clientHeight),
+    };
+  }
+
   // Zooms by `factor` around the screen point [x, y], which stays put.
   function zoomAt([x, y], factor) {
     const zoom = Math.min(GESTURE_MAX_ZOOM, Math.max(1, view.zoom * factor));
     const scale = zoom / view.zoom;
-    view = { zoom, dx: x - scale * (x - view.dx), dy: y - scale * (y - view.dy) };
+    view = clamped({ zoom, dx: x - scale * (x - view.dx), dy: y - scale * (y - view.dy) });
   }
 
   // Tapping a node focuses and opens it, and selects it if it is a choice.
@@ -554,6 +564,7 @@ function createNetworkMap(container) {
     if (!dragged && Math.hypot(x - start[0], y - start[1]) < DRAG_THRESHOLD && pointers.size === 1) return;
     if (!dragged) {
       dragged = true;
+      panned();
       svg.classList.add("nm-panning");
       svg.setPointerCapture(evt.pointerId);
     }
@@ -566,7 +577,7 @@ function createNetworkMap(container) {
     } else {
       const [px, py] = pointers.get(evt.pointerId);
       pointers.set(evt.pointerId, [x, y]);
-      view = { ...view, dx: view.dx + x - px, dy: view.dy + y - py };
+      view = clamped({ ...view, dx: view.dx + x - px, dy: view.dy + y - py });
     }
     redraw();
   });
@@ -578,6 +589,7 @@ function createNetworkMap(container) {
   svg.addEventListener("pointercancel", release);
   svg.addEventListener("wheel", (evt) => {
     evt.preventDefault();
+    panned();
     svg.classList.add("nm-panning");
     zoomAt(local(evt), Math.exp(-evt.deltaY * 0.002));
     redraw();

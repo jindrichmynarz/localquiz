@@ -80,6 +80,8 @@
       (is (string/includes? html "class=\"nm-node nm-root\"")))
     (testing "Only the root and its children show at first"
       (is (string/includes? html "class=\"nm-node nm-choice nm-hidden\" data-id=\"Acid House\"")))
+    (testing "The hint that the map pans shows, and is not announced"
+      (is (string/includes? html "<div class=\"nm-hint\" aria-hidden")))
     (testing "The cell under the map hides until a choice is chosen, then shows it with its description"
       (is (string/includes? html "<div class=\"nm-info\" hidden>"))
       (is (= 3 (occurrences html "class=\"nm-chosen\"")))

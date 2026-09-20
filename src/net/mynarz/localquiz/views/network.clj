@@ -84,9 +84,12 @@
   "Map of the network that `choices` describe, dispatching a bubbling `network-select`
   event with the label of each choice tapped, which the cell under it then shows. Morphs
   leave it be, as the state of what it reveals lives in the browser."
-  [choices]
+  [tr choices]
   [:div.network-map
    {:data-ignore-morph true
     :data-init "createNetworkMap(el)"}
    (h/raw (drawing-html choices))
+   ; Nothing else says the map pans, there being no cursor on touch. network.js takes the
+   ; hint away once it has been heeded. Pointer gestures, so it is not announced.
+   [:div.nm-hint {:aria-hidden true} (tr [:network-hint])]
    (h/raw (info-html choices))])
