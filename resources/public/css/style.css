@@ -330,6 +330,12 @@ select {
   }
 }
 
+/* Centre the spinner against the label instead of relying on the baseline. */
+.btn:has(> .spinner) {
+  display: inline-flex;
+  align-items: center;
+}
+
 @keyframes spin {
   to {
     transform: rotate(1turn);
