@@ -70,7 +70,7 @@
   [:div#end-game
    [:dialog#end-game-dialog
     {:data-ref "_endGameDialog"}
-    [:p (tr [:confirm-end-game])]
+    [:h2 (tr [:confirm-end-game])]
     [:p
      [:button.btn
       {:data-on:click (str "@post('/end/" game-id "')")}
@@ -275,8 +275,8 @@
             (tr [:wait-for-players])])]
        (when (seq lobby)
          [:section#lobby
+          [:h2 (tr [:players])]
           [:table
-           [:thead [:tr [:th (tr [:players])]]]
            [:tbody
             (for [player-name lobby]
               [:tr [:td player-name]])]]])])))
