@@ -402,6 +402,9 @@ input[type="text"], input[type="number"] {
   position: relative;
   top: -5px;
   font-size: var(--font-size);
+  &:focus-visible {
+    outline: none;
+  }
 }
 
 .autocomplete {
@@ -1336,8 +1339,9 @@ input::file-selector-button {
 #player-name {
   border: none;
 
+  /* The other text inputs have no focus ring, so it is set in full. */
   &:user-invalid:focus-visible {
-    outline-color: var(--red);
+    outline: 2px solid var(--red);
   }
 }
 
