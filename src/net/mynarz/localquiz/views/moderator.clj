@@ -281,19 +281,11 @@
             (for [player-name lobby]
               [:tr [:td player-name]])]]])])))
 
-(defn timer
-  [^Boolean answer-revealed?]
-  (when-not answer-revealed?
-    (let [duration (:question-time-out config)]
-      [:div.timer
-       {:data-style:--duration (format "'%ds'" duration)}
-       [:div]])))
-
 (defn question-header
   [tr
-   ^String game-id]
-  (let [scoring (-> game-id game/current-question :scoring)
-        scoring-indicator (case scoring
+   ^String game-id
+   {:keys [scoring]}]
+  (let [scoring-indicator (case scoring
                             :consensus
                             [:span#venn-conversation
                              [:span.chip-label (tr [:scoring])]
@@ -314,57 +306,56 @@
      scoring-indicator]))
 
 (defn question-view
-  ([tr
-    ^String game-id]
-   (question-view tr game-id {}))
-  ([tr
-    ^String game-id
-    {:keys [answer-revealed?]
-     :as answers}]
-   (let [{:keys [scoring text] :as question} (game/current-question game-id)
-         mark-correct? (and answer-revealed? (nil? scoring))]
-      [:section#content
-       (timer answer-revealed?)
-       [:div#question-container
-        [:div#question
-         {:data-signals:_audio "el.querySelector('audio')"
-          :data-init (if answer-revealed?
-                       "$_audio && $_audio.pause()"
-                       "$_audio && $_audio.play();")} ; Play any audio if present in the question.
-         text]
-        (views/answers-view tr
-                            true
-                            answers
-                            game-id
-                            mark-correct?
-                            question)]
-       (when answer-revealed?
-         [:p (next-button tr game-id)])])))
+  [tr
+   ^String game-id
+   {:keys [scoring text elapsed-ms] :as question}
+   {:keys [answer-revealed?]
+    :as answers}]
+  (let [mark-correct? (and answer-revealed? (nil? scoring))]
+    [:section#content
+     (views/timer elapsed-ms answer-revealed?)
+     [:div#question-container
+      [:div#question
+       {:data-signals:_audio "el.querySelector('audio')"
+        :data-init (if answer-revealed?
+                     "$_audio && $_audio.pause()"
+                     "$_audio && $_audio.play();")} ; Play any audio if present in the question.
+       text]
+      (views/answers-view tr
+                          true
+                          answers
+                          game-id
+                          mark-correct?
+                          question)]
+     (when answer-revealed?
+       [:p (next-button tr game-id)])]))
 
 (defmethod views/game-view [:moderator :question]
   [{:tempura/keys [tr]
     {:keys [game-id]} :path-params
     :as request}]
-  (views/morph-body
-    request
-    (question-header tr game-id)
-    [(replay-audio tr)
-     (end-game tr game-id)]
-    (question-view tr game-id)))
+  (let [question (game/current-question game-id)]
+    (views/morph-body
+      request
+      (question-header tr game-id question)
+      [(replay-audio tr)
+       (end-game tr game-id)]
+      (question-view tr game-id question {}))))
 
 (defmethod views/game-view [:moderator :show-answers]
   [{:tempura/keys [tr]
     {:keys [game-id]} :path-params
     :as request}]
-  (views/morph-body
-    request
-    (question-header tr game-id)
-    [(replay-audio tr)
-     (end-game tr game-id)]
-    (let [answers (-> game-id
-                      get-answers
-                      (assoc :answer-revealed? true))]
-      (question-view tr game-id answers))))
+  (let [question (game/current-question game-id)
+        answers (-> game-id
+                    get-answers
+                    (assoc :answer-revealed? true))]
+    (views/morph-body
+      request
+      (question-header tr game-id question)
+      [(replay-audio tr)
+       (end-game tr game-id)]
+      (question-view tr game-id question answers))))
 
 (defmethod views/game-view [:moderator :leaderboard]
   [{:tempura/keys [tr]

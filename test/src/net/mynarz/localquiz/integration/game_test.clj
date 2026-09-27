@@ -115,7 +115,7 @@
 (deftest next-question!
   (with-redefs [game/schedule-timeout (fn [_])]
     (game/next-question! fixtures/game-id))
-  (is (= (game/current-question fixtures/game-id) fixtures/question)))
+  (is (= (dissoc (game/current-question fixtures/game-id) :elapsed-ms) fixtures/question)))
 
 (deftest search-fragments
   (let [game-id (crypto/random-unguessable-uid)

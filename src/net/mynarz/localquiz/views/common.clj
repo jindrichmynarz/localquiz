@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.views.common
   (:require [net.mynarz.localquiz.actions.common :refer [refresh-session!]]
+            [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
@@ -219,6 +220,18 @@
   (if (or (nil? game-id) (game/moderator? game-id session-id))
     :moderator
     :player))
+
+(defn timer
+  "Countdown bar for the current question, offset by its `elapsed-ms`,
+  so that it stays in sync on reloads and for players who join mid-question."
+  [^long elapsed-ms
+   ^Boolean answer-revealed?]
+  (when-not answer-revealed?
+    (let [duration (:question-time-out config)]
+      [:div.timer
+       {:data-style:--duration (format "'%ds'" duration)}
+       [:div
+        {:data-style:animation-delay (format "'-%dms'" elapsed-ms)}]])))
 
 (defmulti game-view
   (juxt ->session-role (comp :state :game)))

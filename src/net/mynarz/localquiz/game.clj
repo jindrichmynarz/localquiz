@@ -139,16 +139,19 @@
        (into {} (map (fn [[id value]] [id (edn/read-string value)])))))
 
 (defn current-question
-  "Get the current question for `game-id`."
+  "Get the current question for `game-id`,
+  with the milliseconds since it was asked as `:elapsed-ms`."
   [^String game-id]
-  (some->> game-id
-           (d/q '[:find ?current-question .
-                  :in $ ?game-id
-                  :where [?game :game/id ?game-id]
-                         [?game :game/current-question ?current-question]]
-                @db-conn)
-           edn/read-string
-           (qs/resolve-refs (get-defs game-id))))
+  (when-let [[question question-inst]
+             (d/q '[:find [?current-question ?question-inst]
+                    :in $ ?game-id
+                    :where [?game :game/id ?game-id]
+                           [?game :game/current-question ?current-question ?question-tx]
+                           [?question-tx :db/txInstant ?question-inst]]
+                  @db-conn
+                  game-id)]
+    (-> (qs/resolve-refs (get-defs game-id) (edn/read-string question))
+        (assoc :elapsed-ms (- (System/currentTimeMillis) (.getTime ^java.util.Date question-inst))))))
 
 (defn parse-answer
   "Parse `answer` to Clojure data types."

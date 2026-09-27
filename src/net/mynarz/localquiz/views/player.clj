@@ -91,15 +91,16 @@
   (views/morph-body
     request
     (exit-game tr game-id)
-    [:section#content
-     [:h2.error
-      {:data-show "$error"
-       :data-text "$error"}]
-     (if (game/player-answered? player-id)
-       [waiting-icon
-        [:h2 (tr [:wait-for-answers])]]
-       (let [answer-revealed? (game/all-players-answered? game-id)
-             current-question (game/current-question game-id)]
+    (let [answer-revealed? (game/all-players-answered? game-id)
+          current-question (game/current-question game-id)]
+      [:section#content
+       (views/timer (:elapsed-ms current-question) answer-revealed?)
+       [:h2.error
+        {:data-show "$error"
+         :data-text "$error"}]
+       (if (game/player-answered? player-id)
+         [waiting-icon
+          [:h2 (tr [:wait-for-answers])]]
          (views/answers-view tr
                              false
                              answer-revealed?
@@ -108,7 +109,7 @@
                              ;; The autocomplete widget needs the player's session
                              ;; to read their typed fragment back; other question
                              ;; types ignore the extra key.
-                             (assoc current-question :session-id player-id))))]))
+                             (assoc current-question :session-id player-id)))])))
 
 (defmethod views/game-view [:player :show-answers]
   [{{:keys [game-id]} :path-params
