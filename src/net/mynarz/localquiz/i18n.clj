@@ -1,14 +1,12 @@
 (ns net.mynarz.localquiz.i18n)
 
 (def dictionary
-  {:cs {:accept "Souhlasím"
-        :and "a"
+  {:cs {:and "a"
         :answer "Odpověď"
         :close "Zavřít"
         :confirm-end-game "Opravdu chcete hru ukončit?"
         :consensus "Konsenzus"
         :consensus-evaluation "%1 % shoda"
-        :cookie-warning "Localquiz pro své funkce používá cookies."
         :copy "Kopírovat"
         :copied "Zkopírováno!"
         :correct "Správně"
@@ -112,14 +110,12 @@
         :wait-for-players "Čekáme alespoň na dva hráče..."
         :you-lost "Prohrál jste, saláte."
         :you-won "Vítězství je tvé!"}
-   :en {:accept "Accept"
-        :and "and"
+   :en {:and "and"
         :answer "Answer"
         :close "Close"
         :confirm-end-game "Do you want to end the game?"
         :consensus "Consensus"
         :consensus-evaluation "%1 % consensus"
-        :cookie-warning "Localquiz uses cookies for its functionality."
         :copy "Copy"
         :copied "Copied!"
         :correct "Correct"

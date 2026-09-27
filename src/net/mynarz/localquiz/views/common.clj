@@ -69,19 +69,6 @@
        [:a {:href "https://data-star.dev"} "Datastar"]
        "🚀."])]])
 
-(defn cookie-warning
-  [tr]
-  [:div#cookie-warning
-   {:aria-live "polite"
-    :data-signals:_cookie-accepted "localStorage.getItem('cookie-accepted') || false"
-    :data-show "!$_cookieAccepted"
-    :role "dialog"}
-   [:p (tr [:cookie-warning])]
-   [:div.buttons
-    [:button.btn
-     {:data-on:click "($_cookieAccepted = true) && localStorage.setItem('cookie-accepted', 'true')"}
-     (tr [:accept])]]])
-
 (defn error-dialog
   [tr]
   [:div#error-dialog
@@ -142,7 +129,6 @@
          (svg "menu.svg")]]]
       [:main main]
       (when-not projected? (footer tr))
-      (cookie-warning tr)
       (error-dialog tr)])))
 
 (defn shim-page

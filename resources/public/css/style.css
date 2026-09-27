@@ -752,20 +752,6 @@ label {
   }
 }
 
-#cookie-warning {
-  width: 100vw;
-  position: fixed;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  color: var(--offwhite);
-  background: var(--dark);
-  z-index: 9999;
-}
-
 #error-dialog {
   display: flex;
   flex-direction: column;
