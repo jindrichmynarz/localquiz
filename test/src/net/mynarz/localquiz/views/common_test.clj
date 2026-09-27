@@ -57,6 +57,19 @@
     (let [html (render-autocomplete "")]
       (is (string/includes? html "data-option=\"Ambient\""))
       (is (string/includes? html "data-option=\"Techno\""))))
+  (testing "The input is a combobox, expanded only when there are suggestions"
+    (let [closed (render-autocomplete)
+          open (render-autocomplete "")]
+      (is (string/includes? closed "role=\"combobox\""))
+      (is (string/includes? closed "aria-expanded=\"false\""))
+      (is (string/includes? open "aria-expanded=\"true\""))
+      (is (string/includes? open "data-options=\"2\""))))
+  (testing "The suggestions are options addressable by index"
+    (let [html (render-autocomplete "")]
+      (is (string/includes? html "role=\"listbox\""))
+      (is (= 2 (count (re-seq #"role=\"option\"" html))))
+      (is (string/includes? html "id=\"option-0\""))
+      (is (string/includes? html "id=\"option-1\""))))
   (testing "The reveal control is always offered"
     (is (every? #(string/includes? % "class=\"reveal-options\"")
                 [(render-autocomplete) (render-autocomplete "amb")]))))

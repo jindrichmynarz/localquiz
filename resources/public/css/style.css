@@ -402,9 +402,6 @@ input[type="text"], input[type="number"] {
   position: relative;
   top: -5px;
   font-size: var(--font-size);
-  &:focus-visible {
-    outline: none;
-  }
 }
 
 .autocomplete {
@@ -464,7 +461,8 @@ input[type="text"], input[type="number"] {
         color: rgb(from var(--dark) r g b / 60%);
       }
 
-      &:hover {
+      &:hover,
+      &[aria-selected="true"] {
         background: var(--orange);
         color: var(--offwhite);
 

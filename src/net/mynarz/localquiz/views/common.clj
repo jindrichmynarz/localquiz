@@ -359,18 +359,35 @@
         ; queueMicrotask() is needed to propagate the $autocomplete signal as the value of the answer form field.
         pick    (format "$autocomplete = el.dataset.option; queueMicrotask(() => %s)"
                         (answer-handler game-id))
-        reveal  "$autocomplete = ''; @post('/autocomplete')"]
+        reveal  "($autocomplete = '', $_active = -1, @post('/autocomplete'))"
+        ; Focus stays in the input, which points at the highlighted option by aria-activedescendant.
+        ; Enter always prevents the implicit submission of the enclosing form.
+        navigate (str "evt.key === 'ArrowDown' && (evt.preventDefault(), el.dataset.options > 0"
+                      " ? $_active = Math.min($_active + 1, el.dataset.options - 1)"
+                      " : !$autocomplete && " reveal ");"
+                      "evt.key === 'ArrowUp' && (evt.preventDefault(), $_active = Math.max($_active - 1, 0));"
+                      "['ArrowDown', 'ArrowUp'].includes(evt.key)"
+                      " && document.getElementById('option-' + $_active)?.scrollIntoView({block: 'nearest'});"
+                      "evt.key === 'Enter' && (evt.preventDefault(), document.getElementById('option-' + $_active)?.click())")]
     [:div.autocomplete
+     {:data-signals:_active__ifmissing "-1"}
      [:input
-      {:autocomplete "off"
+      {:aria-autocomplete "list"
+       :aria-controls "autocomplete-list"
+       :aria-expanded (str (boolean (seq matches)))
+       :autocomplete "off"
        :autofocus true
+       :data-attr:aria-activedescendant "$_active >= 0 && 'option-' + $_active"
        :data-bind "autocomplete"
-       :data-init "$autocomplete = ''" ; Reset
-       :data-on:input__debounce.200ms "@post('/autocomplete')"
+       :data-init "$autocomplete = ''; $_active = -1" ; Reset
+       :data-on:input__debounce.200ms "$_active = -1; @post('/autocomplete')"
+       :data-on:keydown navigate
+       :data-options (count matches)
        :minlength 1
        :maxlength qs/max-answer-length
        :name "answer"
        :placeholder (tr [:search])
+       :role "combobox"
        :type "text"}]
      ; A real button, so that Enter and Space activate it without a keydown handler.
      [:button.reveal-options
@@ -379,13 +396,17 @@
        :data-on:click reveal}
       (svg "arrow_drop_down.svg")]
      (when (seq matches)
-       [:ul.autocomplete-list
-        (for [{:keys [description]
-               :as option} matches
+       [:ul.autocomplete-list#autocomplete-list
+        {:role "listbox"}
+        (for [[index {:keys [description]
+                      :as option}] (map-indexed vector matches)
               :let [label (option-label option)]]
           [:li
-           {:data-on:click pick
-            :data-option label}
+           {:data-attr:aria-selected (format "String($_active == %d)" index)
+            :data-on:click pick
+            :data-option label
+            :id (str "option-" index)
+            :role "option"}
            label
            (when description
              [:span.description description])])])]))
