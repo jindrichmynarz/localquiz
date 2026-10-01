@@ -187,3 +187,14 @@
                                            fixtures/game-id false
                                            {:type :network :choices revealed-choices}))
                "<svg")))))
+
+(deftest percent-range-reveal
+  (let [html (h/html (views/answers-view fixtures/tr true
+                                         {:answer-count 3
+                                          :answer-frequencies {40 2 75 1}
+                                          :answer-revealed? true}
+                                         fixtures/game-id true
+                                         {:type :percent-range :percentage 42}))]
+    (testing "The correct figure is revealed in the card"
+      (is (string/includes? html "class=\"answer revealed\""))
+      (is (string/includes? html "42 %")))))

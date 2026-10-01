@@ -1119,6 +1119,12 @@ label {
     pointer-events: none;
     cursor: inherit;
   }
+
+  /* The correct order, in the card that reveals every correct answer. */
+  &.revealed li {
+    background-color: var(--offwhite);
+    color: var(--dark);
+  }
 }
 
 progress {

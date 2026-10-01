@@ -317,6 +317,12 @@
            {:max answer-count
             :value frequency}]]])]]))
 
+(defn revealed-answer
+  "The correct answer, shown on its own in a card."
+  [answer]
+  [:div.answer.revealed
+   [:p answer [:i.material-icons (svg "check.svg")]]])
+
 (defn option-label
   "The label of a choice `option`: :text in a multiple-choice option, :label in a
   labelled one (see ::choice in question-spec)."
@@ -513,7 +519,7 @@
           [:option {:value value}])]]
       [:p (submit-button tr game-id)]])
    (when answer-revealed?
-     [:p (format "%s %%" (util/decimal-format percentage))])
+     (revealed-answer (format "%s %%" (util/decimal-format percentage))))
    (note-view answer-revealed? note)])
 
 (defmethod answers-view :open
@@ -535,8 +541,7 @@
         :type "text"}]
       (submit-button tr game-id)])
    (when answer-revealed?
-     [:div.answer.revealed
-      [:p answer [:i.material-icons (svg "check.svg")]]])
+     (revealed-answer answer))
    (open-answers tr answers)
    (note-view answer-revealed? note)])
 
@@ -553,7 +558,8 @@
         drag-indicator [:i.material-icons (svg "drag_indicator.svg")]]
     [:form#answers
      [:ul#sortableList
-      {:class (when disabled? "disabled")
+      {:class [(when disabled? "disabled")
+               (when mark-correct? "revealed")]
        :data-init (when-not disabled? "createSortableList(el)")
        :data-signals:_answer (->> shuffled-items
                                   (map :index)
