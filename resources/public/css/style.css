@@ -1355,6 +1355,15 @@ input::file-selector-button {
 
 #player-name-input {
   display: flex;
+  flex-wrap: wrap;
+}
+
+/* Wraps onto its own line, under the input. */
+#name-error {
+  flex-basis: 100%;
+  order: 1;
+  margin: .5em 0 0;
+  color: var(--orange);
 }
 
 @media (max-width: 950px) or (orientation: portrait) {
@@ -1362,6 +1371,12 @@ input::file-selector-button {
     flex-direction: column;
     gap: .5em;
     align-items: center;
+  }
+
+  /* In the column, it stays right under the input instead of under the button. */
+  #name-error {
+    order: 0;
+    margin: 0;
   }
 }
 

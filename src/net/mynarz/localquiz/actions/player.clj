@@ -11,8 +11,8 @@
     :as request}]
   (let [validation-error (game/validate-player-name game-id player-name)
         signals (if validation-error
-                  {:error (tr [validation-error])}
-                  {:error false})]
+                  {:nameError (tr [validation-error])}
+                  {:nameError false})]
     (refresh-session! request {:signals signals})
     (not validation-error)))
 

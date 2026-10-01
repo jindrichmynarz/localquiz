@@ -26,25 +26,29 @@
     [:section#content
      [:form#player-name-input
       {:data-signals "{_controller: new AbortController(),
-                       _submitted: false}"}
+                       _submitted: false,
+                       nameError: false}"}
       [:label
        {:for "player-name"}
        (tr [:player-name])]
       [:input#player-name
-       {:aria-live "polite"
-        :autofocus true
+       {:autofocus true
         :aria-errormessage "name-error"
         :data-on:keydown__debounce.500ms validate-js
-        :data-attr:aria-invalid "!!$error"
+        :data-attr:aria-invalid "!!$nameError"
         :minlength 1
         :maxlength 20
         :name "player-name"
         :required true
         :type "text"}]
+      [:p#name-error
+       {:aria-live "polite"
+        :data-show "$nameError"
+        :data-text "$nameError"}]
       views/lang-input
       [:button.btn.btn-primary#submit
-       {:data-attr:aria-disabled "!!$error"
-        :data-attr:disabled "!!$error"
+       {:data-attr:aria-disabled "!!$nameError"
+        :data-attr:disabled "!!$nameError"
         :data-on:click (long-str "$_controller.abort();"
                                  "$_submitted = true;"
                                  (views/post (str "/join/" game-id)))}
