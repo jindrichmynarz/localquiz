@@ -8,6 +8,12 @@
        1.2 "1.2"
        3.333 "3.33"))
 
+(deftest score-format
+  (are [number formatted] (= (util/score-format number) formatted)
+       0 "0.00"
+       1.2 "1.20"
+       3.999 "4.00"))
+
 (deftest deterministic-shuffle
   (are [coll] (= (util/deterministic-shuffle coll)
                  (util/deterministic-shuffle coll))

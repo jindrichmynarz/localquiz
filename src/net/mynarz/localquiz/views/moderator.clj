@@ -3,7 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.qrcode :refer [url->qrcode-svg]]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
-            [net.mynarz.localquiz.util :refer [decimal-format fraction-of svg]]
+            [net.mynarz.localquiz.util :refer [decimal-format fraction-of score-format svg]]
             [net.mynarz.localquiz.views.common :as views]
             [clojure.math :as math]
             [charred.api :as charred]))
@@ -72,11 +72,13 @@
     {:data-ref "_endGameDialog"}
     [:h2 (tr [:confirm-end-game])]
     [:p
-     [:button.btn
+     [:button.btn.btn-danger
       {:data-on:click (str "@post('/end/" game-id "')")}
       (tr [:question.yesno/yes])]
+     ;; The harmless answer gets the focus, so that Enter does not end the game.
      [:button.btn
-      {:data-on:click "$_endGameDialog.close()"}
+      {:autofocus true
+       :data-on:click "$_endGameDialog.close()"}
       (tr [:question.yesno/no])]]]
    [:button.btn
     {:data-on:click "$_endGameDialog.showModal()"}
@@ -129,7 +131,7 @@
           [:td
            {:style score-style}
            [:span.score-bar]]
-          [:td (decimal-format total-score)]])]]]))
+          [:td (score-format total-score)]])]]]))
 
 (defn next-button
   ([tr
@@ -369,7 +371,7 @@
      [:p
       (if (game/all-questions-answered? game-id)
         (next-button tr
-                     (str "@post('/end/" game-id "')")
+                     "$_endGameDialog.showModal()"
                      :end-game
                      [:i.material-icons.md-dark (svg "cancel.svg")])
         (next-button tr game-id))]]))

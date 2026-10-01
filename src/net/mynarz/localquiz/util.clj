@@ -23,6 +23,12 @@
     (fn [^double n]
       (.format formatter n))))
 
+(def score-format
+  "Format scores with exactly 2 decimal places, so that they align in a column."
+  (let [formatter (DecimalFormat. "0.00" (DecimalFormatSymbols/getInstance Locale/US))]
+    (fn [^double n]
+      (.format formatter n))))
+
 (defn descending-order
   "Sort `a` and `b` in the descending order."
   [a b]
