@@ -298,8 +298,8 @@ select {
   border-radius: 5px;
   padding: .5lh 2ch;
   position: relative;
+  /* Only nudged up, not left: a sideways nudge pulls centred buttons off the centre line. */
   top: -5px;
-  left: -5px;
   z-index: 1;
   cursor: pointer;
 
