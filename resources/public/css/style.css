@@ -298,8 +298,6 @@ select {
   border-radius: 5px;
   padding: .5lh 2ch;
   position: relative;
-  /* Only nudged up, not left: a sideways nudge pulls centred buttons off the centre line. */
-  top: -5px;
   z-index: 1;
   cursor: pointer;
 
@@ -322,18 +320,19 @@ select {
     width: 100%;
   }
 
+  /* The face covers the button's own box, so that its edges line up with its neighbours. */
   &::before {
     background-color: var(--dark);
-    left: -5px;
-    top: -5px;
+    left: -3px;
+    top: -3px;
     z-index: -1;
   }
 
+  /* The depth sticks out 2px below and right of the face. */
   &::after {
     background-color: var(--darker);
-    left: -3px;
-    right: 0;
-    top: -3px;
+    left: -1px;
+    top: -1px;
     z-index: -2;
   }
 }
@@ -419,8 +418,6 @@ input[type="text"], input[type="number"] {
   color: var(--dark);
   border: 3px solid var(--darker);
   padding: .5em;
-  position: relative;
-  top: -5px;
   font-size: var(--font-size);
   &:focus-visible {
     outline: none;
@@ -439,8 +436,7 @@ input[type="text"], input[type="number"] {
   .reveal-options {
     position: absolute;
     right: .5em;
-    /* The -5px matches the nudge that input[type="text"] carries. */
-    top: calc(50% - 5px);
+    top: 50%;
     transform: translateY(-50%);
     display: flex;
     padding: 0;
@@ -457,9 +453,7 @@ input[type="text"], input[type="number"] {
 
   ul {
     position: absolute;
-    /* Offsets the -5px that input[type="text"] is nudged up, so the list sits
-      flush against the bottom of the input. */
-    top: calc(100% - 5px);
+    top: 100%;
     left: 0;
     right: 0;
     z-index: 10;
@@ -810,12 +804,13 @@ label {
 }
 
 .copy-button-wrapper {
-  margin-right: -5px;
+  display: flex;
 }
 
+/* Overlaps the input's right border, so that the two share an edge. */
 #copy-join-url {
   width: 8em;
-  left: -5px;
+  margin-left: -3px;
 }
 
 #waiting-for-players {
