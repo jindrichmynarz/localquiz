@@ -114,8 +114,8 @@
        [:tr
         [:th]
         [:th (tr [:player])]
-        [:th (tr [:score])]
-        [:th]]]
+        ;; Spans the bar and the number, both of which show the score.
+        [:th {:colspan 2} (tr [:score])]]]
       [:tbody
        (for [{:keys [index player-name score total-score winner?]} leaderboard-data
              :let [score-style (format "--former-score: %s; --score: %s;"

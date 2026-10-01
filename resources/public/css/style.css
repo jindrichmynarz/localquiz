@@ -1073,8 +1073,14 @@ label {
       padding-bottom: .25ex;
       padding-inline: 2ch;
 
+      /* Aligned like the values in their columns. */
       &:nth-child(2) {
         padding-left: .5ch;
+        text-align: left;
+      }
+
+      &:last-child {
+        text-align: right;
       }
 
       background: linear-gradient(to bottom, hsl(from var(--orange) h s calc(l + 15)), var(--orange));
