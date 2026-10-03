@@ -618,6 +618,21 @@ input[type="text"], input[type="number"] {
     &.nm-gone {
       opacity: 0;
     }
+
+    /* Pinching on touch, the wheel where there is a mouse. */
+    .nm-hint-pointer {
+      display: none;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .nm-hint-touch {
+        display: none;
+      }
+
+      .nm-hint-pointer {
+        display: inline;
+      }
+    }
   }
 
   .nm-info {
@@ -724,6 +739,14 @@ input[type="text"], input[type="number"] {
       fill: var(--darker);
       stroke: var(--orange);
       stroke-width: 2px;
+    }
+
+    .nm-chevron {
+      fill: none;
+      stroke: var(--orange);
+      stroke-width: 1.5px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
   }
 }

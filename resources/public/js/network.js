@@ -26,6 +26,9 @@ const CHAR_WIDTH = 8.9;
 // How far pinching and the wheel may zoom in, and how far a pointer may move
 // before a tap becomes a drag.
 const GESTURE_MAX_ZOOM = 5;
+// How far a view may zoom in to fill the screen, when what it frames leaves much of
+// the circle empty, as a few nodes kept near their directions do.
+const FIT_MAX_ZOOM = 2;
 const DRAG_THRESHOLD = 6;
 // Distance of pinned parents from the edge of the screen, and of the focus, which a pan
 // keeps on screen so that the map cannot be dragged away.
@@ -171,21 +174,28 @@ function createNetworkMap(container) {
   }
 
   function setLabel(text, side, lines) {
-    const x = side === "left" ? -LABEL_OFFSET : LABEL_OFFSET;
+    const vertical = side === "above" || side === "below";
+    const x = vertical ? 0 : side === "left" ? -LABEL_OFFSET : LABEL_OFFSET;
+    // Beside the node, the lines are centred on it. Above or below it, they stack
+    // from the top of their block, each baseline 0.95em into its 1.2em line.
+    const top = { above: -LABEL_OFFSET - LABEL_HEIGHT * lines.length, below: LABEL_OFFSET }[side];
+    const first = vertical ? "0.95em" : `${0.35 - 0.6 * (lines.length - 1)}em`;
     text.removeAttribute("display");
     text.setAttribute("x", x);
-    text.setAttribute("text-anchor", side === "left" ? "end" : "start");
+    text.setAttribute("text-anchor", vertical ? "middle" : side === "left" ? "end" : "start");
+    if (vertical) text.setAttribute("y", top);
+    else text.removeAttribute("y");
     if (lines.length === 1) {
-      text.setAttribute("dy", "0.35em");
+      text.setAttribute("dy", first);
       text.textContent = lines[0];
     } else {
-      // Lines 1.2em apart, centred on the node.
+      // Lines 1.2em apart.
       text.removeAttribute("dy");
       text.replaceChildren(
         ...lines.map((line, i) => {
           const tspan = document.createElementNS(SVG, "tspan");
           tspan.setAttribute("x", x);
-          tspan.setAttribute("dy", i ? "1.2em" : `${0.35 - 0.6 * (lines.length - 1)}em`);
+          tspan.setAttribute("dy", i ? "1.2em" : first);
           tspan.textContent = line;
           return tspan;
         }),
@@ -194,10 +204,12 @@ function createNetworkMap(container) {
   }
 
   // Every label of `items` ({id, x, y, text, left}, in screen coordinates) shows.
-  // It goes on one line on its preferred side, else the other side, else wrapped
-  // to ever more lines, a word per line at most, on either, whichever first stays
-  // on screen and clear of the circles and of the labels placed before. Failing
-  // that, the one that overlaps least.
+  // It goes on one line on its preferred side, else the other side, else above or
+  // below, outward first, which is where room is left at the top and the bottom
+  // of a crowded circle, its neighbours being beside it. Else wrapped to ever more
+  // lines, a word per line at most, on any side, whichever first stays on screen
+  // and clear of the circles and of the labels placed before. Failing that, the
+  // one that overlaps least.
   function placeLabels(items, width, height) {
     const circles = items.map(({ id, x, y }) => (
       { id, l: x - NODE_RADIUS, r: x + NODE_RADIUS, t: y - NODE_RADIUS, b: y + NODE_RADIUS }
@@ -205,13 +217,17 @@ function createNetworkMap(container) {
     const placed = [];
     for (const { id, x, y, text, left } of items) {
       const layouts = id.split(" ").map((_, i) => wrap(id, i + 1));
-      const sides = left ? ["left", "right"] : ["right", "left"];
+      const sides = [
+        ...(left ? ["left", "right"] : ["right", "left"]),
+        ...(y < height / 2 ? ["above", "below"] : ["below", "above"]),
+      ];
       const candidates = layouts.flatMap((lines) =>
         sides.map((side) => {
           const w = CHAR_WIDTH * longest(lines);
           const h = LABEL_HEIGHT * lines.length;
-          const l = side === "left" ? x - LABEL_OFFSET - w : x + LABEL_OFFSET;
-          const box = { side, lines, l, r: l + w, t: y - h / 2, b: y + h / 2 };
+          const l = { left: x - LABEL_OFFSET - w, right: x + LABEL_OFFSET }[side] ?? x - w / 2;
+          const t = { above: y - LABEL_OFFSET - h, below: y + LABEL_OFFSET }[side] ?? y - h / 2;
+          const box = { side, lines, l, r: l + w, t, b: t + h };
           box.cost =
             w * h - overlapArea(box, { l: 0, r: width, t: 0, b: height }) +
             placed.reduce((sum, other) => sum + overlapArea(box, other), 0) +
@@ -272,6 +288,13 @@ function createNetworkMap(container) {
         if (r === TARGET_RADIUS) circle.setAttribute("class", "nm-target");
         pin.appendChild(circle);
       }
+      // A chevron in the hollow, pointing on along the edge, off screen, so that the
+      // pin reads as the way to a node out of view rather than as a node of its own.
+      const chevron = document.createElementNS(SVG, "path");
+      chevron.setAttribute("class", "nm-chevron");
+      chevron.setAttribute("d", "M -1.5 -3 L 1.5 0 L -1.5 3");
+      chevron.setAttribute("transform", `rotate(${(Math.atan2(dy, dx) * 180) / Math.PI})`);
+      pin.appendChild(chevron);
       const text = document.createElementNS(SVG, "text");
       pin.appendChild(text);
       pins.appendChild(pin);
@@ -423,7 +446,7 @@ function createNetworkMap(container) {
     frame = framed();
     arrange(width, height);
     // Gestures may zoom in from the view, and it fills the screen, so not out.
-    view = { zoom: 1, dx: 0, dy: 0 };
+    view = fitted(width, height);
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
     glide(was, width, height);
     draw();
@@ -463,6 +486,22 @@ function createNetworkMap(container) {
       drawing = false;
       draw();
     });
+  }
+
+  // The view that fills the screen with what is framed, keeping the margins its
+  // labels need, as far as FIT_MAX_ZOOM. Anything else shown that falls outside is
+  // pinned to the edge, as after a pan.
+  function fitted(width, height) {
+    const xs = frame.map((id) => nodes.get(id).x);
+    const ys = frame.map((id) => nodes.get(id).y);
+    const [l, r, t, b] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    // A lone node or a line of them has no extent, which leaves the cap to decide.
+    const zoom = Math.max(1, Math.min(
+      FIT_MAX_ZOOM,
+      (width - 2 * SIDE_MARGIN) / (r - l),
+      (height - 2 * END_MARGIN) / (b - t),
+    ));
+    return clamped({ zoom, dx: width / 2 - zoom * (l + r) / 2, dy: height / 2 - zoom * (t + b) / 2 });
   }
 
   // A view with the focus kept on screen, so that no gesture can take the map away.

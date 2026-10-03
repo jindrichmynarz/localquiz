@@ -205,5 +205,7 @@
    (h/raw (drawing-html choices))
    ; Nothing else says the map pans, there being no cursor on touch. network.js takes the
    ; hint away once it has been heeded. Pointer gestures, so it is not announced.
-   [:div.nm-hint {:aria-hidden true} (tr [:network-hint])]
+   [:div.nm-hint {:aria-hidden true}
+    [:span.nm-hint-touch (tr [:network-hint])]
+    [:span.nm-hint-pointer (tr [:network-hint-pointer])]]
    (h/raw (info-html choices))])
