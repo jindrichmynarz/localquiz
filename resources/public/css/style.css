@@ -1496,7 +1496,6 @@ input::file-selector-button {
   flex-basis: 100%;
   order: 1;
   margin: .5em 0 0;
-  color: var(--orange);
 }
 
 @media (max-width: 950px) or (orientation: portrait) {
