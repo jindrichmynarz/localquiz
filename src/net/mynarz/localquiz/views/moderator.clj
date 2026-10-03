@@ -5,8 +5,7 @@
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
             [net.mynarz.localquiz.util :refer [decimal-format fraction-of score-format svg]]
             [net.mynarz.localquiz.views.common :as views]
-            [clojure.math :as math]
-            [charred.api :as charred]))
+            [clojure.math :as math]))
 
 (defn answer-progress
   "Show how many players in `game-id` have already answered the current question."
@@ -24,13 +23,17 @@
   [tr
    ^String join-game-url]
   [:span.copy-button-wrapper
-   {:data-signals:_copy-label (charred/write-json-str [(tr [:copy]) (tr [:copied])])}
+   {:data-signals:_copied "false"}
+   ;; Both labels are laid over each other, the hidden one still taking space, so the
+   ;; button fits the longer of the two and keeps its width when it switches.
    [:button.btn#copy-join-url
     {:data-on:mousedown (format "navigator.clipboard.writeText('%s');
-                                 $_copyLabel.reverse();
-                                 setTimeout(() => $_copyLabel.reverse(), 2000);"
-                                join-game-url)
-     :data-text "$_copyLabel[0]"}]])
+                                 $_copied = true;
+                                 setTimeout(() => $_copied = false, 2000);"
+                                join-game-url)}
+    [:span {:data-style:visibility "$_copied ? 'hidden' : 'visible'"} (tr [:copy])]
+    [:span {:style "visibility: hidden"
+            :data-style:visibility "$_copied ? 'visible' : 'hidden'"} (tr [:copied])]]])
 
 (def form-validity-handlers
   "Datastar attributes that keep the $_formValid signal in sync with the form's
@@ -255,32 +258,32 @@
     (let [play-game-url (str (:url config) "/play/" game-id)
           lobby (game/lobby game-id)
           has-enough-players? (game/has-enough-players? game-id)]
-      [:div#sections
-       [:section#content
-        [:div#qrcode (url->qrcode-svg play-game-url)]
-        [:p#game-url
-         [:input
-          {:readonly true
-           :type "text"
-           :value play-game-url}]
-         (copy-button tr play-game-url)]
-        (if has-enough-players?
-          [:p
-           [:button.btn.btn-primary
-            {:data-on:click (str "@post('/next/" game-id "')")
-             :disabled (not has-enough-players?)
-             :type "submit"}
-            (tr [:start-game])]]
-          [:p#waiting-for-players
-            (svg "wifi_exercise_animated.svg")
-            (tr [:wait-for-players])])]
-       (when (seq lobby)
-         [:section#lobby
-          [:h2 (tr [:players])]
-          [:table
-           [:tbody
-            (for [player-name lobby]
-              [:tr [:td player-name]])]]])])))
+      [:div#lobby-grid
+       [:div#qrcode (url->qrcode-svg play-game-url)]
+       [:p#game-url
+        [:input
+         {:readonly true
+          :type "text"
+          :value play-game-url}]
+        (copy-button tr play-game-url)]
+       [:section#lobby
+        [:h2 (tr [:players])]
+        [:ul
+         (for [player-name lobby]
+           [:li player-name])]]
+       ;; The wait and the button share one cell, the hidden one still taking space, so
+       ;; the grid keeps its height when the second player lets the game start.
+       [:div#start-game
+        [:p#waiting-for-players
+         {:style (when has-enough-players? "visibility: hidden")}
+         (svg "wifi_exercise_animated.svg")
+         [:span (tr [:wait-for-players])]]
+        [:button.btn.btn-primary
+         {:data-on:click (str "@post('/next/" game-id "')")
+          :disabled (not has-enough-players?)
+          :style (when-not has-enough-players? "visibility: hidden")
+          :type "submit"}
+         (tr [:start-game])]]])))
 
 (defn question-header
   [tr

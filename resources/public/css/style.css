@@ -193,16 +193,6 @@ h1 {
   color: var(--orange);
 }
 
-#sections {
-  display: flex;
-  flex: 1;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-self: center;
-  width: 90vw;
-  gap: 1em;
-}
-
 section {
   display: flex;
   flex-direction: column;
@@ -225,13 +215,73 @@ table {
   }
 }
 
-#lobby {
-  font-size: 1.3em;
+/* Two columns the width of the QR code, flanking the centre axis the header and the
+   questions share. The players take the height of the QR and the URL under it, and the
+   start button spans both, on the axis. Every part holds its place as players join. */
+#lobby-grid {
+  /* Height leads: the QR and the URL under it take as much of the projection as the
+     header and the start button leave. */
+  --module: min(42vw, 58vh);
 
-  table tr {
+  display: grid;
+  flex: 1;
+  align-self: center;
+  grid-template-columns: repeat(2, calc(var(--module) + 6px)); /* + the QR's border */
+  grid-template-areas:
+    "qr    players"
+    "url   players"
+    "start start";
+  align-content: center;
+  gap: 1em 2em;
+
+  > p {
+    margin: 0;
+  }
+
+  #qrcode { grid-area: qr; }
+  #game-url { grid-area: url; }
+  #start-game {
+    grid-area: start;
+    display: grid;
+    place-items: center;
+
+    > * {
+      grid-area: 1 / 1;
+    }
+  }
+}
+
+#lobby {
+  grid-area: players;
+  /* Sized by the rows it spans rather than sizing them, so a long list flows into
+     further columns instead of growing the grid. */
+  contain: size;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-height: 0;
+  font-size: 1.3em;
+  text-align: left;
+
+  ul {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    columns: 8ch auto;
+    column-fill: auto;
+    /* ponytail: columns past the QR's width are clipped; scale the type down if games
+       outgrow it. */
+    overflow: hidden;
+  }
+
+  li {
+    padding: .25em 0;
+    break-inside: avoid;
     animation: 1s ease-in fade-in;
   }
 }
+
 
 @keyframes fade-in {
   from {
@@ -775,8 +825,8 @@ label {
   margin: 0;
 
   svg {
-    height: max(20dvw, 300px);
-    width: max(20dvw, 300px);
+    height: var(--module);
+    width: var(--module);
   }
 }
 
@@ -822,23 +872,34 @@ label {
 
 /* Overlaps the input's right border, so that the two share an edge. */
 #copy-join-url {
-  width: 8em;
+  display: grid;
   margin-left: -3px;
+
+  > span {
+    grid-area: 1 / 1;
+  }
 }
 
 #waiting-for-players {
   margin: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1em;
+  flex-direction: row;
+  /* The figure stands on the last line's baseline: an SVG's baseline is its bottom edge. */
+  align-items: last baseline;
+  gap: .5em;
 
   svg {
     display: inline-block;
-    width: 2em;
+    height: 2lh;
+    width: auto;
     fill: var(--offwhite);
   }
 
+  span {
+    /* Two lines in either language, to match the figure. */
+    max-width: 25ch;
+    text-wrap: balance;
+  }
 }
 
 #content {
@@ -1445,6 +1506,8 @@ body:has(.winner) {
   display: flex;
 
   input {
+    flex: 1;
+    min-width: 0;
     user-select: all;
   }
 }
