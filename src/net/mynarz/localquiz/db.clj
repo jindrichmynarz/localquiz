@@ -127,7 +127,11 @@
           :keep-history? true
           :schema-flexibility :write
           :store (:db-store config)
-          :value-caps :default})
+          :value-caps :default
+          ;; This process is the only one to write to the database, so it keeps the branch
+          ;; head in memory instead of re-reading it from storage on every deref.
+          :writer {:backend :self
+                   :writer-ownership :exclusive}})
 
 (defstate ^{:on-reload :noop} db-conn
   :start (do (when-not (d/database-exists? db-config)
