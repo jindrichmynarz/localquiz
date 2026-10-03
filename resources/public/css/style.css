@@ -93,8 +93,10 @@ header {
 }
 
 #header-center {
-  display: flex;
-  justify-content: center;
+  /* Pinned to the midline rather than centred as a group, so a scoring label of a
+     different length grows outwards instead of shifting both chips. */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: .5em;
   font-size: 1.5em;
 
@@ -105,6 +107,11 @@ header {
     align-items: center;
     gap: .25em;
     padding: .25em 1ch;
+  }
+
+  #answer-progress {
+    justify-self: end;
+    font-variant-numeric: tabular-nums;
   }
 
   .chip-label {
