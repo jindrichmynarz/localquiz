@@ -195,12 +195,14 @@
 
 (defn ->session-role
   "Session role: moderator when there is no game in the URL (the create form) or
-  the session owns the game; otherwise player."
+  the session owns the game; otherwise player. Reuses the role `morph-view` found, as
+  the views ask for it again."
   [{{:keys [game-id]} :path-params
+    {:keys [session-role]} :game
     session-id :sid}]
-  (if (or (nil? game-id) (game/moderator? game-id session-id))
-    :moderator
-    :player))
+  (cond session-role session-role
+        (or (nil? game-id) (game/moderator? game-id session-id)) :moderator
+        :else :player))
 
 (defn timer
   "Countdown bar for the current question, offset by the time since it was asked at

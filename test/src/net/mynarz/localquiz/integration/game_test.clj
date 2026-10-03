@@ -276,3 +276,9 @@
       (game/disconnect-player! p2)
       (is (game/all-players-answered? game-id)))
     (is (nil? (game/answer-progress "no-such-game")))))
+
+(deftest moderator?
+  (is (game/moderator? fixtures/game-id fixtures/moderator-id))
+  (is (not (game/moderator? fixtures/game-id (get-player-id "Jane"))))
+  (is (not (game/moderator? fixtures/game-id nil)))
+  (is (not (game/moderator? "no-such-game" fixtures/moderator-id))))

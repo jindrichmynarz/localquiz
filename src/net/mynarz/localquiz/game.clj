@@ -58,14 +58,9 @@
   "Test if `session-id` is the moderator (owner) of the game with `game-id`."
   [^String game-id
    ^String session-id]
-  (and session-id
-       (= session-id
-          (d/q '[:find ?moderator .
-                 :in $ ?game-id
-                 :where [?game :game/id ?game-id]
-                        [?game :game/moderator ?moderator]]
-               @db-conn
-               game-id))))
+  ;; Looked up by entity rather than queried, as it runs on every render.
+  (and (some? session-id)
+       (= session-id (:game/moderator (d/entity @db-conn [:game/id game-id])))))
 
 (defn- player-entity
   "The player with `player-id`, or nil if there is none. Looked up by entity rather than
