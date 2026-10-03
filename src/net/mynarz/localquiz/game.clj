@@ -153,6 +153,19 @@
     (-> (qs/resolve-refs (get-defs game-id) (edn/read-string question))
         (assoc :asked-at (.getTime ^java.util.Date question-inst)))))
 
+(defn question-asked-at
+  "Epoch milliseconds when the current question in `game-id` was asked."
+  [^String game-id]
+  (when-some [^java.util.Date question-inst
+              (d/q '[:find ?question-inst .
+                     :in $ ?game-id
+                     :where [?game :game/id ?game-id]
+                            [?game :game/current-question _ ?question-tx]
+                            [?question-tx :db/txInstant ?question-inst]]
+                   @db-conn
+                   game-id)]
+    (.getTime question-inst)))
+
 (defn parse-answer
   "Parse `answer` to Clojure data types."
   [^String answer]
