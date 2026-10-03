@@ -28,6 +28,17 @@
        charred/write-json-str
        (d*/patch-signals! sse-gen)))
 
+(defn redirect!
+  "Redirect the page to `url` using the SSE generator `sse-gen`. Unlike `d*/redirect!`,
+  it sends no inline <script>, which the Content Security Policy blocks, but an element
+  whose `data-init` expression Datastar evaluates."
+  [sse-gen
+   ^String url]
+  (d*/patch-elements! sse-gen
+                      (h/html [:div {:data-init (str "window.location.href = " (charred/write-json-str url))}])
+                      {d*/selector "body"
+                       d*/patch-mode d*/pm-append}))
+
 (defn handler
   "Server-sent events handler that runs for each game update."
   [{{last-event-id "last-event-id"} :headers
@@ -59,7 +70,7 @@
                ([{:keys [redirect signals]}]
                 (recur
                   (cond signals (do (patch-signals! sse-gen signals) last-view-hash)
-                        redirect (do (d*/redirect! sse-gen redirect) last-view-hash)
+                        redirect (do (redirect! sse-gen redirect) last-view-hash)
                         :else (on-cpu-pool ; CPU work on real threads
                                 (if-some [new-view (try-on-error (views/morph-view request))]
                                   (let [new-view-str (h/html new-view)
