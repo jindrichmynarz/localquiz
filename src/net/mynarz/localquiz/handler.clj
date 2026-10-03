@@ -27,7 +27,10 @@
                          parameters/parameters-middleware
                          middleware/wrap-parse-signals
                          middleware/wrap-language
-                         [tempura/wrap-ring-request {:tr-opts {:dict i18n/dictionary}}]
+                         ;; In Clojure, Tempura compiles the dictionary on every translation
+                         ;; unless told to cache it, which is safe for a static dictionary.
+                         [tempura/wrap-ring-request {:tr-opts {:dict i18n/dictionary
+                                                               :cache-dict? true}}]
                          middleware/wrap-session
                          exception-middleware
                          ring-coercion/coerce-exceptions-middleware
