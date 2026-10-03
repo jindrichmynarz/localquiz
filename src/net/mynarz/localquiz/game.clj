@@ -67,18 +67,19 @@
                @db-conn
                game-id))))
 
+(defn- player-entity
+  "The player with `player-id`, or nil if there is none. Looked up by entity rather than
+  queried: Datahike caches query plans keyed by the substituted arguments, in an LRU of 100,
+  so a query per player is planned anew on every call in games of more than ~100 players."
+  [db
+   ^String player-id]
+  (d/entity db [:player/id player-id]))
+
 (defn player-in-game?
   "Test if the player with `player-id` is in the game with `game-id`."
   [^String game-id
    ^String player-id]
-  (d/q '[:find ?player-id .
-         :in $ ?game-id ?player-id
-         :where [?game :game/id ?game-id]
-                [?game :game/players ?player]
-                [?player :player/id ?player-id]]
-       @db-conn
-       game-id
-       player-id))
+  (= game-id (some-> (player-entity @db-conn player-id) :game/_players :game/id)))
 
 (defn player-name-in-game?
   "Test if a player with `player-name` is already in the game identified by `game-id`.
@@ -175,12 +176,7 @@
   "Test if a player with `player-id` has already answered
   the current question in game with `game-id`."
   [^String player-id]
-  (d/q '[:find ?player-id .
-         :in $ ?player-id
-         :where [?player :player/id ?player-id]
-                [?answer :answer/player ?player]]
-       @db-conn
-       player-id))
+  (boolean (some-> (player-entity @db-conn player-id) :answer/_player seq)))
 
 (defn get-answers
   "Get the current answers for `game-id`."
@@ -534,31 +530,26 @@
        first))
 
 (defn player-answer
+  "The score of the answer of the player with `player-id` to the current question in the
+  game with `game-id`, or nil if they have not answered."
   [^String game-id
    ^String player-id]
-  (let [query '[:find (pull ?answer [:answer/score :answer/correct?])
-                      ?current-question
-                :in $ ?game-id ?player-id
-                :keys answer current-question
-                :where [?game :game/id ?game-id]
-                       [?game :game/players ?player]
-                       [?player :player/id ?player-id]
-                       [?game :game/answers ?answer]
-                       [?game :game/current-question ?current-question]
-                       [?answer :answer/player ?player]]
-        {{:keys [scoring]} :current-question
-         {:answer/keys [score]} :answer
-         :keys [answer]} (-> query
-                             (d/q @db-conn game-id player-id)
-                             first
-                             (update :current-question edn/read-string))]
-    (cond-> answer
-      ; The score is the consensus, measured among all players.
-      (= scoring :consensus)
-      (assoc :answer/consensus (* (or score 0) 100))
+  (let [player (player-entity @db-conn player-id)
+        game (:game/_players player)]
+    (when-let [answer (and (= game-id (:game/id game))
+                           (first (:answer/_player player)))]
+      (let [{:keys [scoring]} (edn/read-string (:game/current-question game))
+            score (:answer/score answer)]
+        (cond-> (not-empty (into {}
+                                 (filter (comp some? val))
+                                 {:answer/score score
+                                  :answer/correct? (:answer/correct? answer)}))
+          ; The score is the consensus, measured among all players.
+          (= scoring :consensus)
+          (assoc :answer/consensus (* (or score 0) 100))
 
-      (= scoring :majority)
-      (assoc :answer/majority (pos? score)))))
+          (= scoring :majority)
+          (assoc :answer/majority (pos? score)))))))
 
 (defn game-players
   "Get the names of players in game with `game-id`."

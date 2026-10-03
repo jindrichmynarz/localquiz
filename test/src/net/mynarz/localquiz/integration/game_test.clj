@@ -237,3 +237,25 @@
       (game/next-question! game-id))
     (is (= #:game{:questions 0 :questions-total 1}
            (game/game-progress game-id)))))
+
+(deftest player-answer
+  (let [game-id (crypto/random-unguessable-uid)
+        [p0 p1 p2] (map #(str game-id "-p" %) (range 3))]
+    (create-question-game! game-id ["0" "1"]) ; P0 correct, P1 wrong
+    (d/transact db/db-conn [{:db/id [:game/id game-id]
+                             :game/players [{:player/id p2 :player/name "P2"}]}])
+    (game/evaluate-answers! game-id)
+    (testing "Players who answered"
+      (is (game/player-answered? p0))
+      (is (= {:answer/score 1.0 :answer/correct? true} (game/player-answer game-id p0)))
+      (is (= {:answer/score 0.0 :answer/correct? false} (game/player-answer game-id p1))))
+    (testing "A player who did not answer"
+      (is (not (game/player-answered? p2)))
+      (is (nil? (game/player-answer game-id p2))))
+    (testing "Another game"
+      (is (not (game/player-in-game? fixtures/game-id p0)))
+      (is (nil? (game/player-answer fixtures/game-id p0))))
+    (testing "No such player"
+      (is (not (game/player-in-game? game-id "nobody")))
+      (is (not (game/player-answered? "nobody")))
+      (is (nil? (game/player-answer game-id "nobody"))))))
