@@ -3,6 +3,7 @@
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.test-fixtures :as fixtures]
             [net.mynarz.localquiz.views.common :as views]
+            [charred.api :as charred]
             [clojure.string :as string]
             [clojure.test :refer [are deftest is testing use-fixtures]]
             [dev.onionpancakes.chassis.core :as h]))
@@ -78,28 +79,40 @@
   [^String s ^String part]
   (count (re-seq (re-pattern (java.util.regex.Pattern/quote part)) s)))
 
+(defn- unescape-attribute
+  [^String s]
+  (-> s
+      (string/replace "&quot;" "\"")
+      (string/replace "&lt;" "<")
+      (string/replace "&gt;" ">")
+      (string/replace "&amp;" "&")))
+
 (deftest network-answers
   (let [choices [{:label "House" :related ["Genre"]}
                  {:label "Techno" :related ["Genre"] :description "Detroit, emerged mid 80s."}
                  {:label "Acid House" :related ["House" "Techno"]}]
         html (h/html (views/answers-view fixtures/tr false {} fixtures/game-id false
-                                         {:type :network :choices choices}))]
-    (testing "The map survives morphs, which would reset what it reveals"
-      (is (string/includes? html "class=\"network-map\" data-ignore-morph")))
-    (testing "Every arc is drawn"
-      (is (= 4 (occurrences html "class=\"nm-edge"))))
-    (testing "Choices are selectable, and the root, which is none, is not"
-      (is (= 3 (occurrences html "nm-choice")))
-      (is (string/includes? html "class=\"nm-node nm-root\"")))
-    (testing "Only the root and its children show at first"
-      (is (string/includes? html "class=\"nm-node nm-choice nm-hidden\" data-id=\"Acid House\"")))
-    (testing "The hint that the map pans shows, and is not announced"
-      (is (string/includes? html "<div class=\"nm-hint\" aria-hidden")))
-    (testing "The cell under the map hides until a choice is chosen, then shows it with its description"
-      (is (string/includes? html "<div class=\"nm-info\" hidden>"))
-      (is (= 3 (occurrences html "class=\"nm-chosen\"")))
-      (is (string/includes? html (str "data-for=\"Techno\" hidden><strong>Techno</strong>"
-                                      "<div class=\"description\">Detroit, emerged mid 80s.</div>"))))))
+                                         {:type :network :choices choices}))
+        network (some-> (re-find #"network=\"([^\"]*)\"" html)
+                        second
+                        unescape-attribute
+                        (charred/read-json :key-fn keyword))]
+    (testing "The map survives morphs, which would empty it and reset what it reveals"
+      (is (re-find #"<network-map [^>]*data-ignore-morph" html)))
+    (testing "Every arc is passed in"
+      (is (= 4 (count (:edges network)))))
+    (testing "Every node is laid out, the root included"
+      (is (= "Genre" (:root network)))
+      (is (= #{"Genre" "House" "Techno" "Acid House"} (set (map :id (:nodes network)))))
+      (is (every? (comp number? :x) (:nodes network))))
+    (testing "Choices come with their descriptions"
+      (is (= [{:label "House"}
+              {:label "Techno" :description "Detroit, emerged mid 80s."}
+              {:label "Acid House"}]
+             (:choices network))))
+    (testing "The hints that the map pans are passed in"
+      (is (string/includes? html "hint=\"Drag to move the map, pinch to zoom\""))
+      (is (string/includes? html "hint-pointer=\"Drag to move the map, scroll to zoom\"")))))
 
 (def ^:private revealed-choices
   [{:label "House" :related ["Genre"]}

@@ -3,8 +3,8 @@
   radial layered drawing, after Bachmaier's radial adaptation of Sugiyama's framework. Each
   node sits on the ring of its depth around the root, every arc but those closing a loop
   runs outward, and barycentre sweeps order the rings to reduce crossings.
-  resources/public/js/network.js lays out each view it shows around the directions this
-  layout gives.")
+  <network-map> in resources/public/js/components.js lays out each view it shows around
+  the directions this layout gives.")
 
 (def max-nodes
   "Most nodes a network may have. Counting crossings, which picks the best sweep, is

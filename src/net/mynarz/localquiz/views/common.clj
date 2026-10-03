@@ -157,17 +157,10 @@
       {:as "script"
        :href "/js/components.js"
        :rel "modulepreload"}]
-     [:link
-      {:as "script"
-       :href "/js/network.js"
-       :rel "modulepreload"}]
      [:script
       {:crossorigin "anonymous"
        :defer true
        :src datastar-url
-       :type "module"}]
-     [:script
-      {:src "/js/network.js"
        :type "module"}]
      [:script
       {:src "/js/components.js"

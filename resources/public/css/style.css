@@ -556,16 +556,17 @@ input[type="text"], input[type="number"] {
   }
 }
 
-/* Zoom of the network map, which network.js sets. Registered, so that it can transition. */
+/* Zoom of the network map, which <network-map> sets. Registered, so that it can transition. */
 @property --k {
   syntax: "<number>";
   inherits: true;
   initial-value: 1;
 }
 
-/* Sizes are in screen pixels, mirrored by network.js and network.clj, since glyphs are
-   scaled back by the zoom to keep their size. */
-.network-map {
+/* Sizes are in screen pixels, mirrored by <network-map>, since glyphs are scaled back by
+   the zoom to keep their size. */
+network-map {
+  display: block;
   position: relative;
   width: min(92vw, 640px);
   /* One frame around the drawing and the cell under it. */
@@ -583,7 +584,7 @@ input[type="text"], input[type="number"] {
     /* Dragging and pinching pan and zoom the map, not the page. */
     touch-action: none;
     cursor: grab;
-    /* Hidden until network.js first fits it. */
+    /* Hidden until <network-map> first fits it. */
     visibility: hidden;
 
     &.nm-ready {
@@ -752,9 +753,9 @@ input[type="text"], input[type="number"] {
 }
 
 /* The tree of the answers to a :network question, drawn on the reveal. Deliberately not
-   sharing the .nm- classes or the .network-map wrapper: that one is claimed by
-   `#morph:has(.network-map)` below for the full-viewport interactive layout, and its svg
-   stays `visibility: hidden` until network.js adds .nm-ready, which never comes to a
+   sharing the .nm- classes or the network-map wrapper: that one is claimed by
+   `#morph:has(network-map)` below for the full-viewport interactive layout, and its svg
+   stays `visibility: hidden` until <network-map> adds .nm-ready, which never comes to a
    drawing the server finished. Sizes come from the drawing's own units, so they hold
    whether the answers landed together or far apart. */
 .nt {
@@ -810,7 +811,7 @@ input[type="text"], input[type="number"] {
    scrolls instead. `svh` is the viewport with the mobile URL bar shown, so the page fits
    either way and does not jump as the bar hides. Each container on the way to the map
    passes the height down, and the footer makes way. */
-#morph:has(.network-map) {
+#morph:has(network-map) {
   height: 100svh;
   min-height: 0;
 
@@ -827,13 +828,13 @@ input[type="text"], input[type="number"] {
   #content,
   #answers,
   #answers > div,
-  .network-map {
+  network-map {
     display: flex;
     flex-direction: column;
     min-height: 0;
   }
 
-  .network-map svg {
+  network-map svg {
     flex: 0 1 auto;
     height: 640px;
     min-height: 240px;
