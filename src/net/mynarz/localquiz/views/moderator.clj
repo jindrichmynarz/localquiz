@@ -12,14 +12,13 @@
   "Show how many players in `game-id` have already answered the current question."
   [tr
    ^String game-id]
-  (let [{:keys [total answered]} (game/answer-progress game-id)
-        answer-progress-text (format "%d/%d" answered total)]
+  (let [{:keys [total answered]} (game/answer-progress game-id)]
     [:label#answer-progress
      [:span.chip-label (tr [:players-answered])]
      [:progress
       {:max total
-       :value answered}
-      answer-progress-text]]))
+       :value answered}]
+     [:span (format "%d/%d" answered total)]]))
 
 (defn copy-button
   [tr
