@@ -71,7 +71,7 @@
     ;; link leads, so it thanks the players without claiming the reader was one.
     [:section#content
      [:div.verdict
-      [:i.material-icons (svg "emoji_events.svg")]
+      [:i.material-icons (svg "waving_hand_animated.svg")]
       [:h2 (tr [:game-over])]
       [:p (tr [:thanks-for-playing])]]]))
 
