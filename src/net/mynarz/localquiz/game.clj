@@ -496,11 +496,13 @@
 
 (defn game-progress
   [^String game-id]
-  (-> '[:find (pull ?game [:game/questions :game/questions-total]) .
-        :in $ ?game-id
-        :where [?game :game/id ?game-id]]
-      (d/q @db-conn game-id)
-      (update :game/questions count)))
+  (let [db @db-conn
+        game (d/entity db [:game/id game-id])]
+    ;; Counts datoms rather than pulling question strings. A (count ?question) query
+    ;; would return nil instead of 0 once all questions are asked.
+    {:game/questions (count (d/datoms db {:index :eavt
+                                          :components [(:db/id game) :game/questions]}))
+     :game/questions-total (:game/questions-total game)}))
 
 (defn answer-progress
   [^String game-id]

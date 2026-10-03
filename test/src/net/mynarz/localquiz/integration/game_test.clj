@@ -221,3 +221,19 @@
     (is (= :show-answers (game/get-game-state game-id)))
     (is (= 1.0 (player-total game-id "P0")))
     (is (= 0.0 (player-total game-id "P1")))))
+
+(deftest game-progress
+  ;; Over 1000 questions: pull caps cardinality-many attributes at 1000 values.
+  (let [game-id (crypto/random-unguessable-uid)
+        questions (mapv #(pr-str {:id %}) (range 1500))]
+    (game/create-game! game-id (crypto/random-unguessable-uid) questions)
+    (with-redefs [game/schedule-timeout (fn [_])]
+      (game/next-question! game-id))
+    (is (= #:game{:questions 1499 :questions-total 1500}
+           (game/game-progress game-id))))
+  (let [game-id (crypto/random-unguessable-uid)]
+    (-create-game! game-id)
+    (with-redefs [game/schedule-timeout (fn [_])]
+      (game/next-question! game-id))
+    (is (= #:game{:questions 0 :questions-total 1}
+           (game/game-progress game-id)))))
