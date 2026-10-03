@@ -101,7 +101,7 @@
     (let [answer-revealed? (game/all-players-answered? game-id)
           current-question (game/current-question game-id)]
       [:section#content
-       (views/timer (:elapsed-ms current-question) answer-revealed?)
+       (views/timer (:asked-at current-question) answer-revealed?)
        [:h2.error
         {:data-show "$error"
          :data-text "$error"}]

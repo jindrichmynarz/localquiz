@@ -203,16 +203,19 @@
     :player))
 
 (defn timer
-  "Countdown bar for the current question, offset by its `elapsed-ms`,
-  so that it stays in sync on reloads and for players who join mid-question."
-  [^long elapsed-ms
+  "Countdown bar for the current question, offset by the time since it was asked at
+  `asked-at`, so that it stays in sync on reloads and for players who join mid-question.
+  The browser computes the offset, which keeps the markup the same for the whole question,
+  so that re-renders do not change the view hash and are not sent."
+  [^long asked-at
    ^Boolean answer-revealed?]
   (when-not answer-revealed?
     (let [duration (:question-time-out config)]
       [:div.timer
        {:data-style:--duration (format "'%ds'" duration)}
        [:div
-        {:data-style:animation-delay (format "'-%dms'" elapsed-ms)}]])))
+        ;; Capped at 0, so that a client clock behind the server's does not delay the start.
+        {:data-style:animation-delay (format "Math.min(0, %d - Date.now()) + 'ms'" asked-at)}]])))
 
 (defmulti game-view
   (juxt ->session-role (comp :state :game)))

@@ -140,7 +140,7 @@
 
 (defn current-question
   "Get the current question for `game-id`,
-  with the milliseconds since it was asked as `:elapsed-ms`."
+  with the epoch milliseconds when it was asked as `:asked-at`."
   [^String game-id]
   (when-let [[question question-inst]
              (d/q '[:find [?current-question ?question-inst]
@@ -151,7 +151,7 @@
                   @db-conn
                   game-id)]
     (-> (qs/resolve-refs (get-defs game-id) (edn/read-string question))
-        (assoc :elapsed-ms (- (System/currentTimeMillis) (.getTime ^java.util.Date question-inst))))))
+        (assoc :asked-at (.getTime ^java.util.Date question-inst)))))
 
 (defn parse-answer
   "Parse `answer` to Clojure data types."

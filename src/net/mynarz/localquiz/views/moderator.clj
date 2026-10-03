@@ -306,12 +306,12 @@
 (defn question-view
   [tr
    ^String game-id
-   {:keys [scoring text elapsed-ms] :as question}
+   {:keys [asked-at scoring text] :as question}
    {:keys [answer-revealed?]
     :as answers}]
   (let [mark-correct? (and answer-revealed? (nil? scoring))]
     [:section#content
-     (views/timer elapsed-ms answer-revealed?)
+     (views/timer asked-at answer-revealed?)
      [:div#question-container
       [:div#question
        {:data-signals:_media "el.querySelector('audio, video')"
