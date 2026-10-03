@@ -104,6 +104,9 @@ rocket("sortable-list", {
   // How long the hint that the map pans stays, unheeded.
   const HINT_MS = 8000;
   const SVG = "http://www.w3.org/2000/svg";
+  // A chevron pointing right, turned to point the way back, in the hollow of a pin
+  // and of a parent of the focus.
+  const CHEVRON = "M -1.5 -3 L 1.5 0 L -1.5 3";
 
   // Which way the turn a -> b -> c bends: 1, -1, or 0 if it doesn't.
   const ccw = ([ax, ay], [bx, by], [cx, cy]) => Math.sign((by - ay) * (cx - ax) - (bx - ax) * (cy - ay));
@@ -159,6 +162,7 @@ rocket("sortable-list", {
       nodes.set(el.dataset.id, {
         el,
         text: el.querySelector("text"),
+        chevron: el.querySelector(".nm-chevron"),
         // Where the node is in the network's layout.
         gx: parseFloat(el.dataset.x),
         gy: parseFloat(el.dataset.y),
@@ -360,7 +364,7 @@ rocket("sortable-list", {
         // pin reads as the way to a node out of view rather than as a node of its own.
         const chevron = document.createElementNS(SVG, "path");
         chevron.setAttribute("class", "nm-chevron");
-        chevron.setAttribute("d", "M -1.5 -3 L 1.5 0 L -1.5 3");
+        chevron.setAttribute("d", CHEVRON);
         chevron.setAttribute("transform", `rotate(${(Math.atan2(dy, dx) * 180) / Math.PI})`);
         pin.appendChild(chevron);
         const text = document.createElementNS(SVG, "text");
@@ -499,20 +503,31 @@ rocket("sortable-list", {
       if (!width || !height) return;
       const was = shown;
       shown = visible();
+      // The parents of the focus lead back up, and are drawn as on-screen pins.
+      const { parents } = nodes.get(focus);
       for (const [id, node] of nodes) {
         node.el.classList.toggle("nm-hidden", !shown.has(id));
         node.el.classList.toggle("nm-focus", id === focus);
         node.el.classList.toggle("nm-selected", id === selected);
         node.el.classList.toggle("nm-trail", trail.includes(id));
+        node.el.classList.toggle("nm-back", parents.includes(id));
       }
       const onTrail = (edge) => trail.some((id, i) => id === edge.from && trail[i + 1] === edge.to);
       for (const edge of edges) {
         edge.el.classList.toggle("nm-hidden", !(shown.has(edge.from) && shown.has(edge.to)));
         edge.el.classList.toggle("nm-adjacent", edge.from === focus || edge.to === focus);
         edge.el.classList.toggle("nm-trail", onTrail(edge));
+        edge.el.classList.toggle("nm-back", edge.to === focus);
       }
       frame = framed();
       arrange(width, height);
+      // Each chevron points away from the focus, where the node now goes.
+      const f = nodes.get(focus);
+      for (const id of parents) {
+        const node = nodes.get(id);
+        const angle = (Math.atan2(node.y - f.y, node.x - f.x) * 180) / Math.PI;
+        node.chevron.setAttribute("transform", `rotate(${angle})`);
+      }
       // Gestures may zoom in from the view, and it fills the screen, so not out.
       view = fitted(width, height);
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -741,6 +756,7 @@ rocket("sortable-list", {
                 <g class="nm-glyph">
                   <circle class="nm-target" r=${TARGET_RADIUS}></circle>
                   <circle r=${NODE_RADIUS}></circle>
+                  <path class="nm-chevron" d=${CHEVRON}></path>
                   <text>${id}</text>
                 </g>
               </g>

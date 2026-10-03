@@ -684,6 +684,12 @@ network-map {
     &.nm-adjacent {
       stroke: var(--orange);
     }
+
+    /* Up to a parent of the focus: faint and dashed, unlike the bright edges down. */
+    &.nm-back {
+      stroke: rgb(from var(--orange) r g b / 60%);
+      stroke-dasharray: 4 3;
+    }
   }
 
   .nm-node,
@@ -721,6 +727,32 @@ network-map {
       fill: var(--red);
     }
 
+    .nm-chevron {
+      fill: none;
+      stroke: var(--orange);
+      stroke-width: 1.5px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* A parent of the focus, the way back up: hollow with a chevron, like a pin. */
+    &.nm-node:not(.nm-back) .nm-chevron {
+      display: none;
+    }
+
+    &.nm-back circle:not(.nm-target) {
+      fill: var(--darker);
+      stroke: var(--orange);
+      stroke-width: 2px;
+    }
+
+    &.nm-root.nm-back {
+      circle:not(.nm-target),
+      .nm-chevron {
+        stroke: var(--red);
+      }
+    }
+
     &.nm-focus text {
       font-weight: bold;
     }
@@ -740,14 +772,6 @@ network-map {
       fill: var(--darker);
       stroke: var(--orange);
       stroke-width: 2px;
-    }
-
-    .nm-chevron {
-      fill: none;
-      stroke: var(--orange);
-      stroke-width: 1.5px;
-      stroke-linecap: round;
-      stroke-linejoin: round;
     }
   }
 }
