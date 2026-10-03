@@ -6,6 +6,8 @@
   --orange: #fc8314;
   --red: #ec5809;
   --grey: #999;
+  /* A faint grain, for surfaces that should read as material rather than flat colour. */
+  --noise: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/></svg>");
 
   /* Fonts */
   --font-size: clamp(16px, 4vw, 28px);
@@ -1069,7 +1071,7 @@ label {
 
       tbody & {
         background:
-          url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/></svg>"),
+          var(--noise),
           radial-gradient(ellipse at center, transparent 50%, rgb(from var(--darker) r g b / 50%) 100%),
           transparent;
         border-radius: 6px;
@@ -1364,9 +1366,23 @@ progress {
     order: 1;
     margin-bottom: -3px;
     padding: .5em 1em;
-    color: var(--grey);
+    /* Shaped like the active tab, only receded, so it reads as the other tab rather than
+       as unavailable. Its bottom edge is the form's top border, which puts it behind. */
+    border: 3px solid var(--darker);
+    border-radius: 6px 6px 0 0;
+    color: rgb(from var(--offwhite) r g b / 70%);
+    background: var(--noise), var(--dark);
+    /* The form's edge shading the tab, tucking it behind. */
+    box-shadow: inset 0 -.5em .5em -.25em var(--darker);
     z-index: 1;
     transition: color var(--transition);
+
+    /* A folder strip: the tabs share a border, and the inactive one sits lower, behind. */
+    margin-top: .25em;
+
+    & ~ label {
+      margin-left: -3px;
+    }
 
     &:hover {
       color: var(--orange);
@@ -1383,18 +1399,28 @@ progress {
 
   input[type="radio"]:checked + label {
     cursor: inherit;
-    border: 3px solid var(--darker);
-    border-radius: 6px 6px 0 0;
+    margin-top: 0;
+    box-shadow: none;
+    z-index: 2;
     border-bottom-color: transparent;
   }
 
   input[type="radio"]:checked + label, [type="radio"]:checked + label + *  {
     color: var(--offwhite);
     background-color: var(--dark);
+    background-image: var(--noise);
   }
 
+  /* Off screen rather than display: none, so the radios stay in the focus order and the
+     arrow keys switch the tabs. The label shows the focus instead. */
   input[type="radio"] {
-    display: none;
+    position: absolute;
+    left: -9999px;
+  }
+
+  input[type="radio"]:focus-visible + label {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
   }
 
   input[type="radio"] + label + * {
