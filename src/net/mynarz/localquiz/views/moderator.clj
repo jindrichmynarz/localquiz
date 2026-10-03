@@ -161,14 +161,14 @@
      :name "number-of-questions"
      :type "number"}]])
 
-(defn replay-audio
-  "A button to replay audio from the question, if present."
+(defn replay-media
+  "A button to replay audio or video from the question, if present."
   [tr]
-  [:button.btn#replay-audio
-   {:data-show "$_audio"
-    :data-on:click "$_audio.currentTime = 0; $_audio.play()"}
+  [:button.btn#replay-media
+   {:data-show "$_media"
+    :data-on:click "$_media.currentTime = 0; $_media.play()"}
    [:i.material-icons (svg "replay.svg")]
-   (tr [:replay-audio])])
+   (tr [:replay-media])])
 
 (defn create-game-form-fields
   [request]
@@ -314,10 +314,10 @@
      (views/timer elapsed-ms answer-revealed?)
      [:div#question-container
       [:div#question
-       {:data-signals:_audio "el.querySelector('audio')"
+       {:data-signals:_media "el.querySelector('audio, video')"
         :data-init (if answer-revealed?
-                     "$_audio && $_audio.pause()"
-                     "$_audio && $_audio.play();")} ; Play any audio if present in the question.
+                     "$_media && $_media.pause()"
+                     "$_media && $_media.play();")} ; Play any audio or video if present in the question.
        text]
       (views/answers-view tr
                           true
@@ -336,7 +336,7 @@
     (views/morph-body
       request
       (question-header tr game-id question)
-      [(replay-audio tr)
+      [(replay-media tr)
        (end-game tr game-id)]
       (question-view tr game-id question {}))))
 
@@ -351,7 +351,7 @@
     (views/morph-body
       request
       (question-header tr game-id question)
-      [(replay-audio tr)
+      [(replay-media tr)
        (end-game tr game-id)]
       (question-view tr game-id question answers))))
 

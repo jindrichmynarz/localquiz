@@ -53,7 +53,7 @@
         :question {:progress "Otázka %1/%2"
                    :yesno {:yes "Ano"
                            :no "Ne"}}
-        :replay-audio "Přehrát znovu"
+        :replay-media "Přehrát znovu"
         :rules [[:h2 "Pravidla hry"]
                 [:p "Hráči kvízu odpovídají na otázky a získávají body.
                      Hráč s nejvyšším počtem bodů po odehrání všech otázek se stává vítězem.
@@ -164,7 +164,7 @@
         :question {:progress "Question %1/%2"
                    :yesno {:yes "Yes"
                            :no "No"}}
-        :replay-audio "Replay"
+        :replay-media "Replay"
         :rules [[:h2 "Rules of the game"]
                 [:p "This is a quiz: the players answer questions and score points.
                      The player with the highest score after all the questions are answered wins the game.
