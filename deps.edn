@@ -2,7 +2,7 @@
  :deps {org.clojure/clojure            {:mvn/version "1.12.6"}
         org.clojure/core.async         {:mvn/version "1.9.865"}
         clj-fuzzy/clj-fuzzy            {:mvn/version "0.4.1"}
-        com.cnuernber/charred          {:mvn/version "1.042"}
+        com.cnuernber/charred          {:mvn/version "1.043"}
         com.taoensso/tempura           {:mvn/version "1.5.4"}
         com.taoensso/timbre            {:mvn/version "6.8.0"}
         dev.data-star.clojure/brotli   {:mvn/version "1.0.0-RC11"}
@@ -14,13 +14,13 @@
         io.nayuki/qrcodegen            {:mvn/version "1.8.0"}
         io.replikativ/datahike-lmdb    {:git/url "https://github.com/replikativ/datahike-lmdb"
                                         :git/sha "0a59595a33634406af7b875a0ee9c7cc1207926b"}
-        metosin/reitit                 {:mvn/version "0.10.1"}
+        metosin/reitit                 {:mvn/version "0.11.0"}
         mount/mount                    {:mvn/version "0.1.24"}
-        org.replikativ/datahike        {:mvn/version "0.8.1881"}
+        org.replikativ/datahike        {:mvn/version "0.8.1903"}
         ring/ring-devel                {:mvn/version "1.15.0-beta1"}}
  :aliases {:dev {:extra-deps {com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.8.0"}
                               criterium/criterium                      {:mvn/version "0.4.6"}
-                              org.slf4j/slf4j-nop                      {:mvn/version "2.0.19"}}
+                              org.slf4j/slf4j-nop                      {:mvn/version "2.0.20"}}
                  :jvm-opts ["-Dapp.env=dev"
                             "--enable-native-access=ALL-UNNAMED"
                             "-Duser.timezone=UTC"
@@ -30,8 +30,8 @@
            :build {:deps {io.github.clojure/tools.build {:git/tag "v0.10.14" :git/sha "1176afd"}}
                    :ns-default build}
            :repl {:extra-paths ["dev"]
-                  :extra-deps  {nrepl/nrepl                 {:mvn/version "1.7.0"}
-                                cider/cider-nrepl           {:mvn/version "0.62.2"}
+                  :extra-deps  {nrepl/nrepl                 {:mvn/version "1.8.0"}
+                                cider/cider-nrepl           {:mvn/version "0.63.1"}
                                 io.github.tonsky/clj-reload {:mvn/version "1.0.0"}}
                   :main-opts ["--main" "nrepl.cmdline"
                               "--middleware" "[cider.nrepl/cider-middleware]"
