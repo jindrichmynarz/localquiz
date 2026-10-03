@@ -81,6 +81,12 @@ body {
     #header-center {
       font-size: calc(var(--font-size) * .6);
     }
+
+    /* With nothing under it — the inputs live on the players' phones — the question
+       has the whole budget --font-size-projected splits with the answers. */
+    #question-container:has(> :last-child:empty) #question {
+      font-size: 2em;
+    }
   }
 }
 
