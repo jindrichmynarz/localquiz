@@ -278,19 +278,26 @@
        count
        (< 1)))
 
+(defn answer-progress
+  "How many players are in `game-id` (:total) and how many of them answered the current
+  question (:answered), or nil if there is no such game. Counts datoms rather than querying,
+  which would scale with the players. The answer of a player who left stays, so the answers
+  can outnumber the players: :answered is capped at :total, so a game whose remaining
+  players have all answered counts as answered."
+  [^String game-id]
+  (let [db @db-conn]
+    (when-let [game (:db/id (d/entity db [:game/id game-id]))]
+      (let [cardinality #(count (d/datoms db {:index :eavt
+                                              :components [game %]}))
+            total (cardinality :game/players)]
+        {:total total
+         :answered (min total (cardinality :game/answers))}))))
+
 (defn all-players-answered?
   "Test if all players in `game-id` answered the current question."
   [^String game-id]
-  (->> game-id
-       (d/q '[:find ?player
-              :in $ ?game-id
-              :where [?game :game/id ?game-id]
-                     [?game :game/players ?player]
-                     (not [?game :game/answers ?answer]
-                          [?answer :answer/player ?player])]
-            @db-conn)
-       seq
-       not))
+  (let [{:keys [answered total]} (answer-progress game-id)]
+    (= answered total)))
 
 (defn all-questions-answered?
   "Test if all questions in `game-id` were answered."
@@ -512,22 +519,6 @@
     {:game/questions (count (d/datoms db {:index :eavt
                                           :components [(:db/id game) :game/questions]}))
      :game/questions-total (:game/questions-total game)}))
-
-(defn answer-progress
-  [^String game-id]
-  (->> game-id
-       (d/q '[:find (count-distinct ?player) (sum ?answer)
-              :in $ ?game-id
-              :keys total answered
-              :where [?game :game/id ?game-id]
-                     [?game :game/players ?player]
-                     (or-join [?game ?player ?answer]
-                              (and [?game :game/answers ?answer-entity]
-                                   [?answer-entity :answer/player ?player]
-                                   [(ground 1) ?answer])
-                              [(ground 0) ?answer])]
-            @db-conn)
-       first))
 
 (defn player-answer
   "The score of the answer of the player with `player-id` to the current question in the
