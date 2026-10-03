@@ -27,7 +27,9 @@
     :copy-label (tr [:copy])
     :copied-label (tr [:copied])
     ;; Morphing would empty what the component renders into itself.
-    :data-ignore-morph ""}])
+    :data-ignore-morph ""}
+   ;; Slotted into the component's button.
+   [:i.material-icons (svg "content_copy.svg")]])
 
 (def form-validity-handlers
   "Datastar attributes that keep the $_formValid signal in sync with the form's

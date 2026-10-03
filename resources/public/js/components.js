@@ -26,7 +26,7 @@ rocket("copy-button", {
     })
   },
   render: ({ html, props: { copyLabel, copiedLabel } }) => html`
-    <button class="btn" type="button">${copyLabel}</button>
+    <button class="btn" type="button" aria-label="${copyLabel}" title="${copyLabel}"><slot></slot></button>
     <span class="copy-popover" data-show="$$copied">${copiedLabel}</span>
   `,
 })
