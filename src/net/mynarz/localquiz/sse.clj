@@ -46,8 +46,14 @@
     session-id :sid
     :as request}]
   (let [game-id (or player-game-id session-id)
-        <ch (a/sub refresh-pub session-id (a/chan (a/dropping-buffer 1)))
+        ;; Render refreshes re-render the current state, so a pending one stands for any
+        ;; that arrive after it and the rest can be dropped.
+        <ch (a/sub refresh-pub [session-id :render] (a/chan (a/dropping-buffer 1)))
         <throttled-ch (throttle (:max-refresh-ms config) <ch)
+        ;; Signals and redirects each carry something the client must receive, so they
+        ;; are neither dropped nor throttled.
+        ;; ponytail: if a client stops reading, 16 pending events then block the publication.
+        <events (a/sub refresh-pub [session-id :event] (a/chan 16))
         ; Poison pill for work cancelling
         <cancel (a/chan)]
     (hk-adapter/->sse-response
@@ -63,28 +69,35 @@
            (loop [last-view-hash last-event-id]
              (a/alt!!
                [<cancel]
-               (doseq [ch [<throttled-ch <ch <cancel]]
+               (doseq [ch [<throttled-ch <ch <events <cancel]]
                  (a/close! ch))
 
+               [<events]
+               ([{:keys [redirect signals]
+                  :as event}]
+                (when event
+                  (if signals
+                    (patch-signals! sse-gen signals)
+                    (redirect! sse-gen redirect))
+                  (recur last-view-hash)))
+
                [<throttled-ch]
-               ([{:keys [redirect signals]}]
+               ([_]
                 (recur
-                  (cond signals (do (patch-signals! sse-gen signals) last-view-hash)
-                        redirect (do (redirect! sse-gen redirect) last-view-hash)
-                        :else (on-cpu-pool ; CPU work on real threads
-                                (if-some [new-view (try-on-error (views/morph-view request))]
-                                  (let [new-view-str (h/html new-view)
-                                        ; This is a very fast hash
-                                        new-view-hash (Integer/toHexString (hash new-view-str))]
-                                      ; Only send an event if the view has changed
-                                      (when-not (= last-view-hash new-view-hash)
-                                        (log/infof "Rendering game %s for session %s." game-id session-id)
-                                        (d*/patch-elements! sse-gen
-                                                            new-view-str
-                                                            {d*/use-view-transition true}))
-                                      new-view-hash)
-                                  ; Skip re-render in case of an error
-                                  last-view-hash)))))
+                  (on-cpu-pool ; CPU work on real threads
+                    (if-some [new-view (try-on-error (views/morph-view request))]
+                      (let [new-view-str (h/html new-view)
+                            ; This is a very fast hash
+                            new-view-hash (Integer/toHexString (hash new-view-str))]
+                          ; Only send an event if the view has changed
+                          (when-not (= last-view-hash new-view-hash)
+                            (log/infof "Rendering game %s for session %s." game-id session-id)
+                            (d*/patch-elements! sse-gen
+                                                new-view-str
+                                                {d*/use-view-transition true}))
+                          new-view-hash)
+                      ; Skip re-render in case of an error
+                      last-view-hash))))
 
                ; We want work cancelling to have higher priority.
                :priority true))))

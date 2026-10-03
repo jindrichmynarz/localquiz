@@ -19,6 +19,12 @@
   "Async channel for refresh signals."
   :start (a/chan 64))
 
+(defn topic
+  "Topic of a refresh `event`: its session, and whether it is an event the client must
+  receive (:event) or a request to re-render (:render)."
+  [{:keys [redirect session-id signals]}]
+  [session-id (if (or redirect signals) :event :render)])
+
 (defstate refresh-pub
   "Publication of refresh signals for each session ID."
-  :start (a/pub refresh-channel :session-id))
+  :start (a/pub refresh-channel topic))
