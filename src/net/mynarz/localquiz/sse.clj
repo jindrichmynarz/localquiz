@@ -81,7 +81,7 @@
                                         (log/infof "Rendering game %s for session %s." game-id session-id)
                                         (d*/patch-elements! sse-gen
                                                             new-view-str
-                                                            {:use-view-transition true}))
+                                                            {d*/use-view-transition true}))
                                       new-view-hash)
                                   ; Skip re-render in case of an error
                                   last-view-hash)))))
