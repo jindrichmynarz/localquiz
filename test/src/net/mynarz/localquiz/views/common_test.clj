@@ -198,3 +198,14 @@
     (testing "The correct figure is revealed in the card"
       (is (string/includes? html "class=\"answer revealed\""))
       (is (string/includes? html "42 %")))))
+
+(deftest ended-game-keeps-its-players
+  (let [redirects (atom [])
+        request {:path-params {:game-id (crypto/random-unguessable-uid)} ; No such game
+                 :sid (crypto/random-unguessable-uid)
+                 :tempura/tr fixtures/tr}]
+    (with-redefs [net.mynarz.localquiz.actions.common/refresh-session!
+                  (fn [_ event] (swap! redirects conj event))]
+      (let [html (h/html (views/morph-view request))]
+        (is (empty? @redirects))
+        (is (string/includes? html (fixtures/tr [:game-over])))))))

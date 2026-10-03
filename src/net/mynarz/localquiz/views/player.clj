@@ -65,10 +65,13 @@
     :as request}]
   (views/morph-body
     request
+    ;; Where players land when the moderator ends the game, and where an old or mistyped
+    ;; link leads, so it thanks the players without claiming the reader was one.
     [:section#content
-     [:h2.error
-      [:i.material-icons (svg "videogame_asset_off.svg")]
-      (tr [:game-not-exists])]]))
+     [:div.verdict
+      [:i.material-icons (svg "emoji_events.svg")]
+      [:h2 (tr [:game-over])]
+      [:p (tr [:thanks-for-playing])]]]))
 
 (defmethod views/game-view [:player :new]
   [{{:keys [game-id]} :path-params

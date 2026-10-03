@@ -111,6 +111,9 @@
 
 (defn end-game!
   [{{:keys [game-id]} :path-params
-    sid :sid}]
+    sid :sid
+    :as request}]
   (when (game/moderator? game-id sid)
-    (game/end-game! game-id)))
+    (game/end-game! game-id)
+    ;; The players stay for the closing screen; the moderator goes on to the next game.
+    (refresh-session! request {:redirect "/"})))

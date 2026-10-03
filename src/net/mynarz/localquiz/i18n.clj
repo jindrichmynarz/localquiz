@@ -28,7 +28,7 @@
                  :persistence "nerozumnou vytrvalostí"
                  :using "s použitím"}
         :frequency "Četnost"
-        :game-not-exists "Tato hra neexistuje!"
+        :game-over "Tato hra skončila"
         :incorrect "Nesprávně"
         :join-game "Hrát"
         :majority "Většina"
@@ -105,6 +105,7 @@
         :start-game "Zahájit hru"
         :submit "Odeslat"
         :switch-lang "Přepni jazyk"
+        :thanks-for-playing "Díky všem, kdo hráli!"
         :upload-questions "Nahrát otázky"
         :wait-for-answers "Čekáme na další odpovědi..."
         :wait-for-game-start "Počkej prosím na zahájení hry."
@@ -138,7 +139,7 @@
                  :persistence "unreasonable persistence"
                  :using "using"}
         :frequency "Frequency"
-        :game-not-exists "This game does not exist!"
+        :game-over "This game has ended"
         :incorrect "Incorrect"
         :join-game "Join game"
         :majority "Majority"
@@ -215,6 +216,7 @@
         :start-game "Start the game"
         :submit "Submit"
         :switch-lang "Switch the language"
+        :thanks-for-playing "Thanks to everyone who played!"
         :upload-questions "Upload questions"
         :wait-for-answers "Waiting for other answers..."
         :wait-for-game-start "Please wait for the game to start."

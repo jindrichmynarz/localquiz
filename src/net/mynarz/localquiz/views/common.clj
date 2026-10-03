@@ -230,9 +230,10 @@
         state (when game-id (game/get-game-state game-id))
         game {:session-role role
               :state state}]
-    ; If a player is not in a started game, redirect to the home page.
+    ; If a player is not in a running game, redirect to the home page. Not once the
+    ; game is gone: its players stay for the closing screen.
     (when (and (= role :player)
-               (not= state :new)
+               (not (contains? #{nil :new} state))
                (not (game/player-in-game? game-id session-id)))
       (refresh-session! request {:redirect "/"}))
     (game-view (assoc request :game game))))
