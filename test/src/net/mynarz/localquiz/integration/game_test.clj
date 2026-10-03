@@ -262,27 +262,17 @@
 
 (deftest all-players-answered?
   (let [game-id (crypto/random-unguessable-uid)
-        p2 (str game-id "-p2")]
+        [p0 p2] (map #(str game-id "-p" %) [0 2])]
     (create-question-game! game-id ["0" "1"])
     (is (game/all-players-answered? game-id))
     (d/transact db/db-conn [{:db/id [:game/id game-id]
                              :game/players [{:player/id p2 :player/name "P2"}]}])
     (is (not (game/all-players-answered? game-id)))
-    (testing "The answer of a player who left still counts"
-      (d/transact db/db-conn [{:db/id [:game/id game-id]
-                               :game/answers [{:answer/player [:player/id p2]
-                                               :answer/answer "0"}]}])
+    (testing "A player who answered and left does not stand in for one who has not answered"
+      (game/disconnect-player! p0)
+      (is (= {:total 2 :answered 1} (game/answer-progress game-id)))
+      (is (not (game/all-players-answered? game-id))))
+    (testing "A player who left without answering is not waited for"
       (game/disconnect-player! p2)
-      (is (game/all-players-answered? game-id)))))
-
-(deftest answer-progress
-  (let [game-id (crypto/random-unguessable-uid)
-        p2 (str game-id "-p2")]
-    (create-question-game! game-id ["0" "1"])
-    (d/transact db/db-conn [{:db/id [:game/id game-id]
-                             :game/players [{:player/id p2 :player/name "P2"}]}])
-    (is (= {:total 3 :answered 2} (game/answer-progress game-id)))
-    (testing "The answer of a player who left does not outnumber the players"
-      (game/disconnect-player! (str game-id "-p0"))
-      (is (= {:total 2 :answered 2} (game/answer-progress game-id))))
+      (is (game/all-players-answered? game-id)))
     (is (nil? (game/answer-progress "no-such-game")))))

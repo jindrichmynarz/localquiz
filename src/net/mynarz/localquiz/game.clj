@@ -281,9 +281,8 @@
 (defn answer-progress
   "How many players are in `game-id` (:total) and how many of them answered the current
   question (:answered), or nil if there is no such game. Counts datoms rather than querying,
-  which would scale with the players. The answer of a player who left stays, so the answers
-  can outnumber the players: :answered is capped at :total, so a game whose remaining
-  players have all answered counts as answered."
+  which would scale with the players. Exact, since each player answers at most once and
+  `disconnect-player!` retracts the answer of a player who leaves."
   [^String game-id]
   (let [db @db-conn]
     (when-let [game (:db/id (d/entity db [:game/id game-id]))]
@@ -291,7 +290,7 @@
                                               :components [game %]}))
             total (cardinality :game/players)]
         {:total total
-         :answered (min total (cardinality :game/answers))}))))
+         :answered (cardinality :game/answers)}))))
 
 (defn all-players-answered?
   "Test if all players in `game-id` answered the current question."
@@ -505,10 +504,19 @@
    ^String player-name]
   (d/transact db-conn [[:db.fn/call join-game game-id player-id player-name]]))
 
+(defn disconnect-player
+  "Transaction function that retracts the player with `player-id` and their answer, which
+  would otherwise stay in their game's answers and count towards `answer-progress`."
+  [db
+   ^String player-id]
+  (into [[:db/retractEntity [:player/id player-id]]]
+        (map (fn [answer] [:db/retractEntity (:db/id answer)]))
+        (:answer/_player (d/entity db [:player/id player-id]))))
+
 (defn disconnect-player!
   [^String player-id]
   (log/infof "Disconnecting player %s." player-id)
-  (d/transact db-conn [[:db/retractEntity [:player/id player-id]]]))
+  (d/transact db-conn [[:db.fn/call disconnect-player player-id]]))
 
 (defn game-progress
   [^String game-id]
