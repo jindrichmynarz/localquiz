@@ -1224,7 +1224,7 @@ copy-button {
   }
 }
 
-#sortableList {
+#sortableList, sortable-list > ul {
   margin: 0;
   padding-left: 0;
 

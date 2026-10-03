@@ -155,7 +155,7 @@
       (h/raw (charred/write-json-str {:imports {:datastar datastar-url}}))]
      [:link
       {:as "script"
-       :href "/js/sortable.js"
+       :href "/js/components.js"
        :rel "modulepreload"}]
      [:link
       {:as "script"
@@ -167,13 +167,10 @@
        :src datastar-url
        :type "module"}]
      [:script
-      {:src "/js/sortable.js"
-       :type "module"}]
-     [:script
       {:src "/js/network.js"
        :type "module"}]
      [:script
-      {:src "/js/copy-button.js"
+      {:src "/js/components.js"
        :type "module"}]
      ; Enables responsiveness on mobile devices
      [:meta {:name "viewport"
@@ -564,32 +561,32 @@
    {:keys [items note]}]
   (let [shuffled-items (->> items
                             add-index
-                            util/deterministic-shuffle)
-        drag-indicator [:i.material-icons (svg "drag_indicator.svg")]]
+                            util/deterministic-shuffle)]
     [:form#answers
-     [:ul#sortableList
-      {:class [(when disabled? "disabled")
-               (when mark-correct? "revealed")]
-       :data-init (when-not disabled? "createSortableList(el)")
-       :data-signals:_answer (->> shuffled-items
-                                  (map :index)
-                                  charred/write-json-str)
-       :data-on:reordered "$_answer = evt.detail"}
-      (if mark-correct?
-        (for [{:keys [sort-value text]} (sort-by :sort-value items)]
-          [:li
-           [:span text]
-           [:span.sort-value sort-value]])
-        (for [{:keys [index text]} shuffled-items]
-          [:li
-           {:data-index index}
-           [:span text]
-           (when-not disabled?
-             drag-indicator)]))
-      [:input
-       {:data-attr:value "$_answer"
-        :name "answer"
-        :type "hidden"}]]
+     {:data-signals:_answer (->> shuffled-items
+                                 (map :index)
+                                 charred/write-json-str)
+      :data-on:reordered "$_answer = evt.detail"}
+     (if disabled?
+       [:ul#sortableList
+        {:class ["disabled" (when mark-correct? "revealed")]}
+        (if mark-correct?
+          (for [{:keys [sort-value text]} (sort-by :sort-value items)]
+            [:li
+             [:span text]
+             [:span.sort-value sort-value]])
+          (for [{:keys [text]} shuffled-items]
+            [:li [:span text]]))]
+       [:sortable-list
+        {:items (->> shuffled-items
+                     (map (fn [{:keys [index text]}] {:value index :label text}))
+                     charred/write-json-str)
+         ;; Morphing would empty what the component renders into itself.
+         :data-ignore-morph ""}])
+     [:input
+      {:data-attr:value "$_answer"
+       :name "answer"
+       :type "hidden"}]
      (when-not disabled?
        [:p (submit-button tr game-id)])
      (note-view answer-revealed? note)]))
