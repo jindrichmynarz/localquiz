@@ -13,7 +13,6 @@
             [clojure.string :as string]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
-            [starfederation.datastar.clojure.api :refer [CDN-url]]
             [starfederation.datastar.clojure.brotli :as brotli]))
 
 ; Warn on ambiguous attributes
@@ -158,7 +157,7 @@
      [:script
       {:crossorigin "anonymous"
        :defer true
-       :src CDN-url
+       :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.4/bundles/datastar-rocket.js"
        :type "module"}]
      [:script
       {:src "/js/sortable.js"
