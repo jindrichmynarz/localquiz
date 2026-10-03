@@ -891,17 +891,26 @@ label {
   }
 }
 
-.copy-button-wrapper {
+copy-button {
   display: flex;
-}
+  position: relative;
 
-/* Overlaps the input's right border, so that the two share an edge. */
-#copy-join-url {
-  display: grid;
-  margin-left: -3px;
+  /* Overlaps the input's right border, so that the two share an edge. */
+  > button {
+    margin-left: -3px;
+  }
 
-  > span {
-    grid-area: 1 / 1;
+  /* Floats under the button, so that showing it moves nothing. */
+  .copy-popover {
+    position: absolute;
+    top: calc(100% + .25em);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    white-space: nowrap;
+    padding: .25em .75em;
+    border-radius: 1em;
+    background: var(--darker);
   }
 }
 

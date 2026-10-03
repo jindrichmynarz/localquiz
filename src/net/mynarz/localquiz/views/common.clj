@@ -18,6 +18,9 @@
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
 
+(def ^:private datastar-url
+  "https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.4/bundles/datastar-rocket.js")
+
 (defn init-js
   ;; Retry Infinity means we always try to reconnect. The other defaults
   ;; mean that this will at most take 30s (default max backoff).
@@ -146,6 +149,10 @@
       {:href "/css/style.css"
        :rel "stylesheet"
        :type "text/css"}]
+     ;; Lets modules import the very bundle the page loads, sharing its Datastar.
+     [:script
+      {:type "importmap"}
+      (h/raw (charred/write-json-str {:imports {:datastar datastar-url}}))]
      [:link
       {:as "script"
        :href "/js/sortable.js"
@@ -157,13 +164,16 @@
      [:script
       {:crossorigin "anonymous"
        :defer true
-       :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.4/bundles/datastar-rocket.js"
+       :src datastar-url
        :type "module"}]
      [:script
       {:src "/js/sortable.js"
        :type "module"}]
      [:script
       {:src "/js/network.js"
+       :type "module"}]
+     [:script
+      {:src "/js/copy-button.js"
        :type "module"}]
      ; Enables responsiveness on mobile devices
      [:meta {:name "viewport"

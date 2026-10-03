@@ -22,18 +22,12 @@
 (defn copy-button
   [tr
    ^String join-game-url]
-  [:span.copy-button-wrapper
-   {:data-signals:_copied "false"}
-   ;; Both labels are laid over each other, the hidden one still taking space, so the
-   ;; button fits the longer of the two and keeps its width when it switches.
-   [:button.btn#copy-join-url
-    {:data-on:mousedown (format "navigator.clipboard.writeText('%s');
-                                 $_copied = true;
-                                 setTimeout(() => $_copied = false, 2000);"
-                                join-game-url)}
-    [:span {:data-style:visibility "$_copied ? 'hidden' : 'visible'"} (tr [:copy])]
-    [:span {:style "visibility: hidden"
-            :data-style:visibility "$_copied ? 'visible' : 'hidden'"} (tr [:copied])]]])
+  [:copy-button
+   {:text join-game-url
+    :copy-label (tr [:copy])
+    :copied-label (tr [:copied])
+    ;; Morphing would empty what the component renders into itself.
+    :data-ignore-morph ""}])
 
 (def form-validity-handlers
   "Datastar attributes that keep the $_formValid signal in sync with the form's
