@@ -2,7 +2,9 @@
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [decimal-format long-str svg]]
-            [net.mynarz.localquiz.views.common :as views]))
+            [net.mynarz.localquiz.views.common :as views]
+            [dev.onionpancakes.chassis.core :as h])
+  (:import (java.util Collections LinkedHashMap Map)))
 
 (def waiting-icon
   [:div.waiting-icon
@@ -90,6 +92,48 @@
       request
       (player-name-input request))))
 
+(defonce ^:private ^Map question-sections
+  ;; ponytail: LRU of 1000 entries, about one per running game and language, each a few KB.
+  (Collections/synchronizedMap
+    (proxy [LinkedHashMap] [16 0.75 true]
+      (removeEldestEntry [_]
+        (> (.size ^Map this) 1000)))))
+
+(defn- question-section
+  [tr
+   ^String game-id
+   ^long asked-at
+   question]
+  [:section#content
+   ;; The answers are revealed only once the game leaves the :question state.
+   (views/timer asked-at false)
+   [:h2.error
+    {:data-show "$error"
+     :data-text "$error"}]
+   (views/answers-view tr false {} game-id false question)])
+
+(defn- shared-question-section
+  "The current question, which is the same for every player in the game who speaks the
+  same language, so it is rendered once per game, question and language. Except for
+  :autocomplete, which reads back the fragment the player has typed."
+  [{{:keys [game-id]} :path-params
+    player-id :sid
+    :tempura/keys [tr]
+    :as request}
+   ^long asked-at]
+  (let [locales (or (:tempura/locales request)
+                    (some-> request :tempura/accept-langs_ deref))
+        k [game-id asked-at locales]]
+    (if-some [html (.get question-sections k)]
+      (h/raw html)
+      (let [question (assoc (game/current-question game-id) :session-id player-id)
+            section (question-section tr game-id asked-at question)]
+        (if (= (:type question) :autocomplete)
+          section
+          (let [html (h/html section)]
+            (.put question-sections k html)
+            (h/raw html)))))))
+
 (defmethod views/game-view [:player :question]
   [{{:keys [game-id]} :path-params
     player-id :sid
@@ -98,25 +142,16 @@
   (views/morph-body
     request
     (exit-game tr game-id)
-    (let [answer-revealed? (game/all-players-answered? game-id)
-          current-question (game/current-question game-id)]
-      [:section#content
-       (views/timer (:asked-at current-question) answer-revealed?)
-       [:h2.error
-        {:data-show "$error"
-         :data-text "$error"}]
-       (if (game/player-answered? player-id)
+    (let [asked-at (game/question-asked-at game-id)]
+      (if (game/player-answered? player-id)
+        [:section#content
+         (views/timer asked-at false)
+         [:h2.error
+          {:data-show "$error"
+           :data-text "$error"}]
          [waiting-icon
-          [:h2 (tr [:wait-for-answers])]]
-         (views/answers-view tr
-                             false
-                             answer-revealed?
-                             game-id
-                             false
-                             ;; The autocomplete widget needs the player's session
-                             ;; to read their typed fragment back; other question
-                             ;; types ignore the extra key.
-                             (assoc current-question :session-id player-id)))])))
+          [:h2 (tr [:wait-for-answers])]]]
+        (shared-question-section request asked-at)))))
 
 (defmethod views/game-view [:player :show-answers]
   [{{:keys [game-id]} :path-params
