@@ -1152,14 +1152,14 @@ label {
 
 progress {
   border: none;
-  background-color: var(--offwhite);
+  background-color: rgb(from var(--offwhite) r g b / 20%);
   text-align: left;
   height: 8px;
   vertical-align: middle;
   container-type: inline-size;
 
   &::-webkit-progress-bar {
-    background-color: var(--offwhite);
+    background-color: rgb(from var(--offwhite) r g b / 20%);
   }
 
   &::-webkit-progress-value {
