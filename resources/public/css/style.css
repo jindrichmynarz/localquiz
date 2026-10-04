@@ -1031,6 +1031,16 @@ copy-button {
   align-items: center;
   gap: .5em;
   padding: .5em .75em;
+
+  div:has(> img) {
+    display: flex;
+    align-items: center;
+    gap: .75em;
+  }
+
+  img {
+    flex: none;
+  }
 }
 
 #choices label {
