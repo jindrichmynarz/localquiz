@@ -102,11 +102,8 @@
 (defn- question-section
   [tr
    ^String game-id
-   ^long asked-at
    question]
   [:section#content
-   ;; The answers are revealed only once the game leaves the :question state.
-   (views/timer asked-at false)
    [:h2.error
     {:data-show "$error"
      :data-text "$error"}]
@@ -127,7 +124,7 @@
     (if-some [html (.get question-sections k)]
       (h/raw html)
       (let [question (assoc (game/current-question game-id) :session-id player-id)
-            section (question-section tr game-id asked-at question)]
+            section (question-section tr game-id question)]
         (if (= (:type question) :autocomplete)
           section
           (let [html (h/html section)]
@@ -145,7 +142,6 @@
     (let [asked-at (game/question-asked-at game-id)]
       (if (game/player-answered? player-id)
         [:section#content
-         (views/timer asked-at false)
          [:h2.error
           {:data-show "$error"
            :data-text "$error"}]
