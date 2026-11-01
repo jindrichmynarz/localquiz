@@ -66,8 +66,7 @@
   `final?` is for the result of the game, which is at dawn, as is the final leaderboard."
   [^Boolean final?
    state
-   ^String heading
-   ^String line]
+   ^String heading]
   [:section#content
    [:canvas.fire-sky
     {:aria-hidden "true"
@@ -77,8 +76,7 @@
     [:div#campfire
      {:class (name state)}
      (views/fire-scene state)]
-    [:h2 heading]
-    [:p line]]])
+    [:h2 heading]]])
 
 (defmethod views/game-view [:player nil]
   [{:tempura/keys [tr]
@@ -89,8 +87,7 @@
     ;; link leads, so it thanks the players without claiming the reader was one.
     (fire-verdict false
                   :out
-                  (tr [:game-over])
-                  (tr [:thanks-for-playing]))))
+                  (tr [:game-over]))))
 
 (defmethod views/game-view [:player :new]
   [{{:keys [game-id]} :path-params
@@ -208,11 +205,9 @@
       ((game/winners game-id) player-id)
       (fire-verdict true
                     :lit
-                    (tr [:you-won])
-                    (tr [:fire-burned-for-you]))
+                    (tr [:you-won]))
 
       :else
       (fire-verdict true
                     :out
-                    (tr [:not-this-time])
-                    (tr [:thanks-for-the-fire])))))
+                    (tr [:not-this-time])))))

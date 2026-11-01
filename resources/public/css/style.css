@@ -2372,6 +2372,13 @@ input::file-selector-button {
   }
 }
 
+/* The glow of the winner's fire reaches past the page and breathes with the flames. Clipped
+   here, as a page sized by it would resize on every frame. Not lower down, as the sparks
+   rise into the header. */
+#morph:has(.verdict) {
+  overflow: clip;
+}
+
 /* Decorative loops only; the spinner keeps turning, slower, via its own rule. */
 @media (prefers-reduced-motion: reduce) {
   .waiting-icon svg,
