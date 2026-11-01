@@ -61,12 +61,39 @@
       [(tr [:footer/made-by])
        [:a {:href "https://mynarz.net/#jindrich"} "Jindřich Mynarz"]
        (tr [:footer/with])
-       [:abbr {:title (tr [:footer/persistence])} "🧡"]
+       [:abbr {:title (tr [:footer/persistence])} "♥\uFE0E"]
        (tr [:footer/using])
        [:a {:href "https://clojure.org"} "Clojure"]
        (tr [:and])
        [:a {:href "https://data-star.dev"} "Datastar"]
        "🚀."])]])
+
+(defn confirm-button
+  "Button labelled `label` that asks `question` in a dialog and runs `action` on yes. At most
+  one on a page, which can open the dialog elsewhere too, with $_confirmDialog."
+  [tr
+   label
+   question
+   ^String action]
+  [:div#confirm
+   [:dialog#confirm-dialog
+    {:data-ref "_confirmDialog"
+     ;; Morphing would remove `open`, closing it but leaving the page inert under it.
+     :data-ignore-morph ""}
+    [:h2 (tr [question])]
+    [:p
+     [:button.btn.btn-danger
+      {:data-on:click action}
+      (tr [:question.yesno/yes])]
+     ;; The harmless answer gets the focus, so that Enter does not run the action.
+     [:button.btn
+      {:autofocus true
+       :data-on:click "$_confirmDialog.close()"}
+      (tr [:question.yesno/no])]]]
+   [:button.btn
+    {:data-on:click "$_confirmDialog.showModal()"}
+    [:i.material-icons (svg "cancel.svg")]
+    (tr [label])]])
 
 (defn error-dialog
   [tr]
@@ -100,18 +127,20 @@
     main]
    ;; The moderator's view of a running game is projected and read across a room, so it
    ;; gets a type scale that keeps growing with the display (see --font-size-projected in
-   ;; style.css) and drops the credits, which would otherwise sit on the wall for the
-   ;; length of the game and take the line the answers need. The create form is
-   ;; moderator-only too, but it is filled in at a keyboard, so it keeps the hand-held
-   ;; scale and the credits.
-   (let [projected? (boolean (and (= :moderator (->session-role request))
-                                  (-> request :path-params :game-id)))]
+   ;; style.css). The create form is moderator-only too, but it is filled in at a keyboard,
+   ;; so it keeps the hand-held scale. The credits are for the home page: during a game
+   ;; they would only take the line the answers need.
+   (let [game-id (-> request :path-params :game-id)
+         projected? (boolean (and (= :moderator (->session-role request)) game-id))]
      [:div#morph
       {:class (when projected? "projected")
        :data-signals:error__ifmissing ""
        :data-signals:error-preformatted__ifmissing false}
       [:header
-       [:h1 "Localquiz"]
+       [:h1
+        [:a
+         {:href "/"}
+         "Localquiz"]]
        [:div#header-center center]
        [:div#menu-trigger
         {:data-signals:_menu-open "false"}
@@ -119,16 +148,38 @@
          {:data-class:open "$_menuOpen"}
          header
          (lang-switch tr)]
-        [:i.material-icons
-         {:role "button"
-          :tabindex "0"
-          :aria-label (tr [:menu])
+        [:button.key
+         {:aria-label (tr [:menu])
           :data-on:click "$_menuOpen = !$_menuOpen"
-          :data-on:keydown "evt.key === 'Enter' && (evt.preventDefault(), $_menuOpen = !$_menuOpen)"}
-         (svg "menu.svg")]]]
+          :type "button"}
+         [:i.material-icons (svg "menu.svg")]]]]
       [:main main]
-      (when-not projected? (footer tr))
+      (when-not game-id (footer tr))
       (error-dialog tr)])))
+
+(def night
+  "The sky and the ground behind every screen. Outside of the morphed part of the page, as
+  it never changes. The stars come from a fixed seed, so that each page load draws the same
+  sky."
+  (let [random (java.util.Random. 7)
+        pick #(.nextInt random (int %))]
+    [:div#night
+     {:aria-hidden "true"}
+     (vec (repeatedly 46 (fn []
+                           [:i.star
+                            {:style (str "left:" (pick 100) "%;--y:" (pick 60) ";"
+                                         "--size:" (inc (pick 2)) "px;"
+                                         "animation-duration:" (+ 5 (pick 7)) "s;"
+                                         "animation-delay:-" (pick 11) "s")}])))
+     ; Before the horizon, so that they pass behind the mountains.
+     (for [[left y angle duration delay] [[8 8 8 47 9]
+                                          [38 14 5 61 31]
+                                          [62 5 10 83 58]]]
+       [:i.comet
+        {:style (format "left:%d%%;--y:%d;rotate:%ddeg;animation-duration:%ds;animation-delay:%ds"
+                        left y angle duration delay)}])
+     (svg "horizon.svg")
+     [:div.grain]]))
 
 (defn shim-page
   "A basic HTML page with Datastar setup."
@@ -142,6 +193,10 @@
      [:title "Localquiz"]
      [:meta
       {:charset "UTF-8"}]
+     [:link
+      {:href "/favicon.svg"
+       :rel "icon"
+       :type "image/svg+xml"}]
      [:link#css
       {:href "/css/style.css"
        :rel "stylesheet"
@@ -172,6 +227,7 @@
             ; from this element.
             :data-on:online__window (init-js game-id)}
      [:noscript (tr [:no-js])]
+     night
      (morph-body request)]]])
 
 (defn view
@@ -217,7 +273,10 @@
        {:data-style:--duration (format "'%ds'" duration)}
        [:div
         ;; Capped at 0, so that a client clock behind the server's does not delay the start.
-        {:data-style:animation-delay (format "Math.min(0, %d - Date.now()) + 'ms'" asked-at)}]])))
+        ;; Preserved, as a morph removing the style would re-run the expression on the
+        ;; running animation, counting the elapsed time twice.
+        {:data-preserve-attr "style"
+         :data-style:animation-delay (format "Math.min(0, %d - Date.now()) + 'ms'" asked-at)}]])))
 
 (defmulti game-view
   (juxt ->session-role (comp :state :game)))

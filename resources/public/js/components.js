@@ -26,8 +26,13 @@ rocket("copy-button", {
     })
   },
   render: ({ html, props: { copyLabel, copiedLabel } }) => html`
-    <button class="btn" type="button" aria-label="${copyLabel}" title="${copyLabel}"><slot></slot></button>
-    <span class="copy-popover" data-show="$$copied">${copiedLabel}</span>
+    <button class="key" type="button" aria-label="${copyLabel}" title="${copyLabel}">
+      <span class="copy-label" data-show="!$$copied"><slot></slot></span>
+      <span class="copy-label" data-show="$$copied" aria-live="polite">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 13l4.8 4.3L19.5 7"></path></svg>
+        ${copiedLabel}
+      </span>
+    </button>
   `,
 })
 
@@ -64,6 +69,374 @@ rocket("sortable-list", {
     </ul>
   `,
 })
+
+// <camp-fire>: the fire of the lobby. Each of its layers draws on a canvas: flames from a
+// heat simulation, sparks and smoke from particles, and a thin smoke that drifts up the page
+// into the sky, on the canvas of the view over the whole screen. How high the flames burn is
+// written to --fire and --sway on the parent stage, for the CSS that lights the scene. On a
+// stage marked .out the fire has burnt out, which leaves only the smoke.
+{
+  const FLAME_WIDTH = 70
+  const FLAME_HEIGHT = 90
+  const STEP_MS = 110 // Between simulation steps, with frames blending the last two.
+
+  function hexToRgb(hex) {
+    const n = parseInt(hex.trim().slice(1), 16)
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+  }
+
+  // Heat from 0 to 63 to colour: embers, the accent colour, then near white.
+  function firePalette([er, eg, eb]) {
+    return Array.from({ length: 64 }, (_, k) => {
+      const v = k / 63
+      let r, g, b
+      if (v < 0.45) {
+        const a = v / 0.45
+        r = 70 + (er - 70) * a
+        g = 8 + (eg * 0.55 - 8) * a
+        b = 4 + (eb * 0.3 - 4) * a
+      } else if (v < 0.8) {
+        const c = (v - 0.45) / 0.35
+        r = er + (255 - er) * c * 0.6
+        g = eg * 0.55 + (eg - eg * 0.55) * c
+        b = eb * 0.3 + (eb * 0.5 - eb * 0.3) * c
+      } else {
+        const d = (v - 0.8) / 0.2
+        r = 255
+        g = eg + (225 - eg) * d
+        b = eb * 0.5 + (150 - eb * 0.5) * d
+      }
+      return [r | 0, g | 0, b | 0, Math.min(255, Math.pow(v, 1.15) * 300) | 0]
+    })
+  }
+
+  function createNoise() {
+    const seed = Math.random() * 1000
+    const hash = (n) => {
+      const s = Math.sin(n * 127.1 + seed) * 43758.5453
+      return s - Math.floor(s)
+    }
+    return (x) => {
+      const i = Math.floor(x)
+      const f = x - i
+      const u = f * f * (3 - 2 * f)
+      return hash(i) * (1 - u) + hash(i + 1) * u
+    }
+  }
+
+  // Heat rises from the fuel in the bottom row, cooling and drifting as it goes.
+  function createFlames(canvas, palette, noise, onLevel) {
+    const W = FLAME_WIDTH
+    const H = FLAME_HEIGHT
+    const N = W * H
+    const ctx = canvas.getContext("2d")
+    const image = ctx.createImageData(W, H)
+    const heat = new Uint8Array(N)
+    const previous = new Uint8Array(N)
+    let steppedAt = -1
+    let flareUntil = 0
+
+    // A blue heart low in the flames.
+    const blue = new Float32Array(N)
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const dx = (x - (W - 1) / 2) / (W * 0.16)
+        const dy = (H - 1 - y) / (H * 0.22)
+        blue[y * W + x] = Math.exp(-dx * dx) * Math.exp(-dy * dy * 0.8) * 0.6
+      }
+    }
+
+    function fuel(x, time) {
+      const d = (x - 34.5) / 15
+      const core = Math.min(1.15, 1.18 * Math.exp(-d * d * 1.1))
+      const tn = noise(x * 0.38 + time * 0.9) * 0.6 + noise(x * 1.1 - time * 2.1) * 0.4
+      const breath = noise(time * 0.45 + 7) * 0.6 + noise(time * 1.7 + 19) * 0.4
+      if (Math.random() < 0.004) flareUntil = time + 0.35 + Math.random() * 0.5
+      const flare = time < flareUntil ? 1.35 : 1
+      const gap = noise(x * 0.22 + time * 0.3 + 41) < 0.22 ? 0.45 : 1
+      return Math.min(1.05, core * (0.5 + 0.95 * tn * tn) * (0.6 + 0.6 * breath * breath)
+                            * flare * gap * (0.8 + 0.4 * Math.random()))
+    }
+
+    function step(time) {
+      previous.set(heat)
+      for (let x = 0; x < W; x++) {
+        heat[(H - 1) * W + x] = Math.max(0, Math.min(63, (fuel(x, time) * 63 + (Math.random() * 10 - 5)) | 0))
+      }
+      for (let y = 1; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const source = y * W + x
+          const value = heat[source]
+          if (value === 0) {
+            heat[source - W] = 0
+            continue
+          }
+          const target = Math.max(0, source - W + ((Math.random() * 3) | 0) - 1)
+          const edge = Math.abs(x - W / 2) / (W / 2)
+          const cooling = (Math.random() < 0.45 ? 1 : 0) + (Math.random() < 0.25 ? 1 : 0)
+            + (Math.random() < edge * edge * 1.4 ? 2 : 0)
+          heat[target] = value > cooling ? value - cooling : 0
+        }
+      }
+    }
+
+    return (t) => {
+      const time = t / 1000
+      if (steppedAt < 0 || t - steppedAt >= STEP_MS) {
+        steppedAt = t
+        step(time)
+      }
+      const blend = Math.min(1, (t - steppedAt) / STEP_MS)
+      const glow = 0.6 + 0.4 * noise(time * 1.3 + 77)
+      const data = image.data
+      let sum = 0
+      for (let i = 0; i < N; i++) {
+        const value = (previous[i] + (heat[i] - previous[i]) * blend) | 0
+        sum += value
+        const [r, g, b, a] = palette[value]
+        const weight = value > 14 ? blue[i] * glow * Math.min(1, (value - 14) / 30) : 0
+        const o = i * 4
+        data[o] = r + (70 - r) * weight
+        data[o + 1] = g + (130 - g) * weight
+        data[o + 2] = b + (255 - b) * weight
+        data[o + 3] = a
+      }
+      ctx.putImageData(image, 0, 0)
+      onLevel(sum / (N * 63), t)
+    }
+  }
+
+  function createSparks(canvas, palette) {
+    const ctx = canvas.getContext("2d")
+    const W = canvas.width
+    const H = canvas.height
+    const sparks = []
+    let last = -1
+    let nextSpawn = 0
+
+    return (t) => {
+      const dt = last < 0 ? 0 : Math.min(0.05, (t - last) / 1000)
+      last = t
+      if (t >= nextSpawn) {
+        sparks.push({
+          x: W / 2 + (Math.random() - 0.5) * 50,
+          y: H - 80 - Math.random() * 90,
+          vx: (Math.random() - 0.5) * 18,
+          vy: -(28 + Math.random() * 45),
+          life: 0,
+          max: 1.4 + Math.random() * 2.4,
+          size: 0.6 + Math.random() * 1.1,
+          phase: Math.random() * 6.28,
+          wobble: 6 + Math.random() * 18,
+        })
+        nextSpawn = t + 600 + Math.random() * 1600
+      }
+      ctx.clearRect(0, 0, W, H)
+      ctx.globalCompositeOperation = "lighter"
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const s = sparks[i]
+        s.life += dt
+        if (s.life >= s.max || s.y < -10) {
+          sparks.splice(i, 1)
+          continue
+        }
+        s.vx += (Math.random() - 0.5) * 40 * dt + Math.sin(s.phase + s.life * 3) * s.wobble * dt
+        s.vy *= 1 - 0.25 * dt
+        s.x += s.vx * dt
+        s.y += s.vy * dt
+        const k = 1 - s.life / s.max
+        const [r, g, b] = palette[Math.max(18, Math.min(52, (52 * (0.4 + 0.6 * k)) | 0))]
+        const alpha = Math.min(1, k * 1.4) * Math.min(1, s.life / 0.45) * (0.65 + 0.35 * Math.random()) * 0.7
+        ctx.fillStyle = `rgba(${r},${g},${b},${(alpha * 0.18).toFixed(3)})`
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, s.size * 2.6, 0, 6.2832)
+        ctx.fill()
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, s.size * k + 0.3, 0, 6.2832)
+        ctx.fill()
+      }
+      ctx.globalCompositeOperation = "source-over"
+    }
+  }
+
+  function createSmoke(canvas, level, still) {
+    const ctx = canvas.getContext("2d")
+    const W = canvas.width
+    const H = canvas.height
+    const puffs = []
+    let last = -1
+    let nextSpawn = 0
+
+    return (t) => {
+      const dt = last < 0 ? 0 : Math.min(0.05, (t - last) / 1000)
+      last = t
+      const { fire, sway } = level
+      // A flare of the flames sends up a thicker puff at once.
+      const flared = level.flared
+      if (flared) {
+        level.flared = false
+        nextSpawn = Math.min(nextSpawn, t)
+      }
+      if (!still && t >= nextSpawn) {
+        puffs.push({
+          x: W / 2 + sway * 1.4 + (Math.random() - 0.5) * 36,
+          y: H - 10 - Math.random() * 20,
+          vx: (Math.random() - 0.5) * 6 + sway * 0.4,
+          vy: -(14 + Math.random() * 12 + fire * 16),
+          start: 8 + Math.random() * 8,
+          end: 46 + Math.random() * 40,
+          life: 0,
+          max: 6 + Math.random() * 4,
+          phase: Math.random() * 6.28,
+          peak: (0.04 + Math.random() * 0.05) * (0.7 + 0.7 * fire) * (flared ? 1.4 : 1),
+        })
+        nextSpawn = t + (260 + Math.random() * 520) * (1.5 - fire)
+      }
+      ctx.clearRect(0, 0, W, H)
+      const drift = Math.sin(t / 7000) * 5
+      for (let i = puffs.length - 1; i >= 0; i--) {
+        const s = puffs[i]
+        s.life += dt
+        if (s.life >= s.max) {
+          puffs.splice(i, 1)
+          continue
+        }
+        const u = s.life / s.max
+        s.vx += ((Math.random() - 0.5) * 8 + Math.sin(s.phase + s.life * 0.9) * 4 + drift) * dt
+        s.x += s.vx * dt
+        s.y += s.vy * dt
+        const radius = s.start + (s.end - s.start) * Math.sqrt(u)
+        const alpha = s.peak * Math.min(1, u / 0.15) * (1 - u) * (1 - u)
+        // Warm from the fire, cooling to grey as it rises.
+        const warm = Math.max(0, 1 - u * 2.5) * (0.4 + 0.9 * fire)
+        const colour = [110 + 60 * warm, 118 + 20 * warm, 128 - 30 * warm].map(Math.round).join(",")
+        const gradient = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, radius)
+        gradient.addColorStop(0, `rgba(${colour},${alpha.toFixed(3)})`)
+        gradient.addColorStop(0.55, `rgba(${colour},${(alpha * 0.5).toFixed(3)})`)
+        gradient.addColorStop(1, `rgba(${colour},0)`)
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, radius, 0, 6.2832)
+        ctx.fill()
+      }
+    }
+  }
+
+  // At half the resolution of the screen, sized afresh on each frame, as blurred smoke needs no
+  // more and the screen may change.
+  const SKY_SCALE = 0.5
+
+  function createSkySmoke(canvas, flames, level, still) {
+    const ctx = canvas.getContext("2d")
+    const puffs = []
+    let last = -1
+    let nextSpawn = 0
+
+    return (t) => {
+      const w = Math.round(innerWidth * SKY_SCALE)
+      const h = Math.round(innerHeight * SKY_SCALE)
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w
+        canvas.height = h
+      }
+      const source = flames.getBoundingClientRect()
+      const dt = last < 0 ? 0 : Math.min(0.05, (t - last) / 1000)
+      last = t
+      const { fire, sway } = level
+      if (!still && t >= nextSpawn && puffs.length < 40) {
+        puffs.push({
+          x: (source.left + source.width / 2 + sway * 1.4 + (Math.random() - 0.5) * 14) * SKY_SCALE,
+          y: (source.top + source.height * 0.3) * SKY_SCALE,
+          vx: ((Math.random() - 0.5) * 6 + sway * 0.5) * SKY_SCALE,
+          vy: -(26 + Math.random() * 14 + fire * 18) * SKY_SCALE,
+          start: 20 * SKY_SCALE,
+          end: (120 + Math.random() * 110) * SKY_SCALE,
+          life: 0,
+          max: 16 + Math.random() * 8,
+          phase: Math.random() * 6.28,
+          peak: (0.03 + Math.random() * 0.03) * (0.7 + 0.7 * fire),
+        })
+        nextSpawn = t + (500 + Math.random() * 700) * (1.5 - fire)
+      }
+      ctx.clearRect(0, 0, w, h)
+      const wind = (Math.sin(t / 11000) * 0.6 + Math.sin(t / 4300 + 1) * 0.4) * 9 * SKY_SCALE
+      for (let i = puffs.length - 1; i >= 0; i--) {
+        const s = puffs[i]
+        s.life += dt
+        if (s.life >= s.max || s.y < -s.end) {
+          puffs.splice(i, 1)
+          continue
+        }
+        const u = s.life / s.max
+        s.vx += ((Math.random() - 0.5) * 6 * SKY_SCALE + Math.sin(s.phase + s.life * 0.5) * 3 * SKY_SCALE + wind * 0.4) * dt
+        s.vx *= 1 - 0.15 * dt
+        s.x += s.vx * dt
+        s.y += s.vy * dt
+        const radius = s.start + (s.end - s.start) * Math.sqrt(u)
+        const alpha = s.peak * Math.min(1, u / 0.25) * Math.pow(1 - u, 1.6)
+        const gradient = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, radius)
+        gradient.addColorStop(0, `rgba(150,163,182,${alpha.toFixed(3)})`)
+        gradient.addColorStop(0.5, `rgba(140,154,174,${(alpha * 0.55).toFixed(3)})`)
+        gradient.addColorStop(1, "rgba(130,145,165,0)")
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, radius, 0, 6.2832)
+        ctx.fill()
+      }
+    }
+  }
+
+  function createCampFire(host) {
+    const stage = host.closest("#campfire")
+    const palette = firePalette(hexToRgb(getComputedStyle(host).getPropertyValue("--orange")))
+    const noise = createNoise()
+    const out = stage.classList.contains("out")
+    const state = { fire: 0.5, sway: 0, flared: false }
+    let average = null
+    let smoothed = null
+
+    function onLevel(level, t) {
+      average ??= smoothed ??= level
+      average += (level - average) * 0.01
+      smoothed += (level - smoothed) * 0.12
+      const fire = Math.max(0, Math.min(1, ((average > 0 ? smoothed / average : 1) - 0.85) / 0.3))
+      state.flared ||= fire - state.fire > 0.08
+      state.fire = fire
+      state.sway = (noise(t / 900 + 3) - 0.5) * 10
+      stage.style.setProperty("--fire", state.fire.toFixed(3))
+      stage.style.setProperty("--sway", `${state.sway.toFixed(1)}px`)
+    }
+
+    // Without motion, the fire burns long enough to catch and then holds still, without smoke.
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches
+    const flames = host.querySelector(".fire-flames")
+    const layers = [
+      ...(out ? [] : [
+        createFlames(flames, palette, noise, onLevel),
+        createSparks(host.querySelector(".fire-sparks"), palette),
+      ]),
+      createSmoke(host.querySelector(".fire-smoke"), state, still),
+      createSkySmoke(document.querySelector(".fire-sky"), flames, state, still),
+    ]
+    let frames = 0
+    let request = requestAnimationFrame(function frame(t) {
+      layers.forEach((layer) => layer(t))
+      if (!still || ++frames < 240) request = requestAnimationFrame(frame)
+    })
+    return () => cancelAnimationFrame(request)
+  }
+
+  rocket("camp-fire", {
+    mode: "light",
+    onFirstRender: ({ cleanup, host }) => cleanup(createCampFire(host)),
+    render: ({ html }) => html`
+      <canvas class="fire-smoke" width="360" height="440"></canvas>
+      <canvas class="fire-flames" width=${FLAME_WIDTH} height=${FLAME_HEIGHT}></canvas>
+      <canvas class="fire-sparks" width="280" height="400"></canvas>
+    `,
+  })
+}
 
 // <network-map>: progressive disclosure of the network of a :network question,
 // which views/network.clj passes in. Each view is laid out afresh for the screen,

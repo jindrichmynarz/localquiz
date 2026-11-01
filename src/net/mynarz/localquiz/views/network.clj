@@ -4,6 +4,7 @@
   answers."
   (:require [net.mynarz.localquiz.network :as network]
             [charred.api :as charred]
+            [clojure.math :as math]
             [clojure.string :as string]))
 
 (defn- network-json
@@ -73,12 +74,18 @@
         positions                  (network/layout choices)
         picked                     (set (keys answer-frequencies))
         root                       (network/root choices)
-        [x y width height]         (extent (map positions nodes))
+        [x _ width height]         (extent (map positions nodes))
         ; One unit of the sizes above, so the glyphs keep their apparent size whether the
         ; answers landed next to each other or at opposite ends of the network.
         unit                       (/ (max width height) result-unit)
         ; Room for the labels, which sit outside the nodes at the edges of the box.
         margin                     (* unit (+ result-font-size result-label-gap))
+        ; Cropped to the nodes, top and bottom, unlike the box the sizes come from: the
+        ; height is what the drawing should cost the screen, and nothing there needs room.
+        node-ys                    (map (comp second positions) nodes)
+        top                        (- (apply min node-ys) (* unit (inc result-max-radius)))
+        tall                       (+ (- (apply max node-ys) (apply min node-ys))
+                                      (* 2 unit (inc result-max-radius)))
         neighbours                 (reduce (fn [acc [a b]]
                                              (-> acc
                                                  (update a (fnil conj []) b)
@@ -111,10 +118,14 @@
                                           (* result-node-radius 0.7))))]
     (when (seq nodes)
       [:svg.nt
-       {:viewBox             (string/join " " [(- x margin) (- y margin)
-                                               (+ width (* 2 margin)) (+ height (* 2 margin))])
+       {:viewBox             (string/join " " [(- x margin) top (+ width (* 2 margin)) tall])
         :preserveAspectRatio "xMidYMid meet"
-        :role                "img"}
+        :role                "img"
+        ; The width at which the labels come out at the size of the text around them, from
+        ; which the height follows, so that the drawing takes the room its shape needs.
+        :style               (format "width:%dem"
+                                     (math/round (/ (+ width (* 2 margin))
+                                                    (* unit result-font-size))))}
        (for [[a b] arcs
              :let  [[x1 y1] (positions a)
                     [x2 y2] (positions b)]]

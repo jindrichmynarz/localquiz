@@ -16,3 +16,10 @@ pom.xml.asc
 # Ignore temporary files
 .clj-kondo
 .lsp
+
+# design-sync build output and staged scripts
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

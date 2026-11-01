@@ -1,11 +1,24 @@
 :root {
   /* Colours */
-  --offwhite: #fbfde3;
-  --dark: #2e2230;
-  --darker: #1d131d;
-  --orange: #fc8314;
-  --red: #ec5809;
-  --grey: #999;
+  --offwhite: #d5dee6;
+  --moon: #e1e8ee;
+  --paper: #cbcac2;
+  --dark: #222b35;
+  --panel: #121820;
+  --darker: #04060a;
+  --orange: #d9772b;
+  --red: #c9502a;
+  --grey: #93a0ad;
+  /* The night. */
+  --sky: #0a0e13;
+  /* From the crest of the far ridge to its foot, where the sky's light gathers. */
+  --ridge: #0d1118;
+  --ridge-lit: color-mix(in srgb, var(--ridge), rgb(125 150 185) 4%);
+  --ground: #080b0f;
+  /* The ground under the faint light on it, which is also the colour of the closest ridge.
+     Darker than the far ridge, even where the light gathers in the middle of the ground. */
+  --ground-light: 2%;
+  --ground-lit: color-mix(in srgb, var(--ground), var(--moon) var(--ground-light));
   /* A faint grain, for surfaces that should read as material rather than flat colour. */
   --noise: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.15' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/></svg>");
 
@@ -24,6 +37,13 @@
      ~37px on a 1080p projection and 56px from 1440p up, against the 28px a phone caps
      at. */
   --font-size-projected: clamp(20px, min(2.6vw, 3.4vh), 56px);
+  /* A pixel of the lobby's design, drawn for a 1440x1160 frame, where the projected type
+     is 37px. So the sizes taken from it are exact there and at 1080p, and elsewhere scale
+     with the screen, which is what keeps the lobby on it. */
+  --design-px: calc(var(--font-size-projected) / 37);
+  --title-size: max(32px, calc(48 * var(--design-px)));
+  /* Still a finger's width on a phone, where the design's pixels are small. */
+  --key-height: max(44px, calc(52 * var(--design-px)));
 
   /* Motion */
   --transition: 0.2s ease-out;
@@ -35,12 +55,20 @@
 }
 
 body {
+  /* Where the sky ends and the page's content starts, near the 248px of the lobby's
+     design, and at the least the height of the header: its padding and the title with its
+     margins. Here, as both the night and the header read it. */
+  --horizon: max(calc(26px + 2.4 * var(--title-size)), calc(248 * var(--design-px) - 1em));
+
   margin: 0;
   font-family: Avenir, Montserrat, Corbel, "URW Gothic", source-sans-pro, sans-serif;
   color: var(--offwhite);
-  background: var(--darker);
-  background-image: linear-gradient(180deg, rgba(251, 253, 227, 0.10) 1%, rgba(252, 131, 20, 0.08) 51%, rgba(236, 88, 9, 0.07) 100%),
-                    radial-gradient(circle, rgba(27, 27, 50, 1) 50%, rgba(6, 6, 24, 1) 100%);
+  background-color: var(--sky);
+  /* Moonlight from the top left, and the edges of the screen falling into the dark. */
+  background-image: radial-gradient(ellipse 60% 70% at 12% -10%, rgb(140 170 210 / 16%), transparent 70%),
+                    radial-gradient(ellipse 120% 90% at 50% 40%, transparent 40%, rgb(0 0 0 / 60%) 100%);
+  /* Held to the viewport, so that it stays lined up with the night on a page that scrolls. */
+  background-attachment: fixed;
 }
 
 
@@ -92,10 +120,14 @@ body {
   }
 }
 
+/* As tall as the sky, so that the content starts below it. */
 header {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
+  align-content: start;
   align-items: center;
+  box-sizing: border-box;
+  min-height: var(--horizon);
   position: relative;
   padding: calc(10px + .5em) .5em .5em;
 }
@@ -132,11 +164,14 @@ header {
   display: flex;
   align-items: center;
 
-  > .material-icons {
-    padding: 0 .5ch;
-    color: rgb(from var(--offwhite) r g b / 70%);
-    cursor: pointer;
-    user-select: none;
+  > .key {
+    width: var(--key-height);
+    padding: 0;
+
+    svg {
+      width: calc(var(--key-height) * .5);
+      height: calc(var(--key-height) * .5);
+    }
   }
 }
 
@@ -150,11 +185,12 @@ header {
   transition: max-width var(--transition);
   margin-right: 1em;
 
-  #end-game {
+  #confirm {
     display: flex;
   }
 
-  .btn {
+  /* Flat in the menu, but not in the dialog that lives in it. */
+  .btn:not(dialog .btn) {
     display: flex;
     align-items: center;
     transform: none;
@@ -173,6 +209,56 @@ header {
   max-width: 40rem;
 }
 
+/* No room beside the title, so the chips take a row of their own and the menu opens as a
+   panel under its button. */
+@media (max-width: 950px) or (orientation: portrait) {
+  header {
+    grid-template-columns: 1fr auto;
+  }
+
+  #header-center {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  #menu-trigger {
+    position: relative;
+  }
+
+  #top-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 50;
+    flex-direction: column;
+    gap: .5em;
+    margin-right: 0;
+    background: var(--panel);
+    box-shadow: 0 10px 24px rgb(0 0 0 / 70%);
+
+    #lang-switch {
+      margin: 0;
+      text-align: center;
+    }
+
+    #confirm {
+      flex-direction: column;
+    }
+  }
+
+  #menu-trigger:hover #top-menu,
+  #top-menu:focus-within,
+  #top-menu.open {
+    max-width: calc(100vw - 1em);
+    padding: .5em;
+    border: 3px solid var(--darker);
+    border-radius: 3px 7px 4px 8px / 6px 3px 7px 4px;
+  }
+}
+
 main {
   display: flex;
   flex-direction: column;
@@ -182,17 +268,28 @@ main {
 }
 
 h1, h2, h3, h4, h5 {
-  color: rgb(from var(--offwhite) r g b / 80%);
+  color: var(--moon);
   text-shadow: 1px 2px 0px var(--darker);
   margin: 0 0 .2em 0;
 }
 
+/* Moonlit, a cooler white than the type lit by the fire. */
 h1 {
   display: flex;
   align-self: flex-start;
-  font-weight: 700;
+  font-size: var(--title-size);
+  font-weight: 600;
+  line-height: 1.4;
   margin: .5em;
-  color: var(--orange);
+  color: var(--moon);
+  text-shadow: 0 2px 0 #000, 0 0 24px rgb(150 180 220 / 22%);
+
+  /* The title first, and a way home second. */
+  a,
+  a:hover {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 section {
@@ -217,73 +314,465 @@ table {
   }
 }
 
-/* Two columns the width of the QR code, flanking the centre axis the header and the
-   questions share. The players take the height of the QR and the URL under it, and the
-   start button spans both, on the axis. Every part holds its place as players join. */
+/* The lobby is a night scene: the way in on the left, the players around a fire on the
+   right. Like the rest of the projection it fits the screen, so sizes follow the height. */
 #lobby-grid {
-  /* Height leads: the QR and the URL under it take as much of the projection as the
-     header and the start button leave. */
-  --module: min(42vw, 58vh);
+  /* The row of the link and of the button that starts the game, so that they line up. */
+  --action-height: calc(var(--key-height) + 12 * var(--design-px));
 
   display: grid;
   flex: 1;
+  grid-template-columns: minmax(0, calc(560 * var(--design-px))) minmax(0, 1fr);
   align-self: center;
-  grid-template-columns: repeat(2, calc(var(--module) + 6px)); /* + the QR's border */
-  grid-template-areas:
-    "qr    players"
-    "url   players"
-    "start start";
-  align-content: center;
-  gap: 1em 2em;
+  box-sizing: border-box;
+  gap: calc(40 * var(--design-px));
+  width: 100%;
+  max-width: calc(1440 * var(--design-px));
+  min-height: 0;
+  padding: 0 calc(56 * var(--design-px)) calc(56 * var(--design-px));
 
-  > p {
-    margin: 0;
+  > section {
+    justify-content: flex-start;
+    box-sizing: border-box;
+    gap: calc(26 * var(--design-px));
+    min-height: 0;
+    padding: calc(36 * var(--design-px)) calc(40 * var(--design-px)) calc(40 * var(--design-px));
   }
 
-  #qrcode { grid-area: qr; }
-  #game-url { grid-area: url; }
-  #start-game {
-    grid-area: start;
-    display: grid;
-    place-items: center;
+  h2 {
+    margin: 0;
+    font-size: calc(40 * var(--design-px));
+  }
 
-    > * {
-      grid-area: 1 / 1;
+  .hint {
+    font-size: calc(26 * var(--design-px));
+  }
+
+  label.hint {
+    font-size: calc(24 * var(--design-px));
+  }
+}
+
+/* The quiet voice next to a heading: instructions, waiting. */
+.hint {
+  margin: 0;
+  padding: 0;
+  font-style: italic;
+  font-size: .8em;
+  color: rgb(from var(--offwhite) r g b / 65%);
+}
+
+#join {
+  text-align: center;
+
+  /* The spare height, split above and below the QR code. */
+  #qrcode,
+  .hint:last-of-type {
+    margin-top: auto;
+  }
+}
+
+/* Behind every screen: a sky with a haze along the horizon, and a dark ground under it. The
+   ground comes up to the mountains plain and takes on its textures below them, so that
+   there is no seam, and falls away into the dark towards the bottom. */
+#night {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+                              rgb(120 145 180 / 0%),
+                              rgb(120 145 180 / 5%) calc(var(--horizon) * .4),
+                              rgb(130 155 190 / 9%) calc(var(--horizon) * .62),
+                              rgb(120 145 180 / 0%) calc(var(--horizon) * .78));
+
+  /* Grime over the whole page, under the stars. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("../img/texture/grime.webp") 0 0 / 900px;
+    opacity: .8;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: var(--horizon) 0 0;
+    background:
+      linear-gradient(to bottom, var(--ground), transparent calc(var(--horizon) * 2)),
+      linear-gradient(to top,
+                      rgb(2 3 4 / 85%),
+                      rgb(5 7 9 / 45%) 35%,
+                      rgb(8 11 15 / 0%) 60%),
+      url("../img/texture/dirt.webp") 0 0 / 640px,
+      var(--ground);
+  }
+}
+
+/* Over the ground rather than in it, so that its fade does not hide the grain, which comes
+   in over a short way below the horizon. On a faint light, which starts at the horizon, so
+   that the closest ridge runs on into the ground unseen. */
+.grain {
+  position: absolute;
+  inset: var(--horizon) 0 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgb(from var(--moon) r g b / 2%), transparent),
+    rgb(from var(--moon) r g b / var(--ground-light));
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("../img/texture/grain.webp") 0 0 / 256px;
+    opacity: .4;
+    mask-image: linear-gradient(to bottom, transparent, #000 calc(70 * var(--design-px)));
+  }
+}
+
+/* Nothing covers the page that pulses for the winner. */
+body:has(.winner) #night {
+  display: none;
+}
+
+.horizon {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: calc(var(--horizon) + 1px);
+
+  path {
+    fill: var(--ground-lit);
+  }
+
+  /* Solid, as the stars behind it must not show through. The gradient lives in the drawing,
+     so the colour stands in if the drawing has none. */
+  path:first-of-type {
+    fill: url(#ridge-far) var(--ridge);
+  }
+}
+
+.star {
+  position: absolute;
+  top: calc(var(--horizon) * var(--y) / 100);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: var(--offwhite);
+  animation: twinkle linear infinite;
+}
+
+/* A head with a tail behind it, passing now and then: most of each cycle it is away. Flat
+   and high, as there is little open sky above the mountains. */
+.comet {
+  position: absolute;
+  top: calc(var(--horizon) * var(--y) / 100);
+  width: calc(60 * var(--design-px));
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgb(from var(--moon) r g b / 50%));
+  opacity: 0;
+  animation: comet linear infinite;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: -.5px;
+    right: -1px;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--moon);
+    box-shadow: 0 0 3px rgb(from var(--moon) r g b / 60%);
+  }
+}
+
+@keyframes comet {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  2%, 12% {
+    opacity: .6;
+  }
+  15%, 100% {
+    opacity: 0;
+    transform: translateX(14vw);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: .08;
+  }
+  50% {
+    opacity: .95;
+  }
+}
+
+/* A stage whose smaller side sets the size of the fire and the seats. <camp-fire> keeps
+   --fire, how high the flames are from 0 to 1, and --sway up to date for the light. The
+   seats behind the fire, with the lowest z-index, stay behind the flames. */
+#campfire {
+  --fire: .5;
+  --sway: 0px;
+  --firelight: 0;
+  /* Discs touch at any number of players, the nearest ones just overlapping. */
+  --seat: min(20cqmin, 220cqmin / var(--players));
+  /* A small group sits closer in, and reaches the full ring at eight players. */
+  --ring: min(1, .6 + .05 * var(--players));
+  --orbit: 1;
+
+  flex: 1;
+  position: relative;
+  align-self: stretch;
+  min-height: 0;
+  container-type: size;
+
+  ul {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    position: absolute;
+    left: calc(50% + var(--cos) * 38% * var(--ring) * var(--orbit));
+    top: calc(50% + var(--sin) * 35% * var(--ring) * var(--orbit));
+    z-index: calc(20 + 10 * var(--sin));
+    translate: -50% -50%;
+    rotate: var(--tilt);
+    /* Larger towards the viewer, on the ground the ring and the logs imply. */
+    scale: calc(1 + .1 * var(--sin));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--seat);
+    height: var(--seat);
+    padding: 0 .25em;
+    /* A hand-cut disc: every border radius in a run of five is a little off. */
+    border: 3px solid var(--darker);
+    border-radius: 53% 47% 51% 49% / 48% 54% 46% 52%;
+    outline: 1px solid rgb(58 69 82 / 55%);
+    outline-offset: -6px;
+    /* The offset comes from `seats`. */
+    background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px;
+    /* Lit from the side that faces the fire. */
+    box-shadow:
+      inset calc(var(--cos) * (5px + 4px * var(--fire))) calc(var(--sin) * (5px + 4px * var(--fire))) calc(10px + 6px * var(--fire)) rgb(from var(--orange) r g b / calc(var(--firelight) * .29 * (.45 + .85 * var(--fire)))),
+      inset 0 0 18px rgb(0 0 0 / 65%),
+      0 8px 18px rgb(0 0 0 / 70%);
+    /* Shrinks along with the discs of a crowded fire. */
+    font-size: min(calc(21 * var(--design-px)), calc(var(--seat) * .165));
+    text-align: center;
+    animation: 1s ease-in fade-in;
+    /* The seats change as players join, and people follow their name to its new place. */
+    transition-property: left, top, scale, width, height, font-size;
+    transition-duration: .6s;
+    transition-timing-function: ease-in-out;
+
+    &:nth-child(5n + 2) {
+      border-radius: 47% 53% 46% 54% / 52% 47% 55% 48%;
+    }
+
+    &:nth-child(5n + 3) {
+      border-radius: 50% 50% 55% 45% / 46% 52% 48% 54%;
+    }
+
+    &:nth-child(5n + 4) {
+      border-radius: 55% 45% 48% 52% / 51% 46% 54% 49%;
+    }
+
+    &:nth-child(5n) {
+      border-radius: 46% 54% 52% 48% / 54% 49% 51% 46%;
+    }
+
+    /* Two lines, broken at a space, or within a word too long for a line of its own. */
+    span {
+      display: -webkit-box;
+      overflow: hidden;
+      max-width: 100%;
+      line-height: 1.05;
+      text-shadow: 0 1px 3px #000;
+      overflow-wrap: anywhere;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
     }
   }
 }
 
-#lobby {
-  grid-area: players;
-  /* Sized by the rows it spans rather than sizing them, so a long list flows into
-     further columns instead of growing the grid. */
-  contain: size;
-  justify-content: flex-start;
-  align-items: stretch;
-  min-height: 0;
-  font-size: 1.3em;
-  text-align: left;
+#campfire.lit {
+  --firelight: 1;
+}
 
-  ul {
-    flex: 1;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    columns: 8ch auto;
-    column-fill: auto;
-    /* ponytail: columns past the QR's width are clipped; scale the type down if games
-       outgrow it. */
-    overflow: hidden;
-  }
+/* Two staggered rings, taking turns, which keeps the discs larger than one ring could. */
+#campfire.crowded {
+  --seat: calc(3.5cqmin + 175cqmin / var(--slots));
 
-  li {
-    padding: .25em 0;
-    break-inside: avoid;
-    animation: 1s ease-in fade-in;
+  li:nth-child(even) {
+    --orbit: .72;
   }
 }
 
+.fire-scene,
+camp-fire {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fire-scene svg,
+camp-fire canvas {
+  position: absolute;
+  left: 50%;
+}
+
+.fire-glow {
+  position: absolute;
+  inset: 0;
+  transform: translateX(var(--sway)) scale(calc(.93 + .12 * var(--fire)));
+  transform-origin: 50% 42%;
+  /* The pool of light on the ground under the logs, flat as the ground is, then the glow in
+     the air. Strong enough to survive a projector, which lifts the blacks around it. */
+  background:
+    radial-gradient(ellipse 38cqmin 14cqmin at 50% 53%,
+                    rgb(from var(--orange) r g b / 32%),
+                    rgb(from var(--orange) r g b / 14%) 50%,
+                    transparent),
+    radial-gradient(ellipse 50% 46% at 50% 42%,
+                    rgb(from var(--orange) r g b / 40%),
+                    rgb(from var(--orange) r g b / 16%) 45%,
+                    rgb(from var(--orange) r g b / 4%) 75%,
+                    transparent);
+  opacity: calc(.58 + .42 * var(--fire));
+}
+
+.fire-soot {
+  z-index: 16;
+  top: 50%;
+  width: 34cqmin;
+  height: 13cqmin;
+  transform: translate(-50%, -50%);
+}
+
+.fire-logs {
+  z-index: 18;
+  top: 50%;
+  width: 30cqmin;
+  height: 12cqmin;
+  transform: translate(-50%, -58%);
+  overflow: visible;
+}
+
+/* Dark until the fire lights them, with one ember left in the ashes. */
+.fire-logs > * {
+  transition: filter 2s ease-out;
+}
+
+#campfire:not(.lit, .out) {
+  .fire-logs > :not(.last-ember) {
+    filter: brightness(.8) saturate(.45);
+  }
+
+  :is(.ember, .ember-halo):not(.last-ember) {
+    visibility: hidden;
+  }
+}
+
+.ember {
+  animation: 5s ease-in-out infinite ember;
+}
+
+.ember-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: 5s ease-in-out infinite ember-halo;
+}
+
+@keyframes ember {
+  0%, 100% {
+    opacity: .3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes ember-halo {
+  0%, 100% {
+    opacity: .18;
+    transform: scale(.8);
+  }
+  50% {
+    opacity: .75;
+    transform: scale(1.2);
+  }
+}
+
+.fire-flames {
+  z-index: 19;
+  top: 50%;
+  width: 38cqmin;
+  height: 48cqmin;
+  transform: translate(-50%, calc(-100% + 3.8cqmin));
+  filter: blur(1.8px) brightness(1.35) saturate(1.1);
+  mix-blend-mode: screen;
+  mask-image:
+    radial-gradient(ellipse 50% 50% at 50% 54%, #000 52%, rgb(0 0 0 / 60%) 72%, transparent),
+    linear-gradient(to top, rgb(0 0 0 / 30%), rgb(0 0 0 / 55%) 7%, #000 18%);
+  mask-composite: intersect;
+}
+
+.fire-sparks {
+  z-index: 20;
+  top: 50%;
+  width: 48cqmin;
+  height: 69cqmin;
+  transform: translate(-50%, calc(-100% + 3cqmin));
+  filter: blur(.7px);
+  mix-blend-mode: screen;
+}
+
+.fire-sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+.fire-smoke {
+  z-index: 19;
+  top: 50%;
+  width: 62cqmin;
+  height: 76cqmin;
+  transform: translate(-50%, calc(-100% - 7cqmin));
+  filter: blur(3px);
+  mask-image: linear-gradient(to top, transparent, #000 22%, #000 55%, transparent);
+}
+
+#start-game {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: var(--action-height);
+}
+
+@media (max-width: 950px) or (orientation: portrait) {
+  #lobby-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #campfire {
+    flex: none;
+    height: 60vh;
+  }
+}
 
 @keyframes fade-in {
   from {
@@ -305,10 +794,11 @@ a {
 footer {
   display: flex;
   justify-content: center;
-  background: rgb(from var(--darker) r g b / 50%);
+  background: var(--darker);
   padding: 0 1em;
 
   abbr {
+    color: var(--moon);
     text-decoration: none;
   }
 
@@ -411,7 +901,7 @@ select {
 }
 
 .btn-primary {
-  color: var(--dark);
+  color: var(--sky);
   background-color: var(--orange);
   border-color: var(--red);
 
@@ -431,7 +921,7 @@ select {
 /* For actions that cannot be undone. */
 .btn-danger {
   --edge: color-mix(in oklab, var(--red), black 35%);
-  color: var(--dark);
+  color: var(--sky);
   background-color: var(--red);
   border-color: var(--edge);
 
@@ -479,9 +969,10 @@ select {
 }
 
 input[type="text"], input[type="number"] {
-  background: var(--offwhite);
-  color: var(--dark);
+  background: var(--noise), var(--paper);
+  color: var(--sky);
   border: 3px solid var(--darker);
+  border-radius: 6px 2px 8px 3px / 3px 7px 2px 6px;
   padding: .5em;
   font-size: var(--font-size);
   &:focus-visible {
@@ -507,7 +998,7 @@ input[type="text"], input[type="number"] {
     padding: 0;
     border: none;
     background: none;
-    color: var(--dark);
+    color: var(--sky);
     cursor: pointer;
 
     svg {
@@ -527,8 +1018,8 @@ input[type="text"], input[type="number"] {
     max-height: 40vh;
     overflow-y: auto;
     list-style: none;
-    background: var(--offwhite);
-    color: var(--dark);
+    background: var(--paper);
+    color: var(--sky);
     border: 3px solid var(--darker);
     border-top: none;
 
@@ -569,10 +1060,6 @@ network-map {
   display: block;
   position: relative;
   width: min(92vw, 640px);
-  /* One frame around the drawing and the cell under it. */
-  border: 3px solid var(--darker);
-  border-radius: 5px;
-  background: rgb(from var(--darker) r g b / 50%);
   overflow: hidden;
 
   svg {
@@ -637,7 +1124,6 @@ network-map {
   }
 
   .nm-info {
-    border-top: 3px solid var(--darker);
     padding: .5em 1em;
     text-align: left;
 
@@ -784,12 +1270,49 @@ network-map {
    whether the answers landed together or far apart. */
 .nt {
   display: block;
-  width: 100%;
-  /* What the reveal has left once the question, the note and Next have taken theirs. The
-     projection is height-locked, so this is what keeps Next on the screen. */
+  max-width: 100%;
+  height: auto;
   max-height: min(34vh, 22em);
   margin: .5em auto;
   overflow: visible;
+}
+
+/* The reveal on the wall, set tighter than other questions, as it holds the most. The tree
+   takes the height the rest leaves, which is what keeps Next on the height-locked screen.
+   Each container on the way to it passes the height down. */
+#morph.projected #content:has(.nt) {
+  min-height: 0;
+  margin-block: 0;
+  font-size: .85em;
+
+  #question-container,
+  #answers {
+    flex: 1;
+    min-height: 0;
+    gap: 0;
+  }
+
+  #question p,
+  > p {
+    margin: .25em 0;
+  }
+
+  .nt {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    margin: 0 auto;
+  }
+
+  .note {
+    flex: none;
+    padding-block: .25em;
+
+    img {
+      width: auto;
+      height: 4.5em;
+    }
+  }
 }
 
 .nt-edge {
@@ -834,14 +1357,10 @@ network-map {
    Submit stay in view: the map shrinks for them, down to 240px, below which the page
    scrolls instead. `svh` is the viewport with the mobile URL bar shown, so the page fits
    either way and does not jump as the bar hides. Each container on the way to the map
-   passes the height down, and the footer makes way. */
+   passes the height down. */
 #morph:has(network-map) {
   height: 100svh;
   min-height: 0;
-
-  footer {
-    display: none;
-  }
 
   main,
   #content {
@@ -869,14 +1388,23 @@ label {
   padding: .5em;
 }
 
+/* The largest in the design, giving way to the link when the screen is short of height. */
 #qrcode {
   display: flex;
-  border: 3px solid var(--darker);
+  flex: 0 1 calc(440 * var(--design-px));
+  box-sizing: border-box;
+  aspect-ratio: 1;
+  min-height: 0;
   margin: 0;
+  padding: calc(28 * var(--design-px));
+  border-radius: 3px 8px 2px 10px / 9px 2px 7px 3px;
+  background: var(--noise), var(--paper);
+  box-shadow: 0 10px 24px rgb(from var(--darker) r g b / 70%);
+  rotate: -1.2deg;
 
   svg {
-    height: var(--module);
-    width: var(--module);
+    width: 100%;
+    height: 100%;
   }
 }
 
@@ -893,9 +1421,9 @@ label {
   overflow-y: auto;
   padding: .5em 1em;
   color: var(--offwhite);
-  background-color: var(--dark);
+  background: var(--noise), var(--dark);
   border: 3px solid var(--darker);
-  box-shadow: 0 3px 0 var(--darker);
+  box-shadow: 0 10px 24px rgb(from var(--darker) r g b / 70%);
   font-size: var(--font-size);
   z-index: 9999;
 
@@ -916,48 +1444,74 @@ label {
   }
 }
 
-copy-button {
-  display: flex;
-  position: relative;
+/* The way into a game, lit by the fire. */
+.fire-key {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: max(44px, calc(64 * var(--design-px)));
+  padding: 0 calc(40 * var(--design-px));
+  border: 3px solid var(--darker);
+  border-radius: 5px 12px 4px 10px / 10px 4px 12px 5px;
+  color: var(--sky);
+  background: var(--orange);
+  box-shadow:
+    0 0 16px rgb(from var(--orange) r g b / 27%),
+    inset 0 -8px 14px rgb(110 30 10 / 40%);
+  font-size: max(16px, calc(30 * var(--design-px)));
+  font-weight: 600;
+  cursor: pointer;
 
-  /* Overlaps the input's right border, so that the two share an edge. */
-  > button {
-    margin-left: -3px;
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
   }
 
-  /* Floats under the button, so that showing it moves nothing. */
-  .copy-popover {
-    position: absolute;
-    top: calc(100% + .25em);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    white-space: nowrap;
-    padding: .25em .75em;
-    border-radius: 1em;
-    background: var(--darker);
+  &:disabled {
+    cursor: inherit;
+    filter: grayscale(1);
   }
 }
 
-#waiting-for-players {
-  margin: 0;
+/* A small slate key, plainer than .btn, for the tools around the game. */
+.key {
   display: flex;
-  flex-direction: row;
-  /* The figure stands on the last line's baseline: an SVG's baseline is its bottom edge. */
-  align-items: last baseline;
-  gap: .5em;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: var(--key-height);
+  padding: 0 calc(20 * var(--design-px));
+  border: 2px solid var(--sky);
+  border-radius: 3px 7px 4px 8px / 6px 3px 7px 4px;
+  color: var(--moon);
+  background: var(--dark);
+  font-size: calc(21 * var(--design-px));
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
 
-  svg {
-    display: inline-block;
-    height: 2lh;
-    width: auto;
-    fill: var(--offwhite);
+  &:hover {
+    filter: brightness(1.25);
   }
 
-  span {
-    /* Two lines in either language, to match the figure. */
-    max-width: 25ch;
-    text-wrap: balance;
+  /* Not a line of text, whose baseline would leave room under the icon. */
+  i.material-icons {
+    display: flex;
+    padding: 0;
+  }
+
+  svg {
+    width: calc(20 * var(--design-px));
+    height: calc(20 * var(--design-px));
+  }
+}
+
+copy-button {
+  display: flex;
+
+  .copy-label {
+    display: flex;
+    align-items: center;
+    gap: calc(8 * var(--design-px));
   }
 }
 
@@ -967,6 +1521,7 @@ copy-button {
   align-self: center;
   max-width: 800px;
   margin: .5em;
+  padding: 0 1em;
   position: relative;
   text-align: center;
 }
@@ -1048,6 +1603,49 @@ copy-button {
   padding: .75em;
 }
 
+/* Hand-cut boards, like the leaderboard's rows, each cut a little differently. */
+#choices .btn {
+  --cut: 5px 8px 4px 9px / 8px 5px 9px 4px;
+
+  border-color: var(--sky);
+  border-radius: var(--cut);
+  color: var(--moon);
+  text-shadow: 0 1px 3px #000;
+  filter: drop-shadow(0 6px 8px rgb(0 0 0 / 70%));
+
+  &:nth-child(3n + 2) {
+    --cut: 8px 4px 9px 4px / 4px 9px 4px 8px;
+  }
+
+  &:nth-child(3n) {
+    --cut: 4px 9px 5px 7px / 9px 4px 8px 5px;
+  }
+
+  &::before, &::after {
+    border-color: var(--sky);
+    border-radius: var(--cut);
+  }
+
+  /* The texture is held to the screen, so that it runs on from board to board. */
+  &::before {
+    background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px fixed;
+    filter: brightness(1.7);
+  }
+
+  &::after {
+    background-color: var(--sky);
+  }
+
+  &:hover::before {
+    filter: brightness(2.1);
+  }
+
+  /* The right answer catches the firelight, within its own board. */
+  &.correct::before {
+    box-shadow: inset 0 0 2em rgb(from var(--orange) r g b / 12%);
+  }
+}
+
 .answer {
   display: flex;
   flex: 1 1 auto;
@@ -1057,13 +1655,16 @@ copy-button {
   text-align: center;
   animation: 1s ease-in fade-in;
 
+  /* A card of paper, like the QR code in the lobby. */
   &.revealed {
-    background-color: var(--offwhite);
-    color: var(--dark);
-    box-shadow: 0 3px 0 var(--darker);
+    background: var(--noise), var(--paper);
+    color: var(--sky);
+    border-radius: 3px 8px 2px 10px / 9px 2px 7px 3px;
+    box-shadow: 0 10px 24px rgb(from var(--darker) r g b / 70%);
+    rotate: -.6deg;
 
     svg {
-      fill: var(--dark);
+      fill: var(--sky);
     }
   }
 
@@ -1076,7 +1677,7 @@ copy-button {
 }
 
 .incorrect {
-  opacity: 0.5;
+  opacity: 0.7;
 }
 
 /* Timer */
@@ -1125,47 +1726,47 @@ copy-button {
     border-collapse: separate;
     border-spacing: 0 .25em;
 
-    tbody {
-      background:
-        linear-gradient(to bottom, transparent, rgb(from var(--darker) r g b / 60%)),
-        var(--dark);
-    }
+    /* Hand-cut boards, of the same grit as the discs in the lobby, each cut a little
+       differently. */
+    tbody tr {
+      --left: 5px 0 0 9px / 8px 0 0 4px;
+      --right: 0 8px 4px 0 / 0 5px 9px 0;
 
-    tr {
-      thead & {
-        background-color: unset;
+      filter: drop-shadow(0 6px 8px rgb(0 0 0 / 70%));
+
+      &:nth-child(3n + 2) {
+        --left: 8px 0 0 4px / 4px 0 0 8px;
+        --right: 0 4px 9px 0 / 0 8px 5px 0;
       }
 
-      tbody & {
-        background:
-          var(--noise),
-          radial-gradient(ellipse at center, transparent 50%, rgb(from var(--darker) r g b / 50%) 100%),
-          transparent;
-        border-radius: 6px;
-        box-shadow:
-          0 4px 8px rgb(from var(--darker) r g b / 60%),
-          inset 0 0 0 2px rgb(from var(--darker) r g b / 50%),
-          inset 0 -4px 0 0 rgb(from var(--darker) r g b / 50%);
-
-        td:first-child {
-          border-radius: 6px 0 0 6px;
-          color: var(--offwhite);
-          text-shadow: 0 1px 0 rgb(from var(--offwhite) r g b / 20%);
-        }
-
-        td:last-child {
-          border-radius: 0 6px 6px 0;
-          text-align: right;
-          font-variant-numeric: tabular-nums;
-        }
+      &:nth-child(3n) {
+        --left: 4px 0 0 7px / 9px 0 0 5px;
+        --right: 0 9px 5px 0 / 0 4px 8px 0;
       }
 
+      td {
+        border-block: 2px solid var(--sky);
+        /* The texture is held to the screen, so that it runs on from cell to cell. */
+        background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px fixed;
+      }
+
+      td:first-child {
+        border-left: 2px solid var(--sky);
+        border-radius: var(--left);
+      }
+
+      td:last-child {
+        border-right: 2px solid var(--sky);
+        border-radius: var(--right);
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
     }
 
     caption {
       padding: 1ex 2ch;
       margin-bottom: .5em;
-      color: rgb(from var(--offwhite) r g b / 45%);
+      color: rgb(from var(--offwhite) r g b / 65%);
 
       progress {
         display: block;
@@ -1196,8 +1797,8 @@ copy-button {
 
     tbody td {
       padding: 1.5ex 2ch;
-      font-weight: 700;
-      color: color-mix(in hsl, var(--offwhite), var(--orange) 10%);
+      color: var(--moon);
+      text-shadow: 0 1px 3px #000;
 
       &:first-child {
         padding-right: .5ch;
@@ -1205,10 +1806,6 @@ copy-button {
 
       &:nth-child(2) {
         padding-left: .5ch;
-      }
-
-      &:last-child {
-        text-shadow: -1px -1px 0 var(--darker), 1px -1px 0 var(--darker), -1px 1px 0 var(--darker), 1px 1px 0 var(--darker);
       }
     }
 
@@ -1226,9 +1823,8 @@ copy-button {
         text-align: right;
       }
 
-      background: linear-gradient(to bottom, hsl(from var(--orange) h s calc(l + 15)), var(--orange));
-      background-clip: text;
-      color: transparent;
+      font-weight: 600;
+      color: var(--grey);
     }
 
     tr td:last-child {
@@ -1241,8 +1837,11 @@ copy-button {
 
     .score-bar {
       display: inline-block;
+      border-radius: 2px 5px 2px 4px / 4px 2px 5px 2px;
       background-color: var(--orange);
-      box-shadow: 1px 1px 0 var(--darker);
+      box-shadow:
+        0 0 8px rgb(from var(--orange) r g b / 27%),
+        inset 0 -3px 4px rgb(110 30 10 / 40%);
       height: .5em;
       vertical-align: middle;
       animation: grow 1s ease-out forwards;
@@ -1288,8 +1887,16 @@ copy-button {
 
   /* The correct order, in the card that reveals every correct answer. */
   &.revealed li {
-    background-color: var(--offwhite);
-    color: var(--dark);
+    background: var(--noise), var(--paper);
+    color: var(--sky);
+    border-color: transparent;
+    border-radius: 6px 2px 8px 3px / 3px 7px 2px 6px;
+    box-shadow: 0 6px 16px rgb(from var(--darker) r g b / 60%);
+    rotate: -.4deg;
+
+    &:nth-child(even) {
+      rotate: .4deg;
+    }
   }
 }
 
@@ -1431,16 +2038,17 @@ progress {
   input[type="radio"] + label {
     cursor: pointer;
     order: 1;
-    margin-bottom: -3px;
+    margin-bottom: -2px;
     padding: .5em 1em;
     /* Shaped like the active tab, only receded, so it reads as the other tab rather than
        as unavailable. Its bottom edge is the form's top border, which puts it behind. */
-    border: 3px solid var(--darker);
-    border-radius: 6px 6px 0 0;
-    color: rgb(from var(--offwhite) r g b / 70%);
-    background: var(--noise), var(--dark);
+    border: 2px solid var(--sky);
+    border-radius: 7px 4px 0 0 / 5px 3px 0 0;
+    color: var(--grey);
+    /* Held to the screen, as on the form, so that the texture runs on across the seam. */
+    background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px fixed;
     /* The form's edge shading the tab, tucking it behind. */
-    box-shadow: inset 0 -.5em .5em -.25em var(--darker);
+    box-shadow: inset 0 -.5em .5em -.25em rgb(0 0 0 / 65%);
     z-index: 1;
     transition: color var(--transition);
 
@@ -1448,7 +2056,7 @@ progress {
     margin-top: .25em;
 
     & ~ label {
-      margin-left: -3px;
+      margin-left: -2px;
     }
 
     &:hover {
@@ -1459,9 +2067,28 @@ progress {
   form {
     padding: 1em;
     margin-bottom: 1.5em;
-    border: 3px solid var(--darker);
-    box-shadow: 0 3px 0 var(--darker);
+    border: 2px solid var(--sky);
+    border-radius: 0 8px 3px 10px / 0 3px 9px 2px;
+    box-shadow: 0 10px 24px rgb(0 0 0 / 70%);
     z-index: 0;
+  }
+
+  .fire-key {
+    font-weight: normal;
+  }
+
+  /* Quiet like the lobby's instructions, with its answer on a strip of paper beside it. */
+  .form-group {
+    label {
+      color: var(--grey);
+    }
+
+    input {
+      border: 0;
+      border-radius: 6px 2px 8px 3px / 3px 7px 2px 6px;
+      box-shadow: 0 6px 16px rgb(0 0 0 / 60%);
+      rotate: .6deg;
+    }
   }
 
   input[type="radio"]:checked + label {
@@ -1473,9 +2100,8 @@ progress {
   }
 
   input[type="radio"]:checked + label, [type="radio"]:checked + label + *  {
-    color: var(--offwhite);
-    background-color: var(--dark);
-    background-image: var(--noise);
+    color: var(--moon);
+    background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px fixed;
   }
 
   /* Off screen rather than display: none, so the radios stay in the focus order and the
@@ -1500,23 +2126,19 @@ progress {
   }
 }
 
-#question-picker {
-  color: var(--offwhite);
+/* Slate keys, like the ones in the lobby. */
+#question-picker,
+input::file-selector-button {
+  color: var(--moon);
   background-color: var(--dark);
-  border: 3px solid var(--darker);
-  border-radius: 5px;
-  box-shadow: 0 3px 0 var(--darker);
+  border: 2px solid var(--sky);
+  border-radius: 3px 7px 4px 8px / 6px 3px 7px 4px;
   padding: .5em;
+  font-weight: normal;
   cursor: pointer;
 }
 
 input::file-selector-button {
-  color: var(--offwhite);
-  background-color: var(--dark);
-  border: 3px solid var(--darker);
-  border-radius: 5px;
-  padding: .5em;
-  cursor: pointer;
   margin-right: .5em;
 }
 
@@ -1560,18 +2182,37 @@ input::file-selector-button {
   flex-direction: column;
   gap: .5em;
 
+  /* What is left of the fire when the game is over. Low on its stage, under the smoke. */
+  #campfire.out {
+    flex: none;
+    align-self: center;
+    width: min(90vw, 50vh);
+    aspect-ratio: 1;
+
+    .fire-scene {
+      translate: 0 25%;
+    }
+
+    /* The fire of a lobby that morphs into this keeps running, as morphing leaves <camp-fire>
+       be. Hidden rather than removed, as the smoke in the sky rises from where they are. */
+    :is(.fire-flames, .fire-sparks) {
+      visibility: hidden;
+    }
+  }
+
   i.material-icons {
     font-size: 3em;
   }
 }
 
+/* White headings would vanish as the page pulses to white. */
+body:has(.winner) :is(h1, h2) {
+  color: inherit;
+}
+
 body:has(.winner) {
   background-image: none;
   animation: 3s ease-in-out infinite alternate pulsate;
-
-  footer {
-    display: none;
-  }
 }
 
 @keyframes pulsate {
@@ -1581,7 +2222,7 @@ body:has(.winner) {
   }
   to {
     background-color: var(--offwhite);
-    color: var(--dark);
+    color: var(--sky);
   }
 }
 
@@ -1589,40 +2230,87 @@ body:has(.winner) {
 @media (prefers-reduced-motion: reduce) {
   body:has(.winner),
   .waiting-icon svg,
-  .waiting-icon .shadow {
+  .waiting-icon .shadow,
+  .star,
+  .comet,
+  .ember,
+  .ember-halo {
     animation: none;
+  }
+
+  #campfire li {
+    transition: none;
+  }
+
+  /* Hung in the sky rather than passing. */
+  .comet {
+    opacity: .4;
   }
 }
 
+/* A strip of paper, with the link written on it and the button set into it. */
 #game-url {
   display: flex;
+  flex: none;
+  align-items: center;
+  box-sizing: border-box;
+  gap: calc(8 * var(--design-px));
+  margin: 0;
+  width: 100%;
+  max-width: calc(480 * var(--design-px));
+  height: var(--action-height);
+  padding: 0 calc(6 * var(--design-px)) 0 calc(18 * var(--design-px));
+  border-radius: 6px 2px 8px 3px / 3px 7px 2px 6px;
+  background: var(--noise), var(--paper);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 60%);
+  rotate: .6deg;
 
   input {
     flex: 1;
     min-width: 0;
+    padding: 0;
+    border: 0;
+    color: var(--sky);
+    background: transparent;
+    font-size: calc(22 * var(--design-px));
     user-select: all;
   }
 }
 
 
-#end-game-dialog[open] {
+/* A board like the ones of the leaderboard and of the forms. */
+#confirm-dialog[open] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: .5em 1em;
+  gap: 1em;
+  box-sizing: border-box;
+  max-width: min(24em, 90vw);
+  padding: 1.25em 1.75em;
   color: var(--offwhite);
-  background-color: var(--dark);
-  border: 3px solid var(--darker);
-  box-shadow: 0 3px 0 var(--darker);
+  background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px;
+  border: 2px solid var(--sky);
+  border-radius: 5px 12px 4px 10px / 10px 4px 12px 5px;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 70%);
   font-size: var(--font-size);
+  text-align: center;
+  /* Inside the menu, which keeps to one line. */
+  white-space: normal;
+
+  h2 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+  }
 
   p {
     display: flex;
-    gap: .5rem;
+    gap: 1em;
+    margin: 0;
   }
 
   &::backdrop {
-    background: hsl(from var(--darker) h s l / 0.5);
+    background: rgb(from var(--darker) r g b / 60%);
     backdrop-filter: blur(2px);
   }
 }
@@ -1645,14 +2333,15 @@ body:has(.winner) {
 
 #open-answers {
   border: 3px solid var(--darker);
-  background-color: var(--dark);
+  background: var(--noise), var(--dark);
+  box-shadow: 0 10px 24px rgb(from var(--darker) r g b / 70%);
 
   caption {
     margin: 0;
     padding: 0 1ch;
     font-size: .8em;
     line-height: 1.8;
-    color: rgb(from var(--offwhite) r g b / 55%);
+    color: rgb(from var(--offwhite) r g b / 65%);
   }
 
   td, th {
@@ -1676,7 +2365,7 @@ i.material-icons {
   }
 
   &.md-dark svg {
-    fill: var(--dark);
+    fill: var(--sky);
   }
 
   &.answer-mark svg {

@@ -14,10 +14,10 @@
 (defn exit-game
   [tr
    ^String game-id]
-  [:button.btn
-   {:data-on:click (format "@post('/leave/%s')" game-id)}
-   [:i.material-icons (svg "cancel.svg")]
-   (tr [:exit-game])])
+  (views/confirm-button tr
+                        :exit-game
+                        :confirm-exit-game
+                        (format "@post('/leave/%s')" game-id)))
 
 (defn player-name-input
   [{{:keys [game-id]} :path-params
@@ -70,8 +70,18 @@
     ;; Where players land when the moderator ends the game, and where an old or mistyped
     ;; link leads, so it thanks the players without claiming the reader was one.
     [:section#content
+     [:canvas.fire-sky
+      {:aria-hidden "true"
+       :data-ignore-morph ""}]
      [:div.verdict
-      [:i.material-icons (svg "waving_hand_animated.svg")]
+      [:div#campfire.out
+       [:div.fire-scene
+        {:aria-hidden "true"}
+        (svg "campfire_soot.svg")
+        (svg "campfire_logs.svg")
+        [:camp-fire
+         ;; Morphing would empty what the component renders into itself.
+         {:data-ignore-morph ""}]]]
       [:h2 (tr [:game-over])]
       [:p (tr [:thanks-for-playing])]]]))
 
@@ -86,7 +96,7 @@
       (exit-game tr game-id)
       [:section#content
         waiting-icon
-        [:p (tr [:wait-for-game-start])]
+        [:p.hint (tr [:wait-for-game-start])]
         (game-rules tr)])
     (views/morph-body
       request

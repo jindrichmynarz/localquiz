@@ -6,8 +6,8 @@
   "Generate a SVG QR code from `url`."
   [^String url
    & {:keys [dark light]
-      :or {dark "#1d131dee"
-           light "#fbfde3ee"}}]
+      :or {dark "#0a0e13"
+           light "#cbcac2"}}]
   (let [qr (QrCode/encodeText url QrCode$Ecc/MEDIUM)
         qr-size (.size qr)
         path (let [sb (StringBuilder.)]

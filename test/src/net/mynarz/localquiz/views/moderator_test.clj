@@ -1,0 +1,27 @@
+(ns net.mynarz.localquiz.views.moderator-test
+  (:require [net.mynarz.localquiz.views.moderator :as moderator]
+            [clojure.test :refer [deftest is testing]]))
+
+(deftest seats
+  (testing "An odd number of players seats the first at the top."
+    (let [[{:keys [cos player sin]}] (moderator/seats ["Ada" "Grace" "Linus"])]
+      (is (= "Ada" player))
+      (is (= [0.0 -1.0] [cos sin]))))
+  (testing "An even number of players leaves the top free for the smoke."
+    (is (every? #(> (:sin %) -1.0) (moderator/seats ["Ada" "Grace"]))))
+  (testing "Everyone gets a place, in order, evenly around the fire."
+    (let [seats (moderator/seats (map str (range 7)))]
+      (is (= (map str (range 7)) (map :player seats)))
+      (is (= 7 (count (distinct (map (juxt :cos :sin) seats)))))
+      (is (< (abs (reduce + (map :cos seats))) 0.01))
+      (is (= 7 (count (distinct (map (juxt :grit-x :grit-y) seats)))))))
+  (testing "A crowded game sits on an even number of places, with the last one left free."
+    (let [places (fn [n] (map (juxt :cos :sin) (moderator/seats (map str (range n)))))]
+      (is (= (places 17) (butlast (places 18))))))
+  (testing "Below that, everyone sits evenly around one ring."
+    (let [seats (moderator/seats (map str (range 15)))]
+      (is (= 15 (count seats)))
+      (is (< (abs (reduce + (map :cos seats))) 0.01))
+      (is (< (abs (reduce + (map :sin seats))) 0.01))))
+  (testing "No players, no places."
+    (is (empty? (moderator/seats [])))))

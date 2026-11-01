@@ -29,7 +29,8 @@
     ;; Morphing would empty what the component renders into itself.
     :data-ignore-morph ""}
    ;; Slotted into the component's button.
-   [:i.material-icons (svg "content_copy.svg")]])
+   [:i.material-icons (svg "content_copy.svg")]
+   (tr [:copy])])
 
 (def form-validity-handlers
   "Datastar attributes that keep the $_formValid signal in sync with the form's
@@ -41,6 +42,41 @@
   "Whether the questions are valid, so that a game can be created from them."
   "$questionsValidated && $_formValid")
 
+(defn- crowded?
+  "Whether `players` sit on two rings around the fire, which beats one ring from this many."
+  [players]
+  (>= (count players) 16))
+
+(defn- seat-slots
+  "How many places there are around the fire for `players`. Two rings take turns, so they
+  need an even number of places. An odd number of players leaves the last one empty, which
+  the next player takes without anyone moving."
+  [players]
+  (let [n (count players)]
+    (if (crowded? players)
+      (+ n (mod n 2))
+      n)))
+
+(defn seats
+  "Places for `players` around the fire, clockwise from the top: `:cos` and `:sin` of each
+  one's angle, its `:tilt` in degrees and the `:grit-x` and `:grit-y` offsets of its
+  texture in pixels, so that no two discs look alike. Rounded so that the markup, and so the
+  view hash, is the same on every render. An even number of places leaves the top one free,
+  where the smoke rises."
+  [players]
+  (let [n (seat-slots players)
+        offset (if (even? n) (/ math/PI n) 0)
+        rounded #(/ (math/round (* % 1000)) 1000.0)]
+    (map-indexed (fn [index player]
+                   (let [angle (+ (/ math/PI -2) (* index (/ (* 2 math/PI) n)) offset)]
+                     {:cos (rounded (math/cos angle))
+                      :grit-x (mod (* index 131) 512)
+                      :grit-y (mod (* index 197) 512)
+                      :player player
+                      :sin (rounded (math/sin angle))
+                      :tilt (rounded (* 0.8 (- (mod (+ (* index 5) 3) 9) 4)))}))
+                 players)))
+
 (defn create-button
   "Button to create a game, hidden until the questions are valid. Loading them and creating
   the game can take a while, so a spinner shows meanwhile: on its own where the button is
@@ -50,7 +86,7 @@
     [:span.spinner
      {:aria-hidden "true"
       :data-show (str "$_validating && !(" ready ")")}]
-    [:button.btn.btn-primary
+    [:button.fire-key
      ;; A string, as ARIA reads the empty attribute that Datastar renders for true as false.
      {:data-attr:aria-busy "String($_validating || $_creating)"
       :data-attr:disabled "$_validating || $_creating"
@@ -65,23 +101,10 @@
 (defn end-game
   [tr
    ^String game-id]
-  [:div#end-game
-   [:dialog#end-game-dialog
-    {:data-ref "_endGameDialog"}
-    [:h2 (tr [:confirm-end-game])]
-    [:p
-     [:button.btn.btn-danger
-      {:data-on:click (str "@post('/end/" game-id "')")}
-      (tr [:question.yesno/yes])]
-     ;; The harmless answer gets the focus, so that Enter does not end the game.
-     [:button.btn
-      {:autofocus true
-       :data-on:click "$_endGameDialog.close()"}
-      (tr [:question.yesno/no])]]]
-   [:button.btn
-    {:data-on:click "$_endGameDialog.showModal()"}
-    [:i.material-icons (svg "cancel.svg")]
-    (tr [:end-game])]])
+  (views/confirm-button tr
+                        :end-game
+                        :confirm-end-game
+                        (format "@post('/end/%s')" game-id)))
 
 (defn get-answers
   [^String game-id]
@@ -255,31 +278,57 @@
           lobby (game/lobby game-id)
           has-enough-players? (game/has-enough-players? game-id)]
       [:div#lobby-grid
-       [:div#qrcode (url->qrcode-svg play-game-url)]
-       [:p#game-url
-        [:input
-         {:readonly true
-          :type "text"
-          :value play-game-url}]
-        (copy-button tr play-game-url)]
+       ;; Outside of the fire's stage, which would contain it. Morphing would clear it.
+       (when has-enough-players?
+         [:canvas.fire-sky
+          {:aria-hidden "true"
+           :data-ignore-morph ""}])
+       [:section#join
+        [:h2 (tr [:scan-to-join])]
+        [:p.hint (tr [:point-camera])]
+        [:div#qrcode (url->qrcode-svg play-game-url)]
+        [:label.hint
+         {:for "join-url"}
+         (tr [:or-open-link])]
+        [:p#game-url
+         [:input#join-url
+          {:readonly true
+           :type "text"
+           :value play-game-url}]
+         (copy-button tr play-game-url)]]
        [:section#lobby
         [:h2 (tr [:players])]
-        [:ul
-         (for [player-name lobby]
-           [:li player-name])]]
-       ;; The wait and the button share one cell, the hidden one still taking space, so
-       ;; the grid keeps its height when the second player lets the game start.
-       [:div#start-game
-        [:p#waiting-for-players
-         {:style (when has-enough-players? "visibility: hidden")}
-         (svg "wifi_exercise_animated.svg")
-         [:span (tr [:wait-for-players])]]
-        [:button.btn.btn-primary
-         {:data-on:click (str "@post('/next/" game-id "')")
-          :disabled (not has-enough-players?)
-          :style (when-not has-enough-players? "visibility: hidden")
-          :type "submit"}
-         (tr [:start-game])]]])))
+        [:div#campfire
+         {:class [(when has-enough-players? "lit")
+                  (when (crowded? lobby) "crowded")]
+          :style (format "--players:%d;--slots:%d" (count lobby) (seat-slots lobby))}
+         ;; Cold logs from the start, which catch fire once the game can start.
+         [:div.fire-scene
+          {:aria-hidden "true"}
+          (svg "campfire_soot.svg")
+          (svg "campfire_logs.svg")
+          (when has-enough-players?
+            (list
+              [:div.fire-glow]
+              [:camp-fire
+               ;; Morphing would empty what the component renders into itself.
+               {:data-ignore-morph ""}]))]
+         [:ul
+          (for [{:keys [cos grit-x grit-y player sin tilt]} (seats lobby)]
+            [:li
+             ;; Lets the seat keep its element, and so glide, when a player before it leaves.
+             {:id (str "seat-" (hash player))
+              :style (format "--cos:%s;--sin:%s;--tilt:%sdeg;background-position:%dpx %dpx"
+                             cos sin tilt grit-x grit-y)}
+             [:span player]])]]
+        ;; Hidden rather than left out, so that the fire does not move when it appears.
+        [:div#start-game
+         [:button.fire-key
+          {:data-on:click (str "@post('/next/" game-id "')")
+           :disabled (not has-enough-players?)
+           :style (when-not has-enough-players? "visibility: hidden")
+           :type "submit"}
+          (tr [:start-game])]]]])))
 
 (defn question-header
   [tr
@@ -369,7 +418,7 @@
      [:p
       (if (game/all-questions-answered? game-id)
         (next-button tr
-                     "$_endGameDialog.showModal()"
+                     "$_confirmDialog.showModal()"
                      :end-game
                      [:i.material-icons.md-dark (svg "cancel.svg")])
         (next-button tr game-id))]]))
