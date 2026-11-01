@@ -1,5 +1,6 @@
 (ns net.mynarz.localquiz.views.moderator
   (:require [net.mynarz.localquiz.config :refer [config]]
+            [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.qrcode :refer [url->qrcode-svg]]
             [net.mynarz.localquiz.question-sources :refer [question-sources]]
@@ -59,9 +60,10 @@
 
 (defn seats
   "Places for `players` around the fire, clockwise from the top: `:cos` and `:sin` of each
-  one's angle, its `:tilt` in degrees and the `:grit-x` and `:grit-y` offsets of its
-  texture in pixels, so that no two discs look alike. Rounded so that the markup, and so the
-  view hash, is the same on every render. An even number of places leaves the top one free,
+  one's angle, its `:tilt` in degrees, the `:grit-x` and `:grit-y` offsets of its texture in
+  pixels, so that no two discs look alike, and an `:id` that follows its player, whose name
+  is unique in the game. Rounded so that the markup, and so the view hash, is the same on
+  every render. An even number of places leaves the top one free,
   where the smoke rises."
   [players]
   (let [n (seat-slots players)
@@ -72,6 +74,7 @@
                      {:cos (rounded (math/cos angle))
                       :grit-x (mod (* index 131) 512)
                       :grit-y (mod (* index 197) 512)
+                      :id (str "seat-" (crypto/bytes->base64 (String/.getBytes ^String player)))
                       :player player
                       :sin (rounded (math/sin angle))
                       :tilt (rounded (* 0.8 (- (mod (+ (* index 5) 3) 9) 4)))}))
@@ -167,7 +170,9 @@
     icon]
    [:button.btn.btn-primary.btn-next
     {:data-on:click next-action
-     :data-on:keydown__window (str "evt.key === 'Enter' && " next-action)}
+     ;; Enter on a focused control, such as a dialog button, is that control's own.
+     :data-on:keydown__window (str "evt.key === 'Enter' && evt.target === document.body && "
+                                   next-action)}
     (tr [label-key])
     icon]))
 
@@ -303,21 +308,12 @@
                   (when (crowded? lobby) "crowded")]
           :style (format "--players:%d;--slots:%d" (count lobby) (seat-slots lobby))}
          ;; Cold logs from the start, which catch fire once the game can start.
-         [:div.fire-scene
-          {:aria-hidden "true"}
-          (svg "campfire_soot.svg")
-          (svg "campfire_logs.svg")
-          (when has-enough-players?
-            (list
-              [:div.fire-glow]
-              [:camp-fire
-               ;; Morphing would empty what the component renders into itself.
-               {:data-ignore-morph ""}]))]
+         (views/fire-scene (if has-enough-players? :lit :cold))
          [:ul
-          (for [{:keys [cos grit-x grit-y player sin tilt]} (seats lobby)]
+          (for [{:keys [cos grit-x grit-y id player sin tilt]} (seats lobby)]
             [:li
              ;; Lets the seat keep its element, and so glide, when a player before it leaves.
-             {:id (str "seat-" (hash player))
+             {:id id
               :style (format "--cos:%s;--sin:%s;--tilt:%sdeg;background-position:%dpx %dpx"
                              cos sin tilt grit-x grit-y)}
              [:span player]])]]

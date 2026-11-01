@@ -10,6 +10,15 @@
 
 (use-fixtures :once fixtures/test-db)
 
+(deftest fire-scene
+  (are [state glow? fire?] (let [html (h/html (views/fire-scene state))]
+                             (and (string/includes? html "<svg")
+                                  (= glow? (string/includes? html "fire-glow"))
+                                  (= fire? (string/includes? html "<camp-fire"))))
+       :cold false false
+       :lit  true  true
+       :out  false true))
+
 (deftest search-options
   (let [options [{:label "Nové Vinohrady"}
                  {:label "Žižkov" :description "Prague 3"}

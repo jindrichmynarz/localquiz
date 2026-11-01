@@ -3,6 +3,10 @@
             [clojure.test :refer [deftest is testing]]))
 
 (deftest seats
+  (testing "Names with the same hash get different ids, which are valid in the DOM."
+    (let [ids (map :id (moderator/seats ["Aa" "BB" "Žluťoučký kůň"]))]
+      (is (apply distinct? ids))
+      (is (every? #(re-matches #"seat-[\w-]+" %) ids))))
   (testing "An odd number of players seats the first at the top."
     (let [[{:keys [cos player sin]}] (moderator/seats ["Ada" "Grace" "Linus"])]
       (is (= "Ada" player))

@@ -95,6 +95,23 @@
     [:i.material-icons (svg "cancel.svg")]
     (tr [label])]])
 
+(defn fire-scene
+  "Logs of the fire, to go inside `#campfire`, in one of these states:
+  - `:cold`: Only the logs.
+  - `:lit`: Burning.
+  - `:out`: `<camp-fire>` is kept, as `#campfire.out` hides its flames but not its smoke."
+  [state]
+  [:div.fire-scene
+   {:aria-hidden "true"}
+   (svg "campfire_soot.svg")
+   (svg "campfire_logs.svg")
+   (when (= state :lit)
+     [:div.fire-glow])
+   (when-not (= state :cold)
+     [:camp-fire
+      ;; Morphing would empty what the component renders into itself.
+      {:data-ignore-morph ""}])])
+
 (defn error-dialog
   [tr]
   [:div#error-dialog

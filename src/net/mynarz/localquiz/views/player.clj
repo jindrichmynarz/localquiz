@@ -75,13 +75,7 @@
        :data-ignore-morph ""}]
      [:div.verdict
       [:div#campfire.out
-       [:div.fire-scene
-        {:aria-hidden "true"}
-        (svg "campfire_soot.svg")
-        (svg "campfire_logs.svg")
-        [:camp-fire
-         ;; Morphing would empty what the component renders into itself.
-         {:data-ignore-morph ""}]]]
+       (views/fire-scene :out)]
       [:h2 (tr [:game-over])]
       [:p (tr [:thanks-for-playing])]]]))
 
