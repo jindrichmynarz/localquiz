@@ -62,17 +62,15 @@
    (tr [:rules] [(:question-time-out config)])])
 
 (defn- fire-verdict
-  "The fire in a `state` of `views/fire-scene`, :lit or :out, over `heading`.
-  `final?` is for the result of the game, which is at dawn, as is the final leaderboard."
-  [^Boolean final?
-   state
+  "The fire in a `state` of `views/fire-scene`, :lit or :out, over `heading`. At dawn, as is
+  the final leaderboard, which `.final` brings on."
+  [state
    ^String heading]
   [:section#content
    [:canvas.fire-sky
     {:aria-hidden "true"
      :data-ignore-morph ""}]
-   [:div.verdict
-    {:class (when final? "final")}
+   [:div.verdict.final
     [:div#campfire
      {:class (name state)}
      (views/fire-scene state)]
@@ -83,10 +81,9 @@
     :as request}]
   (views/morph-body
     request
-    ;; Where players land when the moderator ends the game, and where an old or mistyped
-    ;; link leads, so it thanks the players without claiming the reader was one.
-    (fire-verdict false
-                  :out
+    ;; Where players land when the moderator ends the game, still at dawn, and where an old
+    ;; or mistyped link leads, so it does not claim the reader was a player.
+    (fire-verdict :out
                   (tr [:game-over]))))
 
 (defmethod views/game-view [:player :new]
@@ -203,11 +200,9 @@
          [:h2 (tr [:no-answer])])]
 
       ((game/winners game-id) player-id)
-      (fire-verdict true
-                    :lit
+      (fire-verdict :out
                     (tr [:you-won]))
 
       :else
-      (fire-verdict true
-                    :out
+      (fire-verdict :out
                     (tr [:not-this-time])))))
