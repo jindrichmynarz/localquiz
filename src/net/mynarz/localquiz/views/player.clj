@@ -62,7 +62,7 @@
    (tr [:rules] [(:question-time-out config)])])
 
 (defn- fire-verdict
-  "The fire in a `state` of `views/fire-scene`, :lit or :out, over `heading` and `line`.
+  "The fire in a `state` of `views/fire-scene`, :lit or :out, over `heading`.
   `final?` is for the result of the game, which is at dawn, as is the final leaderboard."
   [^Boolean final?
    state

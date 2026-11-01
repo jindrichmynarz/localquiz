@@ -29,7 +29,6 @@
                  :persistence "nerozumnou vytrvalostí"
                  :using "s použitím"}
         :frequency "Četnost"
-        :fire-burned-for-you "Oheň hořel pro tebe."
         :game-over "Tato hra skončila"
         :incorrect "Nesprávně"
         :join-game "Hrát"
@@ -111,8 +110,6 @@
         :start-game "Zahájit hru"
         :submit "Odeslat"
         :switch-lang "Přepni jazyk"
-        :thanks-for-playing "Díky všem, kdo hráli!"
-        :thanks-for-the-fire "Díky za večer u ohně."
         :upload-questions "Nahrát otázky"
         :wait-for-answers "Čekáme na další odpovědi..."
         :wait-for-game-start "Počkej prosím na zahájení hry."
@@ -145,7 +142,6 @@
                  :persistence "unreasonable persistence"
                  :using "using"}
         :frequency "Frequency"
-        :fire-burned-for-you "The fire burned for you."
         :game-over "This game has ended"
         :incorrect "Incorrect"
         :join-game "Join game"
@@ -227,8 +223,6 @@
         :start-game "Start game"
         :submit "Submit"
         :switch-lang "Switch the language"
-        :thanks-for-playing "Thanks to everyone who played!"
-        :thanks-for-the-fire "Thanks for sitting by the fire."
         :upload-questions "Upload questions"
         :wait-for-answers "Waiting for other answers..."
         :wait-for-game-start "Please wait for the game to start."
