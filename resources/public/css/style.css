@@ -7,7 +7,9 @@
   --panel: #121820;
   --darker: #04060a;
   --orange: #d9772b;
-  --red: #c9502a;
+  --ember: #c9502a;
+  /* Errors only. */
+  --red: #ef5350;
   --grey: #93a0ad;
   /* The night. */
   --sky: #0a0e13;
@@ -73,6 +75,12 @@ body {
 
 
 #morph {
+  /* Read from the page's own type, so that on a page held in the hand the keys keep to the
+     size of the type around them rather than growing with the display. */
+  --design-px: calc(var(--font-size) / 37);
+  /* Of a field of paper, shared with the key that goes with it. Its type, padding and border. */
+  --field-height: calc(var(--font-size) * 2.4 + 6px);
+
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -112,10 +120,19 @@ body {
       font-size: calc(var(--font-size) * .6);
     }
 
-    /* With nothing under it — the inputs live on the players' phones — the question
-       has the whole budget --font-size-projected splits with the answers. */
-    #question-container:has(> :last-child:empty) #question {
-      font-size: 2em;
+    /* Hung from the top, so that what the reveal adds under the question cannot move it. */
+    #content:has(#question) {
+      justify-content: flex-start;
+    }
+
+    /* The other boards fill the wall, but this one is read from its label to its value. */
+    #choices {
+      grid-auto-rows: 1fr;
+    }
+
+    #sortableList {
+      width: min(100%, 30em);
+      margin-inline: auto;
     }
   }
 }
@@ -196,6 +213,7 @@ header {
     transform: none;
     padding: .25em 1ch;
     border-color: var(--darker);
+    font-weight: 600;
 
     &::before, &::after {
       display: none;
@@ -431,11 +449,6 @@ table {
   }
 }
 
-/* Nothing covers the page that pulses for the winner. */
-body:has(.winner) #night {
-  display: none;
-}
-
 .horizon {
   position: absolute;
   top: 0;
@@ -507,6 +520,131 @@ body:has(.winner) #night {
   }
   50% {
     opacity: .95;
+  }
+}
+
+/* The sun coming up on the results of the game, the final leaderboard and what the players
+   see of it, over the same mountains and ground. Above the stars, which the sky hides on its
+   way down, and behind the mountains and the ground. */
+body:has(.final) {
+  --ridge: #3a3450;
+  --ridge-lit: #3a3450;
+  --ground: #121219;
+  --ground-lit: color-mix(in srgb, var(--ground), var(--moon) var(--ground-light));
+
+  #dawn {
+    display: block;
+  }
+
+  /* The warmth on the land, from over the mountains, so that there is no seam at the horizon,
+     and the glow on the ground in front of them. */
+  .grain::before {
+    --top: calc(var(--horizon) * .42);
+
+    content: "";
+    position: absolute;
+    inset: calc(var(--top) * -1) 0 0;
+    background:
+      radial-gradient(ellipse calc(450 * var(--design-px)) calc(280 * var(--design-px))
+                      at 50% calc(var(--top) + var(--horizon) * .68),
+                      rgb(255 196 140 / 12%),
+                      rgb(255 180 130 / 5%) 50%,
+                      transparent),
+      linear-gradient(to bottom,
+                      transparent,
+                      rgb(255 190 140 / 10%) calc(var(--horizon) * .17),
+                      rgb(255 185 130 / 16%) calc(var(--horizon) * .33),
+                      rgb(230 150 105 / 8%) calc(var(--horizon) * .81),
+                      transparent calc(var(--horizon) * 1.68));
+    animation: 26s ease-out both land-warm;
+  }
+}
+
+#dawn {
+  --rise: 26s cubic-bezier(.2, .6, .3, 1) both;
+
+  display: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: var(--horizon);
+  background:
+    linear-gradient(to bottom,
+                    transparent,
+                    rgb(255 190 140 / 8%) 27%,
+                    rgb(255 200 150 / 16%) 52%,
+                    transparent 81%),
+    linear-gradient(to bottom,
+                    rgb(20 27 46 / 30%),
+                    #1e2443 22%,
+                    #3a3352 42%,
+                    #74506a 60%,
+                    #c07562 77%,
+                    #eda06e 90%,
+                    #f7c487);
+  animation: 3s ease-in both fade-in;
+
+  /* All around the sun, where it will be once it has risen. */
+  &::before,
+  &::after,
+  i {
+    content: "";
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    translate: -50% -50%;
+  }
+
+  /* The rays, turning slowly. */
+  &::before {
+    width: calc(1500 * var(--design-px));
+    height: calc(1500 * var(--design-px));
+    background: repeating-conic-gradient(rgb(255 226 180 / 7%) 0deg 3deg, transparent 3deg 11deg);
+    mask-image: radial-gradient(circle, #000, rgb(0 0 0 / 50%) 30%, transparent 62%);
+    animation: 240s linear infinite spin;
+  }
+
+  /* The glow around the sun. */
+  &::after {
+    width: calc(1500 * var(--design-px));
+    height: calc(760 * var(--design-px));
+    background: radial-gradient(ellipse 50% 50% at 50% 50%,
+                                rgb(255 214 160 / 60%),
+                                rgb(250 170 115 / 30%) 22%,
+                                rgb(220 120 100 / 12%) 45%,
+                                transparent 70%);
+    animation: var(--rise) glow-rise;
+  }
+
+  /* The sun. */
+  i {
+    width: calc(150 * var(--design-px));
+    height: calc(150 * var(--design-px));
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff8e8, #ffe6b8 45%, #ffc985 80%, #f9ae6c);
+    box-shadow:
+      0 0 calc(40 * var(--design-px)) calc(12 * var(--design-px)) rgb(255 210 150 / 55%),
+      0 0 calc(120 * var(--design-px)) calc(40 * var(--design-px)) rgb(255 175 120 / 30%);
+    animation: var(--rise) sunrise;
+  }
+}
+
+@keyframes sunrise {
+  from {
+    transform: translateY(calc(70 * var(--design-px)));
+  }
+}
+
+@keyframes glow-rise {
+  from {
+    opacity: .35;
+    transform: translateY(calc(60 * var(--design-px))) scale(.85);
+  }
+}
+
+@keyframes land-warm {
+  from {
+    opacity: .3;
   }
 }
 
@@ -796,7 +934,7 @@ a {
   color: var(--orange);
 
   &:hover {
-    color: var(--red);
+    color: var(--moon);
   }
 }
 
@@ -838,7 +976,6 @@ select {
 
   option {
     padding: .5em;
-    background-color: var(--dark);
     color: var(--offwhite);
 
     &:hover {
@@ -851,7 +988,10 @@ select {
   }
 
   ::picker(select) {
-    box-shadow: 0 3px 0 var(--darker);
+    border: 2px solid var(--sky);
+    border-radius: 6px 2px 8px 3px / 3px 7px 2px 6px;
+    background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px;
+    box-shadow: 0 10px 24px rgb(0 0 0 / 70%);
   }
 }
 
@@ -901,30 +1041,8 @@ select {
   }
 }
 
-.btn-next {
-  padding: .25lh 1ch;
-}
-
 .btn, .btn::before, .btn::after {
   transition: all var(--transition);
-}
-
-.btn-primary {
-  color: var(--sky);
-  background-color: var(--orange);
-  border-color: var(--red);
-
-  &::before, &::after {
-    border-color: var(--red);
-  }
-
-  &::before {
-    background-color: var(--orange);
-  }
-
-  &::after {
-    background-color: var(--red);
-  }
 }
 
 /* A ring that turns while something slow runs, e.g. inside a button. */
@@ -960,8 +1078,13 @@ select {
 input[type="text"], input[type="number"] {
   background: var(--noise), var(--paper);
   color: var(--sky);
-  border: 3px solid var(--darker);
+  /* Paper has no frame. Transparent rather than none, to stay a finger's height. */
+  border: 3px solid transparent;
   border-radius: 6px 2px 8px 3px / 3px 7px 2px 6px;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 60%);
+  rotate: .6deg;
+  box-sizing: border-box;
+  height: var(--field-height);
   padding: .5em;
   font-size: var(--font-size);
   &:focus-visible {
@@ -971,9 +1094,14 @@ input[type="text"], input[type="number"] {
 
 .autocomplete {
   position: relative;
+  /* Above the .fire-key next to it, as the tilt makes this a stacking context. */
+  z-index: 2;
   display: inline-block;
+  /* The input and its list are one piece of paper, so they tilt together. */
+  rotate: .6deg;
 
   input[type="text"] {
+    rotate: none;
     /* Keeps the typed text clear of the reveal control. */
     padding-right: 1.8em;
   }
@@ -1007,10 +1135,11 @@ input[type="text"], input[type="number"] {
     max-height: 40vh;
     overflow-y: auto;
     list-style: none;
-    background: var(--paper);
+    /* More of the paper of the input, torn off at the bottom. */
+    background: var(--noise), var(--paper);
     color: var(--sky);
-    border: 3px solid var(--darker);
-    border-top: none;
+    border-radius: 0 0 8px 3px / 0 0 7px 6px;
+    box-shadow: 0 6px 16px rgb(0 0 0 / 60%);
 
     li {
       text-align: left;
@@ -1020,16 +1149,15 @@ input[type="text"], input[type="number"] {
       .description {
         display: block;
         font-size: .8em;
-        color: rgb(from var(--dark) r g b / 60%);
+        color: rgb(from var(--sky) r g b / 75%);
       }
 
       &:hover,
       &[aria-selected="true"] {
         background: var(--orange);
-        color: var(--offwhite);
 
         .description {
-          color: rgb(from var(--offwhite) r g b / 75%);
+          color: inherit;
         }
       }
     }
@@ -1199,7 +1327,7 @@ network-map {
     }
 
     &.nm-root circle:not(.nm-target) {
-      fill: var(--red);
+      fill: var(--moon);
     }
 
     .nm-chevron {
@@ -1224,7 +1352,7 @@ network-map {
     &.nm-root.nm-back {
       circle:not(.nm-target),
       .nm-chevron {
-        stroke: var(--red);
+        stroke: var(--moon);
       }
     }
 
@@ -1266,13 +1394,11 @@ network-map {
   overflow: visible;
 }
 
-/* The reveal on the wall, set tighter than other questions, as it holds the most. The tree
-   takes the height the rest leaves, which is what keeps Next on the height-locked screen.
-   Each container on the way to it passes the height down. */
+/* The reveal on the wall, which holds the most. The tree takes the height the rest leaves,
+   which is what keeps Next on the height-locked screen. Each container on the way to it
+   passes the height down. */
 #morph.projected #content:has(.nt) {
   min-height: 0;
-  margin-block: 0;
-  font-size: .85em;
 
   #question-container,
   #answers {
@@ -1281,7 +1407,6 @@ network-map {
     gap: 0;
   }
 
-  #question p,
   > p {
     margin: .25em 0;
   }
@@ -1322,7 +1447,7 @@ network-map {
 }
 
 .nt-root circle {
-  fill: var(--red);
+  fill: var(--moon);
 }
 
 .nt-label {
@@ -1397,6 +1522,7 @@ label {
   }
 }
 
+/* A board like #confirm-dialog. */
 #error-dialog {
   display: flex;
   flex-direction: column;
@@ -1410,9 +1536,10 @@ label {
   overflow-y: auto;
   padding: .5em 1em;
   color: var(--offwhite);
-  background: var(--noise), var(--dark);
-  border: 3px solid var(--darker);
-  box-shadow: 0 10px 24px rgb(from var(--darker) r g b / 70%);
+  background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px;
+  border: 2px solid var(--sky);
+  border-radius: 5px 12px 4px 10px / 10px 4px 12px 5px;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 70%);
   font-size: var(--font-size);
   z-index: 9999;
 
@@ -1433,7 +1560,7 @@ label {
   }
 }
 
-/* The way into a game, lit by the fire. */
+/* The main key, lit by the fire. */
 .fire-key {
   display: inline-flex;
   align-items: center;
@@ -1460,12 +1587,27 @@ label {
     filter: grayscale(1);
   }
 
-  /* Not lit: the harmless way out. */
+  /* Not a line of text, whose baseline would lift the icon off the label's centre. */
+  i.material-icons {
+    display: flex;
+  }
+
+  /* Not lit: the answers to a question that is not the way forward, the size of the lit key. */
   &.unlit {
     color: var(--offwhite);
     background: var(--dark);
     box-shadow: inset 0 -8px 14px rgb(0 0 0 / 25%);
+
+    /* The same step as .key, on the same fill. */
+    &:hover {
+      filter: brightness(1.25);
+    }
   }
+}
+
+/* The key that goes with a field. */
+:is(#player-name-input, .tabs form, #answers) .fire-key {
+  min-height: var(--field-height);
 }
 
 /* A small slate key, plainer than .btn, for the tools around the game. */
@@ -1522,6 +1664,14 @@ copy-button {
   text-align: center;
 }
 
+/* Boards take the whole column, rather than the width of their text, which leaves them as
+   small as "Yes" and different on every question. */
+#content:has(#choices, #sortableList, sortable-list) {
+  /* Less the column's margin and padding. */
+  width: calc(100% - 3em);
+  align-items: stretch;
+}
+
 #scoring-icon svg {
   height: 2em;
   width: 2em;
@@ -1533,13 +1683,22 @@ copy-button {
   flex-direction: column;
   gap: .5rem;
 
+  /* The same for every type of question, before and after the reveal, and the largest type
+     on the screen. */
   #question {
+    font-size: 1.3em;
+    font-weight: 600;
     text-align: center;
 
     img {
       border: 3px solid var(--darker);
       max-height: 40vh;
     }
+  }
+
+  /* A step below the question, whichever type of answers follows it. */
+  > :not(#question) {
+    font-size: .85em;
   }
 }
 
@@ -1552,8 +1711,10 @@ copy-button {
 
 #choices {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: 1fr;
+  /* Equal columns: a long word breaks rather than widening its own. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Tall enough for a thumb on a page held in the hand, and held off a short screen. */
+  grid-auto-rows: minmax(min(6em, 20vh), 1fr);
   gap: .3em;
   list-style-type: none;
   position: relative;
@@ -1597,6 +1758,7 @@ copy-button {
 #choices label {
   display: flex;
   padding: .75em;
+  overflow-wrap: anywhere;
 }
 
 /* Hand-cut boards, like the leaderboard's rows, each cut a little differently. */
@@ -1636,9 +1798,24 @@ copy-button {
     filter: brightness(2.1);
   }
 
-  /* The right answer catches the firelight, within its own board. */
-  &.correct::before {
-    box-shadow: inset 0 0 2em rgb(from var(--orange) r g b / 12%);
+  /* The right answer turns to paper, like the card that reveals it on the other questions. */
+  &.correct {
+    --track: rgb(from var(--sky) r g b / 20%);
+
+    border-color: transparent;
+    color: var(--sky);
+    text-shadow: none;
+    rotate: -.6deg;
+
+    &::before {
+      background: var(--noise), var(--paper);
+      border-color: transparent;
+      filter: none;
+    }
+
+    &::after {
+      display: none;
+    }
   }
 }
 
@@ -1684,7 +1861,7 @@ copy-button {
   right: 0;
   height: 10px;
   width: 100%;
-  background: linear-gradient(to bottom, var(--orange), var(--red));
+  background: linear-gradient(to bottom, var(--orange), var(--ember));
   animation: timer var(--duration) linear forwards;
   transform-origin: right center;
   box-shadow: 0 1px 0 var(--darker);
@@ -1858,18 +2035,33 @@ copy-button {
   margin: 0;
   padding-left: 0;
 
+  /* Hand-cut boards, like the answers of the other questions. */
   li {
+    --cut: 5px 8px 4px 9px / 8px 5px 9px 4px;
+
     display: flex;
     justify-content: space-between;
     gap: 1em;
-    background-color: var(--dark);
-    border: 3px solid var(--darker);
+    color: var(--moon);
+    /* The texture is held to the screen, so that it runs on from board to board. */
+    background: var(--dark) url("../img/texture/dirt.webp") 0 0 / 512px fixed;
+    border: 2px solid var(--sky);
+    border-radius: var(--cut);
     list-style-type: none;
     text-align: left;
+    text-shadow: 0 1px 3px #000;
     padding: .5em 1em;
     margin-block-end: .25em;
     cursor: grab;
-    box-shadow: 0 3px 0 var(--darker);
+    filter: drop-shadow(0 6px 8px rgb(0 0 0 / 70%));
+
+    &:nth-child(3n + 2) {
+      --cut: 8px 4px 9px 4px / 4px 9px 4px 8px;
+    }
+
+    &:nth-child(3n) {
+      --cut: 4px 9px 5px 7px / 9px 4px 8px 5px;
+    }
   }
 
   .sortable-ghost {
@@ -1888,6 +2080,8 @@ copy-button {
     border-color: transparent;
     border-radius: 6px 2px 8px 3px / 3px 7px 2px 6px;
     box-shadow: 0 6px 16px rgb(from var(--darker) r g b / 60%);
+    text-shadow: none;
+    filter: none;
     rotate: -.4deg;
 
     &:nth-child(even) {
@@ -1898,23 +2092,23 @@ copy-button {
 
 progress {
   border: none;
-  background-color: rgb(from var(--offwhite) r g b / 20%);
+  background-color: var(--track, rgb(from var(--offwhite) r g b / 20%));
   text-align: left;
   height: 8px;
   vertical-align: middle;
   container-type: inline-size;
 
   &::-webkit-progress-bar {
-    background-color: rgb(from var(--offwhite) r g b / 20%);
+    background-color: var(--track, rgb(from var(--offwhite) r g b / 20%));
   }
 
   &::-webkit-progress-value {
-    background: linear-gradient(90deg, var(--orange), var(--red));
+    background: linear-gradient(90deg, var(--orange), var(--ember));
     background-size: 100cqi;
   }
 
   &::-moz-progress-bar {
-    background: linear-gradient(90deg, var(--orange), var(--red));
+    background: linear-gradient(90deg, var(--orange), var(--ember));
     background-size: 100cqi;
   }
 }
@@ -1934,16 +2128,6 @@ progress {
     animation: 3s ease-in-out infinite alternate pendulum;
     transform-origin: top center;
   }
-
-  .shadow {
-    display: flex;
-    width: 90px;
-    height: 45px;
-    background: rgba(from var(--darker) r g b / 50%);
-    border-radius: 50%;
-    margin: .5em auto 0;
-    animation: 3s ease-in-out infinite alternate moveShade;
-  }
 }
 
 @keyframes pendulum {
@@ -1952,20 +2136,6 @@ progress {
   }
   to {
     transform: rotate(45deg);
-  }
-}
-
-@keyframes moveShade {
-  0% {
-    transform: translateX(30px) scale(1.4, .5);
-    filter: blur(8px);
-  }
-  50% {
-    filter: blur(5px);
-  }
-  100% {
-    transform: translateX(-30px) scale(1.4, .5);
-    filter: blur(8px);
   }
 }
 
@@ -2019,11 +2189,10 @@ progress {
   }
 }
 
-.error i.material-icons {
-  font-size: 2em;
-  margin-right: .2em;
-  vertical-align: middle;
-  color: var(--orange);
+.error,
+#name-error,
+#error-dialog h2 {
+  color: var(--red);
 }
 
 .tabs {
@@ -2069,21 +2238,10 @@ progress {
     z-index: 0;
   }
 
-  .fire-key {
-    font-weight: normal;
-  }
-
   /* Quiet like the lobby's instructions, with its answer on a strip of paper beside it. */
   .form-group {
     label {
       color: var(--grey);
-    }
-
-    input {
-      border: 0;
-      border-radius: 6px 2px 8px 3px / 3px 7px 2px 6px;
-      box-shadow: 0 6px 16px rgb(0 0 0 / 60%);
-      rotate: .6deg;
     }
   }
 
@@ -2130,12 +2288,13 @@ input::file-selector-button {
   border: 2px solid var(--sky);
   border-radius: 3px 7px 4px 8px / 6px 3px 7px 4px;
   padding: .5em;
-  font-weight: normal;
+  font-weight: 600;
   cursor: pointer;
 }
 
 input::file-selector-button {
   margin-right: .5em;
+  font-family: inherit;
 }
 
 #player-name-input {
@@ -2165,8 +2324,6 @@ input::file-selector-button {
 }
 
 #player-name {
-  border: none;
-
   /* The other text inputs have no focus ring, so it is set in full. */
   &:user-invalid:focus-visible {
     outline: 2px solid var(--red);
@@ -2178,8 +2335,8 @@ input::file-selector-button {
   flex-direction: column;
   gap: .5em;
 
-  /* What is left of the fire when the game is over. Low on its stage, under the smoke. */
-  #campfire.out {
+  /* The fire when the game is over. Low on its stage, under what rises from it. */
+  #campfire {
     flex: none;
     align-self: center;
     width: min(90vw, 50vh);
@@ -2188,49 +2345,45 @@ input::file-selector-button {
     .fire-scene {
       translate: 0 25%;
     }
+  }
 
-    /* The fire of a lobby that morphs into this keeps running, as morphing leaves <camp-fire>
-       be. Hidden rather than removed, as the smoke in the sky rises from where they are. */
-    :is(.fire-flames, .fire-sparks) {
-      visibility: hidden;
+  /* All that is left of it for the players who did not win. The fire of a lobby that morphs
+     into this keeps running, as morphing leaves <camp-fire> be. Hidden rather than removed,
+     as the smoke in the sky rises from where they are. */
+  #campfire.out :is(.fire-flames, .fire-sparks) {
+    visibility: hidden;
+  }
+
+  /* Roaring for the winner, half as high again as the fire of the lobby. */
+  #campfire.lit {
+    .fire-flames {
+      width: 60cqmin;
+      height: 76cqmin;
     }
-  }
 
-  i.material-icons {
-    font-size: 3em;
-  }
-}
+    .fire-sparks {
+      width: 76cqmin;
+      height: 110cqmin;
+    }
 
-/* White headings would vanish as the page pulses to white. */
-body:has(.winner) :is(h1, h2) {
-  color: inherit;
-}
-
-body:has(.winner) {
-  background-image: none;
-  animation: 3s ease-in-out infinite alternate pulsate;
-}
-
-@keyframes pulsate {
-  from {
-    background-color: var(--dark);
-    color: var(--offwhite);
-  }
-  to {
-    background-color: var(--offwhite);
-    color: var(--sky);
+    .fire-glow {
+      scale: 1.5;
+    }
   }
 }
 
 /* Decorative loops only; the spinner keeps turning, slower, via its own rule. */
 @media (prefers-reduced-motion: reduce) {
-  body:has(.winner),
   .waiting-icon svg,
-  .waiting-icon .shadow,
   .star,
   .comet,
   .ember,
-  .ember-halo {
+  .ember-halo,
+  #dawn,
+  #dawn::before,
+  #dawn::after,
+  #dawn i,
+  body:has(.final) .grain::before {
     animation: none;
   }
 
@@ -2261,11 +2414,15 @@ body:has(.winner) {
   box-shadow: 0 6px 16px rgb(0 0 0 / 60%);
   rotate: .6deg;
 
+  /* Written on the strip, which is the paper here. */
   input {
     flex: 1;
     min-width: 0;
+    height: auto;
     padding: 0;
     border: 0;
+    box-shadow: none;
+    rotate: none;
     color: var(--sky);
     background: transparent;
     font-size: calc(22 * var(--design-px));
@@ -2273,6 +2430,13 @@ body:has(.winner) {
   }
 }
 
+
+/* Neither answer is lit, so this ring alone shows which one Enter picks, even when the dialog
+   was opened with the mouse, for which :focus-visible draws none. */
+#confirm-dialog button:focus {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
 
 /* A board like the ones of the leaderboard and of the forms. */
 #confirm-dialog[open] {
@@ -2327,10 +2491,15 @@ body:has(.winner) {
   margin-left: .5rem;
 }
 
+/* A board like the ones of the leaderboard and of the forms. */
 #open-answers {
-  border: 3px solid var(--darker);
-  background: var(--noise), var(--dark);
-  box-shadow: 0 10px 24px rgb(from var(--darker) r g b / 70%);
+  /* A collapsed table cannot round its corners. */
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 2px solid var(--sky);
+  border-radius: 5px 12px 4px 10px / 10px 4px 12px 5px;
+  background: var(--panel) url("../img/texture/dirt.webp") 0 0 / 512px fixed;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 70%);
 
   caption {
     margin: 0;
@@ -2355,15 +2524,6 @@ i.material-icons {
     height: 1em;
   }
 
-  &.md-large svg {
-    width: inherit;
-    height: inherit;
-  }
-
-  &.md-dark svg {
-    fill: var(--sky);
-  }
-
   &.answer-mark svg {
     width: 3em;
     height: 3em;
@@ -2371,12 +2531,8 @@ i.material-icons {
   }
 }
 
-i.score-direction {
-  font-style: normal;
-  padding-left: .25em;
-}
-
 #rules {
+  margin-top: 2em;
   text-align: left;
   font-size: .8em;
 

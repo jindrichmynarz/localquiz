@@ -29,6 +29,7 @@
                  :persistence "nerozumnou vytrvalostí"
                  :using "s použitím"}
         :frequency "Četnost"
+        :fire-burned-for-you "Oheň hořel pro tebe."
         :game-over "Tato hra skončila"
         :incorrect "Nesprávně"
         :join-game "Hrát"
@@ -41,6 +42,7 @@
         :network-hint-pointer "Mapu lze posouvat tažením a přibližovat kolečkem myši"
         :next "Dále"
         :no-answer "Bez odpovědi"
+        :not-this-time "Tentokrát to nevyšlo."
         :no-js "Váš prohlížeč nepodporuje JavaScript!"
         :number-of-questions "Počet otázek"
         :or-open-link "nebo otevřete tento odkaz"
@@ -110,10 +112,10 @@
         :submit "Odeslat"
         :switch-lang "Přepni jazyk"
         :thanks-for-playing "Díky všem, kdo hráli!"
+        :thanks-for-the-fire "Díky za večer u ohně."
         :upload-questions "Nahrát otázky"
         :wait-for-answers "Čekáme na další odpovědi..."
         :wait-for-game-start "Počkej prosím na zahájení hry."
-        :you-lost "Prohrál jste, saláte."
         :you-won "Vítězství je tvé!"}
    :en {:and "and"
         :answer "Answer"
@@ -143,6 +145,7 @@
                  :persistence "unreasonable persistence"
                  :using "using"}
         :frequency "Frequency"
+        :fire-burned-for-you "The fire burned for you."
         :game-over "This game has ended"
         :incorrect "Incorrect"
         :join-game "Join game"
@@ -155,6 +158,7 @@
         :network-hint-pointer "Drag to move the map, scroll to zoom"
         :next "Next"
         :no-answer "No answer"
+        :not-this-time "Not this time."
         :no-js "Your browser does not support JavaScript!"
         :number-of-questions "Number of questions"
         :or-open-link "or open this link"
@@ -224,8 +228,8 @@
         :submit "Submit"
         :switch-lang "Switch the language"
         :thanks-for-playing "Thanks to everyone who played!"
+        :thanks-for-the-fire "Thanks for sitting by the fire."
         :upload-questions "Upload questions"
         :wait-for-answers "Waiting for other answers..."
         :wait-for-game-start "Please wait for the game to start."
-        :you-lost "You lost."
         :you-won "You won!"}})

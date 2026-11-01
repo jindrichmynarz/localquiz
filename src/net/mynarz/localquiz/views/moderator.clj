@@ -128,6 +128,7 @@
                        (apply max))
         final-leaderboard? (= questions-answered questions-total)]
     [:div#leaderboard
+     {:class (when final-leaderboard? "final")}
      [:table
       [:caption
        [:div (tr [:question/progress] [questions-answered questions-total])]
@@ -148,8 +149,6 @@
          [:tr
           [:td index]
           [:td player-name
-           (when (pos? score)
-             [:i.score-direction "↑"])
            (when (and final-leaderboard? winner?)
              [:i.material-icons (svg "emoji_events.svg")])]
           [:td
@@ -163,12 +162,12 @@
    (next-button tr
                 (str "@post('/next/" game-id "')")
                 :next
-                [:i.material-icons.md-large (svg "arrow_circle_right.svg")]))
+                [:i.material-icons (svg "arrow_circle_right.svg")]))
   ([tr
     ^String next-action
     ^clojure.lang.Keyword label-key
     icon]
-   [:button.btn.btn-primary.btn-next
+   [:button.fire-key
     {:data-on:click next-action
      ;; Enter on a focused control, such as a dialog button, is that control's own.
      :data-on:keydown__window (str "evt.key === 'Enter' && evt.target === document.body && "
@@ -416,5 +415,5 @@
         (next-button tr
                      "$_confirmDialog.showModal()"
                      :end-game
-                     [:i.material-icons.md-dark (svg "cancel.svg")])
+                     [:i.material-icons (svg "cancel.svg")])
         (next-button tr game-id))]]))

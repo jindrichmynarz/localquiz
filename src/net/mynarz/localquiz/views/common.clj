@@ -82,7 +82,7 @@
      :data-ignore-morph ""}
     [:h2 (tr [question])]
     [:p
-     [:button.fire-key
+     [:button.fire-key.unlit
       {:data-on:click action}
       (tr [:question.yesno/yes])]
      ;; The harmless answer gets the focus, so that Enter does not run the action.
@@ -126,7 +126,7 @@
         :data-text "$error"}]
    [:pre {:data-show "$errorPreformatted"
           :data-text "$error"}]
-   [:button.btn.btn-primary
+   [:button.fire-key
     {:data-on:click "$error = ''; $errorPreformatted = false"}
     (tr [:close])]])
 
@@ -197,6 +197,8 @@
        [:i.comet
         {:style (format "left:%d%%;--y:%d;rotate:%ddeg;animation-duration:%ds;animation-delay:%ds"
                         left y angle duration delay)}])
+     [:div#dawn
+      [:i]]
      (svg "horizon.svg")
      [:div.grain]]))
 
@@ -338,7 +340,7 @@
 (defn submit-button
   [tr
    ^String game-id]
-  [:button.btn.btn-primary#submit
+  [:button.fire-key#submit
    {:data-on:click (answer-handler game-id)}
    (tr [:submit])])
 

@@ -8,8 +8,7 @@
 
 (def waiting-icon
   [:div.waiting-icon
-   [:i.material-icons (svg "hourglass_empty.svg")]
-   [:div.shadow]])
+   [:i.material-icons (svg "hourglass_empty.svg")]])
 
 (defn exit-game
   [tr
@@ -48,7 +47,7 @@
         :data-show "$nameError"
         :data-text "$nameError"}]
       views/lang-input
-      [:button.btn.btn-primary#submit
+      [:button.fire-key#submit
        {:data-attr:aria-disabled "!!$nameError"
         :data-attr:disabled "!!$nameError"
         :data-on:click (long-str "$_controller.abort();"
@@ -62,6 +61,25 @@
   [:div#rules
    (tr [:rules] [(:question-time-out config)])])
 
+(defn- fire-verdict
+  "The fire in a `state` of `views/fire-scene`, :lit or :out, over `heading` and `line`.
+  `final?` is for the result of the game, which is at dawn, as is the final leaderboard."
+  [^Boolean final?
+   state
+   ^String heading
+   ^String line]
+  [:section#content
+   [:canvas.fire-sky
+    {:aria-hidden "true"
+     :data-ignore-morph ""}]
+   [:div.verdict
+    {:class (when final? "final")}
+    [:div#campfire
+     {:class (name state)}
+     (views/fire-scene state)]
+    [:h2 heading]
+    [:p line]]])
+
 (defmethod views/game-view [:player nil]
   [{:tempura/keys [tr]
     :as request}]
@@ -69,15 +87,10 @@
     request
     ;; Where players land when the moderator ends the game, and where an old or mistyped
     ;; link leads, so it thanks the players without claiming the reader was one.
-    [:section#content
-     [:canvas.fire-sky
-      {:aria-hidden "true"
-       :data-ignore-morph ""}]
-     [:div.verdict
-      [:div#campfire.out
-       (views/fire-scene :out)]
-      [:h2 (tr [:game-over])]
-      [:p (tr [:thanks-for-playing])]]]))
+    (fire-verdict false
+                  :out
+                  (tr [:game-over])
+                  (tr [:thanks-for-playing]))))
 
 (defmethod views/game-view [:player :new]
   [{{:keys [game-id]} :path-params
@@ -150,7 +163,7 @@
           {:data-show "$error"
            :data-text "$error"}]
          [waiting-icon
-          [:h2 (tr [:wait-for-answers])]]]
+          [:p.hint (tr [:wait-for-answers])]]]
         (shared-question-section request asked-at)))))
 
 (defmethod views/game-view [:player :show-answers]
@@ -181,19 +194,25 @@
   (views/morph-body
     request
     (exit-game tr game-id)
-    [:section#content
-     (if (game/all-questions-answered? game-id)
-       (if ((game/winners game-id) player-id)
-         [:div.verdict.winner
-          [:i.material-icons (svg "emoji_events.svg")]
-          [:h2 (tr [:you-won])]]
-         [:div.verdict
-          [:i.material-icons (svg "sentiment_very_dissatisfied.svg")]
-          [:h2 (tr [:you-lost])]])
+    (cond
+      (not (game/all-questions-answered? game-id))
+      [:section#content
        (if-let [{:answer/keys [score]} (game/player-answer game-id player-id)]
          [:h2 (format "+ %s %s"
                       (decimal-format score)
                       (tr [(cond (= score 1.0) :point
                                  (>= score 2.0) :points
                                  :else :point-fraction)]))]
-         [:h2 (tr [:no-answer])]))]))
+         [:h2 (tr [:no-answer])])]
+
+      ((game/winners game-id) player-id)
+      (fire-verdict true
+                    :lit
+                    (tr [:you-won])
+                    (tr [:fire-burned-for-you]))
+
+      :else
+      (fire-verdict true
+                    :out
+                    (tr [:not-this-time])
+                    (tr [:thanks-for-the-fire])))))
