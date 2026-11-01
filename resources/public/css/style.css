@@ -518,7 +518,7 @@ body:has(.winner) #night {
   --sway: 0px;
   --firelight: 0;
   /* Discs touch at any number of players, the nearest ones just overlapping. */
-  --seat: min(20cqmin, 220cqmin / var(--players));
+  --seat: min(26cqmin, 220cqmin / var(--players));
   /* A small group sits closer in, and reaches the full ring at eight players. */
   --ring: min(1, .6 + .05 * var(--players));
   --orbit: 1;
@@ -566,7 +566,7 @@ body:has(.winner) #night {
       inset 0 0 18px rgb(0 0 0 / 65%),
       0 8px 18px rgb(0 0 0 / 70%);
     /* Shrinks along with the discs of a crowded fire. */
-    font-size: min(calc(21 * var(--design-px)), calc(var(--seat) * .165));
+    font-size: min(calc(30 * var(--design-px)), calc(var(--seat) * .2));
     text-align: center;
     animation: 1s ease-in fade-in;
     /* The seats change as players join, and people follow their name to its new place. */
@@ -610,7 +610,7 @@ body:has(.winner) #night {
 
 /* Two staggered rings, taking turns, which keeps the discs larger than one ring could. */
 #campfire.crowded {
-  --seat: calc(3.5cqmin + 175cqmin / var(--slots));
+  --seat: calc(5cqmin + 185cqmin / var(--slots));
 
   li:nth-child(even) {
     --orbit: .72;
@@ -667,19 +667,28 @@ camp-fire canvas {
   overflow: visible;
 }
 
-/* Dark until the fire lights them, with one ember left in the ashes. */
+/* Dark and without embers until the fire lights them. */
 .fire-logs > * {
   transition: filter 2s ease-out;
 }
 
 #campfire:not(.lit, .out) {
-  .fire-logs > :not(.last-ember) {
+  .fire-logs > * {
     filter: brightness(.8) saturate(.45);
   }
 
-  :is(.ember, .ember-halo):not(.last-ember) {
+  :is(.ember, .ember-halo) {
     visibility: hidden;
   }
+}
+
+/* The logs catch the light of the flames, which the seats and the ground do too. */
+:is(.log-light, .crack-light) {
+  opacity: calc(var(--firelight) * (.3 + .7 * var(--fire)));
+}
+
+.log-light {
+  translate: calc(var(--sway) * .6) 0;
 }
 
 .ember {

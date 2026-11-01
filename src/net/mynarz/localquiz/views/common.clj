@@ -118,7 +118,9 @@
    {:aria-live "assertive"
     :data-on:keydown__window "evt.key === 'Escape' && ($error = '', $errorPreformatted = false)"
     :data-show "$error"
-    :role "dialog"}
+    :role "dialog"
+    ;; Hidden until Datastar loads, or the page would open with the dialog showing.
+    :style "display: none"}
    [:h2 (tr [:errors/errors])]
    [:p {:data-show "!$errorPreformatted"
         :data-text "$error"}]

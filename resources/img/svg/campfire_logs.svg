@@ -5,6 +5,10 @@
 <linearGradient id="barkB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#693c19"></stop><stop offset="0.4" stop-color="#1D140D"></stop><stop offset="1" stop-color="#080504"></stop></linearGradient>
 <linearGradient id="char" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgba(0, 0, 0, 0)"></stop><stop offset="0.3" stop-color="rgba(5, 3, 2, 0.85)"></stop><stop offset="0.7" stop-color="rgba(5, 3, 2, 0.85)"></stop><stop offset="1" stop-color="rgba(0, 0, 0, 0)"></stop></linearGradient>
 <filter id="emberBlur" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="3.2"></feGaussianBlur></filter><filter id="bedBlur" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="7"></feGaussianBlur></filter>
+<radialGradient id="logLight" cx="50%" cy="0" r="75%"><stop offset="0" stop-color="#ffc27a" stop-opacity="0.85"></stop><stop offset="0.35" stop-color="#d9772b" stop-opacity="0.5"></stop><stop offset="0.75" stop-color="#d9772b" stop-opacity="0"></stop></radialGradient>
+<clipPath id="logA"><path d="M14 33 C40 30.5 120 30 158 32.5 L159 45 C120 47.5 40 47 15 46.5 Z"></path></clipPath>
+<clipPath id="logB"><path d="M8 38 C38 36 116 35.5 164 37.5 L165 51.5 C116 53.5 38 53.5 9 52.5 Z"></path></clipPath>
+<clipPath id="logC"><path d="M70 37 C84 36.2 104 36.3 118 37 L118.6 45.5 C104 46.2 84 46.2 70.4 45.8 Z"></path></clipPath>
 </defs>
 <ellipse cx="88" cy="52" rx="66" ry="12" fill="rgba(0, 0, 0, 0.6)"></ellipse>
 <ellipse cx="88" cy="46" rx="62" ry="15" fill="#d9772b54" filter="url(#bedBlur)" class="ember-halo" style="animation-duration: 6.5s"></ellipse>
@@ -14,6 +18,8 @@
 <path d="M58 31.3 C75 30.6 104 30.6 122 31.2 L123 46.4 C104 47 75 47 58 46.8 Z" fill="url(#char)"></path>
 <path d="M22 36 C48 35 70 36.5 92 35.2 M30 41 C55 40.2 80 42 104 40.6 M112 36.4 C128 35.6 140 36.8 152 36 M118 42.2 C132 41.6 144 42.6 154 42" stroke="#0A0705" stroke-width="1.1" fill="none" stroke-linecap="round"></path>
 <path d="M66 38.5 l6 -1.2 l5 1.6 l7 -1 M86 42 l5 .8 l6 -1.4 l6 .9 M95 36.2 l4 1.1 l7 -.8" stroke="#d9772bd6" stroke-width="1.3" fill="none" stroke-linecap="round" class="ember" style="animation-duration: 4.6s; animation-delay: -1.2s"></path>
+<g clip-path="url(#logA)"><rect class="log-light" x="0" y="30" width="176" height="18" fill="url(#logLight)"></rect></g>
+<path class="crack-light" d="M66 38.5 l6 -1.2 l5 1.6 l7 -1 M86 42 l5 .8 l6 -1.4 l6 .9 M95 36.2 l4 1.1 l7 -.8" stroke="#ffb45e" stroke-width="1.3" fill="none" stroke-linecap="round"></path>
 <ellipse cx="158.5" cy="38.8" rx="3.4" ry="6.3" fill="#2B1D13"></ellipse>
 <ellipse cx="158.5" cy="38.8" rx="2.2" ry="4.2" fill="none" stroke="#160E09" stroke-width="0.8"></ellipse>
 <ellipse cx="158.5" cy="38.8" rx="1" ry="1.9" fill="none" stroke="#160E09" stroke-width="0.7"></ellipse>
@@ -23,6 +29,8 @@
 <path d="M60 36.3 C76 35.8 102 35.8 118 36.2 L119 52.8 C102 53.4 76 53.4 60 53 Z" fill="url(#char)"></path>
 <path d="M16 42 C42 41 66 42.6 90 41.2 M24 47.5 C50 46.6 78 48.4 102 47 M118 42.4 C136 41.6 150 43 160 42.2 M112 48 C130 47.4 146 48.6 160 48" stroke="#070504" stroke-width="1.1" fill="none" stroke-linecap="round"></path>
 <path d="M68 44 l5 1.3 l6 -1.5 l5 1.1 M90 39.6 l6 1 l4 -1.2 M96 48.5 l6 -.9 l6 1.2" stroke="#d9772bd6" stroke-width="1.3" fill="none" stroke-linecap="round" class="ember" style="animation-duration: 5.8s; animation-delay: -3.4s"></path>
+<g clip-path="url(#logB)"><rect class="log-light" x="-8" y="35" width="192" height="19" fill="url(#logLight)"></rect></g>
+<path class="crack-light" d="M68 44 l5 1.3 l6 -1.5 l5 1.1 M90 39.6 l6 1 l4 -1.2 M96 48.5 l6 -.9 l6 1.2" stroke="#ffb45e" stroke-width="1.3" fill="none" stroke-linecap="round"></path>
 <ellipse cx="8.6" cy="45.2" rx="3.6" ry="7.1" fill="#2E2015"></ellipse>
 <ellipse cx="8.6" cy="45.2" rx="2.4" ry="4.8" fill="none" stroke="#170F0A" stroke-width="0.8"></ellipse>
 <ellipse cx="8.6" cy="45.2" rx="1.1" ry="2.2" fill="none" stroke="#170F0A" stroke-width="0.7"></ellipse>
@@ -32,6 +40,8 @@
 <path d="M70 37 C84 36.2 104 36.3 118 37 L118.6 45.5 C104 46.2 84 46.2 70.4 45.8 Z" fill="url(#barkA)"></path>
 <path d="M70 37 C84 36.2 100 36.3 112 36.8 L112.4 45.9 C100 46.3 84 46.2 70.4 45.8 Z" fill="url(#char)"></path>
 <path d="M78 41 l5 1 l5 -1.2 l6 .9" stroke="#d9772bd6" stroke-width="1.2" fill="none" stroke-linecap="round" class="ember" style="animation-duration: 5.2s; animation-delay: -0.4s"></path>
+<g clip-path="url(#logC)"><rect class="log-light" x="56" y="36" width="78" height="10" fill="url(#logLight)"></rect></g>
+<path class="crack-light" d="M78 41 l5 1 l5 -1.2 l6 .9" stroke="#ffb45e" stroke-width="1.2" fill="none" stroke-linecap="round"></path>
 <ellipse cx="118.3" cy="41.2" rx="2.4" ry="4.3" fill="#2B1D13"></ellipse>
 </g>
 <circle cx="56" cy="47" r="1.6" fill="#1A110B"></circle>
@@ -62,7 +72,7 @@
 <circle class="ember-halo" style="animation-delay:-2.8s" cx="114" cy="48.5" r="4.4" fill="#d9772bc9" filter="url(#emberBlur)" opacity="0.5"></circle>
 <circle class="ember-halo" style="animation-delay:-3.5s" cx="74" cy="48" r="4.8" fill="#d9772bc9" filter="url(#emberBlur)" opacity="0.5"></circle>
 <circle class="ember-halo" style="animation-delay:-4.2s" cx="96" cy="49.5" r="5.8" fill="#d9772bc9" filter="url(#emberBlur)" opacity="0.5"></circle>
-<circle class="ember-halo last-ember" style="animation-delay:-4.9s" cx="90.0" cy="49.3" r="6.1" fill="#d9772bc9" filter="url(#emberBlur)" opacity="0.5"></circle>
+<circle class="ember-halo" style="animation-delay:-4.9s" cx="90.0" cy="49.3" r="6.1" fill="#d9772bc9" filter="url(#emberBlur)" opacity="0.5"></circle>
 <circle class="ember-halo" style="animation-delay:-0.6s" cx="87.7" cy="45.9" r="5.1" fill="#d9772bc9" filter="url(#emberBlur)" opacity="0.5"></circle>
 <circle class="ember-halo" style="animation-delay:-1.3s" cx="118.8" cy="50.2" r="5.1" fill="#d9772bc9" filter="url(#emberBlur)" opacity="0.5"></circle>
 <circle class="ember-halo" style="animation-delay:-2.0s" cx="60.4" cy="46.0" r="6.5" fill="#d9772bc9" filter="url(#emberBlur)" opacity="0.5"></circle>
@@ -82,7 +92,7 @@
 <circle class="ember" style="animation-delay:-2.8s" cx="114" cy="48.5" r="1.3" fill="#d9772bc9" opacity="0.8"></circle>
 <circle class="ember" style="animation-delay:-3.5s" cx="74" cy="48" r="1.4" fill="#d9772bc9" opacity="0.8"></circle>
 <circle class="ember" style="animation-delay:-4.2s" cx="96" cy="49.5" r="1.7" fill="#d9772bc9" opacity="0.8"></circle>
-<circle class="ember last-ember" style="animation-delay:-4.9s" cx="90.0" cy="49.3" r="1.8" fill="#d9772bc9" opacity="0.8"></circle>
+<circle class="ember" style="animation-delay:-4.9s" cx="90.0" cy="49.3" r="1.8" fill="#d9772bc9" opacity="0.8"></circle>
 <circle class="ember" style="animation-delay:-0.6s" cx="87.7" cy="45.9" r="1.5" fill="#d9772bc9" opacity="0.8"></circle>
 <circle class="ember" style="animation-delay:-1.3s" cx="118.8" cy="50.2" r="1.5" fill="#d9772bc9" opacity="0.8"></circle>
 <circle class="ember" style="animation-delay:-2.0s" cx="60.4" cy="46.0" r="1.9" fill="#d9772bc9" opacity="0.8"></circle>
