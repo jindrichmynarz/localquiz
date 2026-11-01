@@ -82,11 +82,11 @@
      :data-ignore-morph ""}
     [:h2 (tr [question])]
     [:p
-     [:button.btn.btn-danger
+     [:button.fire-key
       {:data-on:click action}
       (tr [:question.yesno/yes])]
      ;; The harmless answer gets the focus, so that Enter does not run the action.
-     [:button.btn
+     [:button.fire-key.unlit
       {:autofocus true
        :data-on:click "$_confirmDialog.close()"}
       (tr [:question.yesno/no])]]]

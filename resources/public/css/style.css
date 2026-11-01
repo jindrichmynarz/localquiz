@@ -189,8 +189,8 @@ header {
     display: flex;
   }
 
-  /* Flat in the menu, but not in the dialog that lives in it. */
-  .btn:not(dialog .btn) {
+  /* Flat in the menu. */
+  .btn {
     display: flex;
     align-items: center;
     transform: none;
@@ -927,26 +927,6 @@ select {
   }
 }
 
-/* For actions that cannot be undone. */
-.btn-danger {
-  --edge: color-mix(in oklab, var(--red), black 35%);
-  color: var(--sky);
-  background-color: var(--red);
-  border-color: var(--edge);
-
-  &::before, &::after {
-    border-color: var(--edge);
-  }
-
-  &::before {
-    background-color: var(--red);
-  }
-
-  &::after {
-    background-color: var(--edge);
-  }
-}
-
 /* A ring that turns while something slow runs, e.g. inside a button. */
 .spinner {
   display: inline-block;
@@ -1478,6 +1458,13 @@ label {
   &:disabled {
     cursor: inherit;
     filter: grayscale(1);
+  }
+
+  /* Not lit: the harmless way out. */
+  &.unlit {
+    color: var(--offwhite);
+    background: var(--dark);
+    box-shadow: inset 0 -8px 14px rgb(0 0 0 / 25%);
   }
 }
 
