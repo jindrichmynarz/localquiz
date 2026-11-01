@@ -131,10 +131,12 @@
      {:class (when final-leaderboard? "final")}
      [:table
       [:caption
-       [:div (tr [:question/progress] [questions-answered questions-total])]
-       [:progress
-        {:max questions-total
-         :value questions-answered}]]
+       (if final-leaderboard?
+         [:div (tr [:final-results])]
+         (list [:div (tr [:question/progress] [questions-answered questions-total])]
+               [:progress
+                {:max questions-total
+                 :value questions-answered}]))]
       [:thead
        [:tr
         [:th]
@@ -147,10 +149,9 @@
                                        (decimal-format (fraction-of (- total-score score) max-score))
                                        (decimal-format (fraction-of total-score max-score)))]]
          [:tr
+          {:class (when (and final-leaderboard? winner?) "winner")}
           [:td index]
-          [:td player-name
-           (when (and final-leaderboard? winner?)
-             [:i.material-icons (svg "emoji_events.svg")])]
+          [:td player-name]
           [:td
            {:style score-style}
            [:span.score-bar]]
@@ -415,5 +416,5 @@
         (next-button tr
                      "$_confirmDialog.showModal()"
                      :end-game
-                     [:i.material-icons (svg "cancel.svg")])
+                     nil)
         (next-button tr game-id))]]))

@@ -1934,6 +1934,17 @@ copy-button {
         text-align: right;
         font-variant-numeric: tabular-nums;
       }
+
+      /* Firelit edges, like the seats in the lobby. On the row, as the board is one piece. */
+      &.winner {
+        filter:
+          drop-shadow(0 0 7px rgb(from var(--orange) r g b / 60%))
+          drop-shadow(0 6px 8px rgb(0 0 0 / 70%));
+
+        td {
+          border-color: var(--orange);
+        }
+      }
     }
 
     caption {
@@ -2334,6 +2345,11 @@ input::file-selector-button {
   display: flex;
   flex-direction: column;
   gap: .5em;
+
+  /* Above the fire, whose layers are positioned. */
+  h2 {
+    position: relative;
+  }
 
   /* The fire when the game is over. Low on its stage, under what rises from it. */
   #campfire {

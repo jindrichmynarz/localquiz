@@ -1,6 +1,10 @@
 (ns net.mynarz.localquiz.views.moderator-test
-  (:require [net.mynarz.localquiz.views.moderator :as moderator]
-            [clojure.test :refer [deftest is testing]]))
+  (:require [net.mynarz.localquiz.game :as game]
+            [net.mynarz.localquiz.test-fixtures :as fixtures]
+            [net.mynarz.localquiz.views.moderator :as moderator]
+            [clojure.string :as string]
+            [clojure.test :refer [deftest is testing]]
+            [dev.onionpancakes.chassis.core :as h]))
 
 (deftest seats
   (testing "Names with the same hash get different ids, which are valid in the DOM."
@@ -29,3 +33,23 @@
       (is (< (abs (reduce + (map :sin seats))) 0.01))))
   (testing "No players, no places."
     (is (empty? (moderator/seats [])))))
+
+(deftest final-leaderboard
+  (with-redefs [game/leaderboard (constantly [{:index 1
+                                               :player-name "Ada"
+                                               :score 1.0
+                                               :total-score 1.0
+                                               :winner? true}])]
+    (let [render (fn [questions-left]
+                   (with-redefs [game/game-progress (constantly {:game/questions questions-left
+                                                                 :game/questions-total 2})]
+                     (h/html (moderator/leaderboard fixtures/tr "game"))))]
+      (testing "The last board is titled rather than counted."
+        (is (string/includes? (render 0) (fixtures/tr [:final-results])))
+        (is (not (string/includes? (render 0) "<progress"))))
+      (testing "The others show the progress of the game."
+        (is (string/includes? (render 1) "<progress"))
+        (is (not (string/includes? (render 1) (fixtures/tr [:final-results])))))
+      (testing "Only the last board marks the winner."
+        (is (string/includes? (render 0) "class=\"winner\""))
+        (is (not (string/includes? (render 1) "class=\"winner\"")))))))

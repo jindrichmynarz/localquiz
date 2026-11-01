@@ -81,7 +81,7 @@
     :as request}]
   (views/morph-body
     request
-    ;; Where players land when the moderator ends the game, still at dawn, and where an old
+    ;; Where everyone lands when the moderator ends the game, still at dawn, and where an old
     ;; or mistyped link leads, so it does not claim the reader was a player.
     (fire-verdict :out
                   (tr [:game-over]))))

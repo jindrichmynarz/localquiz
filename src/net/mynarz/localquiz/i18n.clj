@@ -28,8 +28,9 @@
                  :with "s"
                  :persistence "nerozumnou vytrvalostí"
                  :using "s použitím"}
+        :final-results "Finální výsledky"
         :frequency "Četnost"
-        :game-over "Tato hra skončila"
+        :game-over "Hra je u konce."
         :incorrect "Nesprávně"
         :join-game "Hrát"
         :majority "Většina"
@@ -141,8 +142,9 @@
                  :with "with"
                  :persistence "unreasonable persistence"
                  :using "using"}
+        :final-results "Final results"
         :frequency "Frequency"
-        :game-over "This game has ended"
+        :game-over "The game is over."
         :incorrect "Incorrect"
         :join-game "Join game"
         :majority "Majority"
@@ -226,4 +228,4 @@
         :upload-questions "Upload questions"
         :wait-for-answers "Waiting for other answers..."
         :wait-for-game-start "Please wait for the game to start."
-        :you-won "You won!"}})
+        :you-won "Victory is yours!"}})
