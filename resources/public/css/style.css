@@ -896,8 +896,9 @@ body:has(.final) {
                                 rgb(0 0 0 / 40%) 58%,
                                 rgb(0 0 0 / 15%) 72%,
                                 transparent 90%);
-    opacity: .4;
-    filter: blur(14px) brightness(1.1);
+    /* Faint, as the page's content stands in it. */
+    opacity: .22;
+    filter: blur(14px) brightness(1.05);
     animation-direction: reverse;
   }
 
