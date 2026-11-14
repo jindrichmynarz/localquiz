@@ -61,18 +61,21 @@
    (tr [:rules] [(:question-time-out config)])])
 
 (defn- fire-verdict
-  "The fire gone out, over `heading`. At dawn, as is the final leaderboard, which `.final`
-  brings on."
-  [^String heading]
-  [:section#content
-   [:canvas.fire-sky
-    {:aria-hidden "true"
-     :data-ignore-morph ""}]
-   [:div.verdict.final
-    [:div#campfire
-     {:class "out"}
-     (views/fire-scene :out)]
-    [:h2 heading]]])
+  "The fire gone out, over `heading`, which glows for the `winner?`. At dawn, as is the
+  final leaderboard, which `.final` brings on."
+  ([^String heading]
+   (fire-verdict heading false))
+  ([^String heading
+    ^Boolean winner?]
+   [:section#content
+    [:canvas.fire-sky
+     {:aria-hidden "true"
+      :data-ignore-morph ""}]
+    [:div.verdict.final
+     [:div#campfire
+      {:class "out"}
+      (views/fire-scene :out)]
+     [:h2 {:class (when winner? "winner")} heading]]]))
 
 (defmethod views/game-view [:player nil]
   [{:tempura/keys [tr]
@@ -111,6 +114,7 @@
   [tr
    ^String game-id
    question]
+  ;; No timer, unlike the moderator's view: players watch the countdown on the projector.
   [:section#content
    [:h2.error
     {:data-show "$error"
@@ -169,10 +173,13 @@
            :as answer} (game/player-answer game-id player-id)]
       [:section#content
        [:h2
-        (cond (some? correct?) [:i.material-icons.answer-mark
-                                (if correct?
-                                  (svg "check.svg")
-                                  (svg "close.svg"))]
+        {:class (when (some? correct?) (if correct? "answer-right" "answer-wrong"))}
+        (cond (some? correct?) (list [:i.material-icons.answer-mark
+                                      {:aria-hidden "true"}
+                                      (if correct?
+                                        (svg "check.svg")
+                                        (svg "close.svg"))]
+                                     (tr [(if correct? :correct :incorrect)]))
               (some? consensus) (tr [:consensus-evaluation] [(decimal-format consensus)])
               (some? majority) (tr [(if majority :majority-gained :majority-failed)])
               (nil? answer) (tr [:no-answer]))]])))
@@ -189,15 +196,15 @@
       (not (game/all-questions-answered? game-id))
       [:section#content
        (if-let [{:answer/keys [score]} (game/player-answer game-id player-id)]
-         [:h2 (format "+ %s %s"
-                      (decimal-format score)
-                      (tr [(cond (= score 1.0) :point
-                                 (>= score 2.0) :points
-                                 :else :point-fraction)]))]
+         [:h2.points
+          [:span.points-value (str "+" (decimal-format score))]
+          [:span.points-unit (tr [(cond (= score 1.0) :point
+                                        (>= score 2.0) :points
+                                        :else :point-fraction)])]]
          [:h2 (tr [:no-answer])])]
 
       ((game/winners game-id) player-id)
-      (fire-verdict (tr [:you-won]))
+      (fire-verdict (tr [:you-won]) true)
 
       :else
       (fire-verdict (tr [:not-this-time])))))

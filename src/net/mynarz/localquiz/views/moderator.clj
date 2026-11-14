@@ -14,6 +14,8 @@
    ^String game-id]
   (let [{:keys [total answered]} (game/answer-progress game-id)]
     [:label#answer-progress
+     ;; Lit once everyone has answered, which is when the moderator moves on.
+     {:class (when (and (pos? total) (= answered total)) "all")}
      [:span.chip-label (tr [:players-answered])]
      [:progress
       {:max total
@@ -155,7 +157,11 @@
           [:td
            {:style score-style}
            [:span.score-bar]]
-          [:td (score-format total-score)]])]]]))
+          [:td
+           (score-format total-score)
+           ;; This round's points, which the bar grew by.
+           (when (pos? score)
+             [:span.gain (str "+" (decimal-format score))])]])]]]))
 
 (defn next-button
   ([tr

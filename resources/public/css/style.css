@@ -170,6 +170,12 @@ header {
   #answer-progress {
     justify-self: end;
     font-variant-numeric: tabular-nums;
+
+    /* Everyone has answered: firelit, like the winner's row. */
+    &.all {
+      color: var(--orange);
+      text-shadow: 0 0 12px rgb(from var(--orange) r g b / 45%);
+    }
   }
 
   .chip-label {
@@ -1068,9 +1074,6 @@ input[type="text"], input[type="number"] {
   height: var(--field-height);
   padding: .5em;
   font-size: var(--font-size);
-  &:focus-visible {
-    outline: none;
-  }
 }
 
 .autocomplete {
@@ -1869,10 +1872,22 @@ copy-button {
   }
 
   .answer-frequency {
-    display: flex;
-    height: 3px;
-    width: 100%;
     margin-top: auto;
+  }
+}
+
+/* How many gave an answer, a bar and a count, to be read off the wall. */
+.answer-frequency {
+  display: flex;
+  align-items: center;
+  gap: .5ch;
+  width: 100%;
+  font-size: .8em;
+  font-variant-numeric: tabular-nums;
+
+  progress {
+    flex: 1;
+    height: .5em;
   }
 }
 
@@ -1900,10 +1915,27 @@ copy-button {
   }
 }
 
+.percent-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75em;
+}
+
+/* The answer, written on a card like the one that reveals the right figure. */
 .percentage {
-  padding: 0 .25em;
-  display: inline-block;
-  width: 3em;
+  box-sizing: border-box;
+  width: 5ch;
+  padding: .1em .25em;
+  font-size: 2em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--sky);
+  background: var(--noise), var(--paper);
+  border-radius: 3px 8px 2px 10px / 9px 2px 7px 3px;
+  box-shadow: 0 10px 24px rgb(from var(--darker) r g b / 70%);
+  rotate: -.6deg;
 }
 
 .range-input {
@@ -2043,7 +2075,13 @@ copy-button {
     }
 
     td:has(.score-bar) {
-      width: calc(var(--score) * 100px);
+      width: calc(var(--score) * 8em);
+    }
+
+    .gain {
+      margin-left: .5ch;
+      font-size: .7em;
+      color: var(--muted);
     }
 
     .score-bar {
@@ -2062,10 +2100,10 @@ copy-button {
 
 @keyframes grow {
   from {
-    width: calc(var(--former-score) * 100px);
+    width: calc(var(--former-score) * 8em);
   }
   to {
-    width: calc(var(--score) * 100px);
+    width: calc(var(--score) * 8em);
   }
 }
 
@@ -2364,7 +2402,6 @@ input::file-selector-button {
 }
 
 #player-name {
-  /* The other text inputs have no focus ring, so it is set in full. */
   &:user-invalid:focus-visible {
     outline: 2px solid var(--red);
   }
@@ -2378,6 +2415,12 @@ input::file-selector-button {
   /* Above the fire, whose layers are positioned. */
   h2 {
     position: relative;
+  }
+
+  /* Lit by the fire that burned for them. */
+  h2.winner {
+    color: var(--orange);
+    text-shadow: 0 2px 0 #000, 0 0 24px rgb(from var(--orange) r g b / 55%);
   }
 
   /* The fire when the game is over. Low on its stage, under what rises from it. */
@@ -2570,4 +2613,37 @@ i.material-icons {
   margin-top: 2em;
   text-align: left;
   font-size: .8em;
+}
+
+/* The player's verdict on a question: the mark over its word, firelit when right. */
+h2:is(.answer-right, .answer-wrong) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h2.answer-right {
+  color: var(--orange);
+}
+
+h2.answer-wrong {
+  color: var(--muted);
+}
+
+/* The points a question earned, the largest thing on the screen. */
+h2.points {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .points-value {
+    font-size: 3em;
+    color: var(--orange);
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 0 #000, 0 0 24px rgb(from var(--orange) r g b / 55%);
+  }
+
+  .points-unit {
+    color: var(--muted);
+  }
 }

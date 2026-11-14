@@ -353,8 +353,8 @@
    ^Boolean correct?]
   (when (and answer-revealed? correct?)
     [:i.material-icons
-     {:aria-hidden "true"
-      :aria-label (tr [:correct])}
+     {:aria-label (tr [:correct])
+      :role "img"}
      (svg "check.svg")]))
 
 (defn note-view
@@ -372,15 +372,24 @@
   [coll]
   (map-indexed (fn [index item] (assoc item :index index)) coll))
 
+(defn- frequency-bar
+  "How many of `answer-count` answers were given `frequency` times, as a bar and a count,
+  both large enough to read off a projection."
+  [answer-count
+   frequency]
+  [:div.answer-frequency
+   [:progress
+    {:max answer-count
+     :value frequency}]
+   [:span (str frequency "×")]])
+
 (defn answer-frequency
   [{:keys [answer-count
            answer-frequencies
            answer-revealed?]}
    answer]
   (when-let [frequency (and answer-revealed? (get answer-frequencies answer))]
-    [:progress.answer-frequency
-     {:max answer-count
-      :value frequency}]))
+    (frequency-bar answer-count frequency)))
 
 (defn open-answers
   [tr
@@ -396,10 +405,7 @@
                                     (take 10))]
         [:tr
          [:td answer]
-         [:td
-          [:progress.answer-frequency
-           {:max answer-count
-            :value frequency}]]])]]))
+         [:td (frequency-bar answer-count frequency)]])]]))
 
 (defn revealed-answer
   "The correct answer, shown on its own in a card."
@@ -599,7 +605,7 @@
   [:div
    (when-not disabled?
      [:form#answers
-      [:p
+      [:p.percent-picker
        {:data-signals "{_answer: 50}"}
        [:button.key
         {:data-on:click__prevent "$_answer--"}
