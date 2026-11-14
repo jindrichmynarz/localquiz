@@ -1151,17 +1151,61 @@ input[type="text"], input[type="number"] {
         font-size: .8em;
         color: rgb(from var(--sky) r g b / 75%);
       }
+    }
 
-      &:hover,
-      &[aria-selected="true"] {
-        background: var(--orange);
+    /* The pointer highlights only while the keyboard has selected none, else a pointer
+       left over the list, or the sticky hover of a tap, shows a second selection. */
+    &:not(:has([aria-selected="true"])) li:hover,
+    li[aria-selected="true"] {
+      background: var(--orange);
 
-        .description {
-          color: inherit;
-        }
+      .description {
+        color: inherit;
       }
     }
   }
+}
+
+/* The search under a network map lists its suggestions in the flow, below it, which
+   shrinks for them rather than being covered, so that the suggestion highlighted shows on
+   it. Three at a time, scrolling, by label alone: the description shows under the map. */
+network-map + .autocomplete {
+  /* As wide as the input, which the column of the map would otherwise stretch it past. */
+  align-self: center;
+  /* Clear of the nodes, which the map draws up to its edge. */
+  margin-top: 1em;
+  /* A grid, so that the reveal control is centred on the input's row rather than on the
+     input and the list together: positioned absolutely, it takes the area it is placed
+     in for its containing block. */
+  display: grid;
+
+  .reveal-options {
+    /* The ends spelled out: an absolutely positioned item's auto end is the container's. */
+    grid-area: 1 / 1 / 2 / 2;
+  }
+}
+
+network-map + .autocomplete ul {
+  position: static;
+  /* As wide as the input: the descriptions held to a line would otherwise widen it. */
+  width: 0;
+  min-width: 100%;
+  /* Three rows: padding and the label, at this line height. */
+  max-height: calc(3 * (1em + 1.25em));
+  overscroll-behavior: contain;
+
+  li {
+    line-height: 1.25;
+  }
+}
+
+/* The description of the choice selected on a network map, under the search box that names
+   it. */
+.network-description .description {
+  padding: .5em 1em;
+  text-align: left;
+  font-size: .8em;
+  color: rgb(from var(--offwhite) r g b / 75%);
 }
 
 /* Zoom of the network map, which <network-map> sets. Registered, so that it can transition. */
@@ -1237,21 +1281,6 @@ network-map {
       .nm-hint-pointer {
         display: inline;
       }
-    }
-  }
-
-  .nm-info {
-    padding: .5em 1em;
-    text-align: left;
-
-    strong {
-      color: var(--orange);
-      font-size: 1.2em;
-    }
-
-    .description {
-      font-size: .8em;
-      color: rgb(from var(--offwhite) r g b / 75%);
     }
   }
 
@@ -1496,6 +1525,12 @@ network-map {
     height: 640px;
     min-height: 240px;
   }
+
+  /* Held at the drawing's least, which, clipping what overflows, it would otherwise shrink
+     past, down to nothing, for whatever follows it, such as the search's suggestions. */
+  network-map {
+    min-height: 240px;
+  }
 }
 
 label {
@@ -1605,9 +1640,18 @@ label {
   }
 }
 
-/* The key that goes with a field. */
+/* The key that goes with a field, its face as high as the paper. The paper shows to its
+   edge, its border being transparent, but the key's dark frame melts into the night, so
+   the frame overhangs the field's height, taking none of the room it is laid out in. */
+/* A field followed by its key tilts about the edge it shares with the key, which would
+   otherwise drop below the key's top, or rise above, by half the tilt across the field. */
+:is(#player-name-input, .tabs form, #answers) input:has(~ .fire-key) {
+  transform-origin: right center;
+}
+
 :is(#player-name-input, .tabs form, #answers) .fire-key {
-  min-height: var(--field-height);
+  min-height: calc(var(--field-height) + 6px);
+  margin-block: -3px;
 }
 
 /* A small slate key, plainer than .btn, for the tools around the game. */

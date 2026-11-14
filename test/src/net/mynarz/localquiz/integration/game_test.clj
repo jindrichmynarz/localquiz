@@ -112,6 +112,15 @@
                                               :player/name player-name}]}])
     (is (= (last (game/lobby fixtures/game-id)) player-name))))
 
+(deftest join-game!-emoji-name
+  (let [game-id (crypto/random-unguessable-uid)
+        ;; Surrogate pair plus a ZWJ sequence, which spans several code points.
+        player-name "Zoë 🎉👩‍💻"]
+    (-create-game! game-id)
+    (game/join-game! game-id (crypto/random-unguessable-uid) player-name)
+    (is (= (game/lobby game-id) [player-name]))
+    (is (game/player-name-in-game? game-id player-name))))
+
 (deftest next-question!
   (with-redefs [game/schedule-timeout (fn [_])]
     (game/next-question! fixtures/game-id))

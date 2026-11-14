@@ -53,7 +53,6 @@
         :data-on:click (long-str "$_controller.abort();"
                                  "$_submitted = true;"
                                  (views/post (str "/join/" game-id)))}
-       [:i.material-icons (svg "play_circle.svg")]
        (tr [:join-game])]]]))
 
 (defn game-rules
@@ -123,7 +122,7 @@
 (defn- shared-question-section
   "The current question, which is the same for every player in the game who speaks the
   same language, so it is rendered once per game, question and language. Except for
-  :autocomplete, which reads back the fragment the player has typed."
+  :autocomplete and :network, which read back the fragment the player has typed."
   [{{:keys [game-id]} :path-params
     player-id :sid
     :tempura/keys [tr]
@@ -136,7 +135,7 @@
       (h/raw html)
       (let [question (assoc (game/current-question game-id) :session-id player-id)
             section (question-section tr game-id question)]
-        (if (= (:type question) :autocomplete)
+        (if (#{:autocomplete :network} (:type question))
           section
           (let [html (h/html section)]
             (.put question-sections k html)

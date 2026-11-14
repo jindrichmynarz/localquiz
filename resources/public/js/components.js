@@ -554,11 +554,6 @@ rocket("sortable-list", {
       nodes.get(edge.to).parents.push(edge.from);
       return edge;
     });
-    // The cell under the drawing, hidden until a choice is chosen, then showing it.
-    const info = container.querySelector(".nm-info");
-    const chosen = new Map(
-      [...container.querySelectorAll(".nm-chosen")].map((el) => [el.dataset.for, el]),
-    );
     // Nothing else says that the map pans, there being no cursor on touch, so a hint shows
     // until it is heeded, it times out, or it was heeded on an earlier question.
     const hint = container.querySelector(".nm-hint");
@@ -979,7 +974,8 @@ rocket("sortable-list", {
       view = clamped({ zoom, dx: x - scale * (x - view.dx), dy: y - scale * (y - view.dy) });
     }
 
-    // Tapping a node focuses and opens it, and selects it if it is a choice.
+    // Tapping a node focuses and opens it, and selects it if it is a choice, else
+    // clears the selection, so that what is selected is always what is in focus.
     // Tapping the focus again closes or opens it. Going back along the trail cuts
     // it, going down to a child extends it, and going anywhere else takes the
     // shortest path from the root.
@@ -993,12 +989,9 @@ rocket("sortable-list", {
         else trail = pathTo(id);
         focus = id;
         open = true;
-        if (nodes.get(id).el.classList.contains("nm-choice")) {
-          selected = id;
-          info.hidden = false;
-          for (const [label, el] of chosen) el.hidden = label !== id;
-          container.dispatchEvent(new CustomEvent("network-select", { detail: id, bubbles: true }));
-        }
+        const choice = nodes.get(id).el.classList.contains("nm-choice");
+        selected = choice ? id : null;
+        container.dispatchEvent(new CustomEvent("network-select", { detail: { id, choice }, bubbles: true }));
       }
       render();
     }
@@ -1093,6 +1086,10 @@ rocket("sortable-list", {
     }, { passive: false });
     let wheeling = null;
     svg.addEventListener("click", press);
+    // A node the search shows. Showing the focus again leaves it open, as tapping would not.
+    container.addEventListener("network-show", ({ detail: id }) => {
+      if (nodes.has(id) && id !== focus) activate(id);
+    });
     svg.addEventListener("keydown", (evt) => {
       if ((evt.key === "Enter" || evt.key === " ") && press(evt)) evt.preventDefault();
     });
@@ -1105,10 +1102,10 @@ rocket("sortable-list", {
     };
   }
 
-  // `network` is {root, nodes: [{id, x, y}], edges: [[from, to]], choices: [{label,
-  // description}]}, the choices being the nodes that can be picked. Dispatches a bubbling
-  // `network-select` event with the label of each choice tapped, which the cell under the
-  // map then shows. The hints say that the map pans, by touch and by pointer.
+  // `network` is {root, nodes: [{id, x, y}], edges: [[from, to]], choices: [{label}]}, the
+  // choices being the nodes that can be picked. Dispatches a bubbling `network-select` event
+  // with {id, choice} for each node focused, `choice` saying whether it is selected, and shows
+  // the node of each `network-show` event it receives. The hints say that the map pans, by touch and by pointer.
   rocket("network-map", {
     mode: "light",
     props: ({ json, string }) => ({
@@ -1139,14 +1136,6 @@ rocket("sortable-list", {
         <div class="nm-hint" aria-hidden="true">
           <span class="nm-hint-touch">${hint}</span>
           <span class="nm-hint-pointer">${hintPointer}</span>
-        </div>
-        <div class="nm-info" hidden>
-          ${choices.map(({ label, description }) => html`
-            <div class="nm-chosen" data-for=${label} hidden>
-              <strong>${label}</strong>
-              ${description ? html`<div class="description">${description}</div>` : ""}
-            </div>
-          `)}
         </div>
       `;
     },

@@ -4,6 +4,7 @@
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
+            [net.mynarz.localquiz.network :as network]
             [net.mynarz.localquiz.normalize :refer [normalize-answer]]
             [net.mynarz.localquiz.question-spec :as qs]
             [net.mynarz.localquiz.session :as session]
@@ -13,7 +14,9 @@
             [clojure.string :as string]
             [dev.onionpancakes.chassis.compiler :as cc]
             [dev.onionpancakes.chassis.core :as h]
-            [starfederation.datastar.clojure.brotli :as brotli]))
+            [starfederation.datastar.clojure.brotli :as brotli])
+  (:import (java.text Collator)
+           (java.util Locale)))
 
 ; Warn on ambiguous attributes
 (cc/set-warn-on-ambig-attrs!)
@@ -410,12 +413,18 @@
   [option]
   (or (:text option) (:label option)))
 
+(def ^:private ^Collator collator
+  "Orders labels as a reader expects, letters with diacritics next to the ones without.
+  ponytail: root locale, so the Czech ch, sorted after h, is not; per-language collators
+  if that matters."
+  (Collator/getInstance Locale/ROOT))
+
 (defn search-options
   "The `options` whose label contains `fragment`, compared with case, punctuation and
   diacritics normalized away, as :open answers are. Options whose label starts with the
-  fragment come first, each group in the order the question lists them. All `options` when
-  `fragment` is empty (the player asked to see them), nil when it is missing (the player
-  has not opened the list)."
+  fragment come first, each group in alphabetical order. All `options`, in alphabetical
+  order, when `fragment` is empty (the player asked to see them), nil when it is missing
+  (the player has not opened the list)."
   [options
    ^String fragment]
   (when (some? fragment)
@@ -423,6 +432,7 @@
                              normalize-answer
                              not-empty)]
       (->> options
+           (sort-by option-label collator)
            (keep (fn [option]
                    (when-some [index (-> option
                                          option-label
@@ -432,7 +442,7 @@
                      [(pos? index) option])))
            (sort-by first)
            (map second))
-      options)))
+      (sort-by option-label collator options))))
 
 (defn autocomplete
   "Autocomplete text input feeding the enclosing answer form's `answer` field,
@@ -440,63 +450,79 @@
   native (unstylable) `<datalist>`. `options` are filtered server-side by the
   fragment the player has typed, stored in :session/search-fragment for
   `session-id` and retracted when the game moves on to the next question. Revealing all
-  the options empties the fragment, which is what tells the server to stop filtering."
-  [tr game-id session-id options]
-  (let [matches (search-options options (game/get-search-fragment session-id))
-        ; queueMicrotask() is needed to propagate the $autocomplete signal as the value of the answer form field.
-        pick    (format "$autocomplete = el.dataset.option; queueMicrotask(() => %s)"
-                        (answer-handler game-id))
-        reveal  "($autocomplete = '', $_active = -1, @post('/autocomplete'))"
-        ; Focus stays in the input, which points at the highlighted option by aria-activedescendant.
-        ; Enter always prevents the implicit submission of the enclosing form.
-        navigate (str "evt.key === 'ArrowDown' && (evt.preventDefault(), el.dataset.options > 0"
-                      " ? $_active = Math.min($_active + 1, el.dataset.options - 1)"
-                      " : !$autocomplete && " reveal ");"
-                      "evt.key === 'ArrowUp' && (evt.preventDefault(), $_active = Math.max($_active - 1, 0));"
-                      "['ArrowDown', 'ArrowUp'].includes(evt.key)"
-                      " && document.getElementById('option-' + $_active)?.scrollIntoView({block: 'nearest'});"
-                      "evt.key === 'Enter' && (evt.preventDefault(), document.getElementById('option-' + $_active)?.click())")]
-    [:div.autocomplete
-     {:data-signals:_active__ifmissing "-1"}
-     [:input
-      {:aria-autocomplete "list"
-       :aria-controls "autocomplete-list"
-       :aria-expanded (str (boolean (seq matches)))
-       :autocomplete "off"
-       :autofocus true
-       :data-attr:aria-activedescendant "$_active >= 0 && 'option-' + $_active"
-       :data-bind "autocomplete"
-       :data-init "$autocomplete = ''; $_active = -1" ; Reset
-       :data-on:input__debounce.200ms "$_active = -1; @post('/autocomplete')"
-       :data-on:keydown navigate
-       :data-options (count matches)
-       :minlength 1
-       :maxlength qs/max-answer-length
-       :name "answer"
-       :placeholder (tr [:search])
-       :role "combobox"
-       :type "text"}]
-     ; A real button, so that Enter and Space activate it without a keydown handler.
-     [:button.reveal-options
-      {:type "button"
-       :aria-label (tr [:show-all-options])
-       :data-on:click reveal}
-      (svg "arrow_drop_down.svg")]
-     (when (seq matches)
-       [:ul.autocomplete-list#autocomplete-list
-        {:role "listbox"}
-        (for [[index {:keys [description]
-                      :as option}] (map-indexed vector matches)
-              :let [label (option-label option)]]
-          [:li
-           {:data-attr:aria-selected (format "String($_active == %d)" index)
-            :data-on:click pick
-            :data-option label
-            :id (str "option-" index)
-            :role "option"}
-           label
-           (when description
-             [:span.description description])])])]))
+  the options empties the fragment, which is what tells the server to stop filtering.
+  `opts` may give the `:pick` expression run on the suggestion picked, which by default
+  submits it as the answer, and `:input` attributes merged into the input."
+  ([tr game-id session-id options]
+   (autocomplete tr game-id session-id options {}))
+  ([tr game-id session-id options opts]
+   (let [matches (search-options options (game/get-search-fragment session-id))
+         ; queueMicrotask() is needed to propagate the $autocomplete signal as the value of the answer form field.
+         pick    (or (:pick opts)
+                     (format "$autocomplete = el.dataset.option; queueMicrotask(() => %s)"
+                             (answer-handler game-id)))
+         reveal  "($autocomplete = '', $_active = -1, $_closed = false, @post('/autocomplete'))"
+         ; Focus stays in the input, which points at the highlighted option by aria-activedescendant.
+         ; Enter always prevents the implicit submission of the enclosing form.
+         ; The arrows reopen a list a pick closed, and scroll once it shows again, which
+         ; Datastar applies only after this handler: hidden, it would not scroll.
+         navigate (str "['ArrowDown', 'ArrowUp'].includes(evt.key) && ($_closed = false);"
+                       "evt.key === 'ArrowDown' && (evt.preventDefault(), el.dataset.options > 0"
+                       " ? $_active = Math.min($_active + 1, el.dataset.options - 1)"
+                       " : !$autocomplete && " reveal ");"
+                       "evt.key === 'ArrowUp' && (evt.preventDefault(), $_active = Math.max($_active - 1, 0));"
+                       "['ArrowDown', 'ArrowUp'].includes(evt.key)"
+                       " && queueMicrotask(() => document.getElementById('option-' + $_active)?.scrollIntoView({block: 'nearest'}));"
+                       "evt.key === 'Enter' && (evt.preventDefault(), document.getElementById('option-' + $_active)?.click())")]
+     [:div.autocomplete
+      {:data-signals:_active__ifmissing "-1"
+       ; A pick that does not submit the answer, and so leaves the view as it is, closes
+       ; the list by this.
+       :data-signals:_closed__ifmissing "false"}
+      [:input
+       (merge
+        {:aria-autocomplete "list"
+         :aria-controls "autocomplete-list"
+         :aria-expanded (str (boolean (seq matches)))
+         ; Closed by a pick that leaves the view as it is, which the server does not see.
+         :data-attr:aria-expanded (format "String(%b && !$_closed)" (boolean (seq matches)))
+         :autocomplete "off"
+         :autofocus true
+         :data-attr:aria-activedescendant "$_active >= 0 && 'option-' + $_active"
+         :data-bind "autocomplete"
+         :data-init "$autocomplete = ''; $_active = -1" ; Reset
+         :data-on:input__debounce.200ms "$_active = -1; $_closed = false; @post('/autocomplete')"
+         :data-on:keydown navigate
+         :data-options (count matches)
+         :minlength 1
+         :maxlength qs/max-answer-length
+         :name "answer"
+         :placeholder (tr [:search])
+         :role "combobox"
+         :type "text"}
+        (:input opts))]
+      ; A real button, so that Enter and Space activate it without a keydown handler.
+      [:button.reveal-options
+       {:type "button"
+        :aria-label (tr [:show-all-options])
+        :data-on:click reveal}
+       (svg "arrow_drop_down.svg")]
+      (when (seq matches)
+        [:ul.autocomplete-list#autocomplete-list
+         {:data-show "!$_closed"
+          :role "listbox"}
+         (for [[index {:keys [description]
+                       :as option}] (map-indexed vector matches)
+               :let [label (option-label option)]]
+           [:li
+            {:data-attr:aria-selected (format "String($_active == %d)" index)
+             :data-on:click pick
+             :data-option label
+             :id (str "option-" index)
+             :role "option"}
+            label
+            (when description
+              [:span.description description])])])])))
 
 (defmulti answers-view
   (fn [& args]
@@ -703,6 +729,28 @@
    (open-answers tr answers)
    (note-view answer-revealed? note)])
 
+;; Showing a node focuses it on the map, and selects it if it is a choice, but leaves the
+;; answer to the submit button, so browsing the suggestions cannot answer by accident.
+(def ^:private show-node
+  "document.querySelector('network-map').dispatchEvent(new CustomEvent('network-show', {detail: %s}))")
+
+(defn- network-search
+  "Search for a node of the network that `choices` describe, which shows the suggestion
+  picked or highlighted on the map. Every node is searched, those that are not choices
+  included, as they lead to the choices around them. Suggestions go without descriptions,
+  which the map shows for the node it shows."
+  [tr game-id session-id choices]
+  (let [options (for [node (:nodes (network/network choices))]
+                  {:label node})]
+    (autocomplete tr game-id session-id options
+                  {:pick  (str "$_closed = true; $_active = -1; $autocomplete = el.dataset.option; "
+                               (format show-node "el.dataset.option"))
+                   ; Not the answer, which the map gives, and no keyboard over the map.
+                   :input {:autofocus false
+                           :name nil
+                           :data-effect (str "$_active >= 0 && "
+                                             (format show-node "document.getElementById('option-' + $_active)?.dataset.option"))}})))
+
 (defmethod answers-view :network
   [tr
    ^Boolean disabled?
@@ -710,14 +758,28 @@
     :as answers}
    ^String game-id
    _
-   {:keys [choices note]}]
+   {:keys [choices note session-id]}]
   (let [{:keys [answer-count answer-frequencies]} answers]
     [:form#answers
      (when-not disabled?
        [:div
         {:data-signals:_answer "''"
-         :data-on:network-select "$_answer = evt.detail"}
+         ;; A node focused that is no choice clears the answer, and with it its
+         ;; description. Either is named in the search box, unless the player is going
+         ;; through its suggestions, whose own text that would replace.
+         :data-on:network-select (str "$_answer = evt.detail.choice ? evt.detail.id : ''; "
+                                      "$_active < 0 && ($autocomplete = evt.detail.id)")}
         (network-map tr choices)
+        ;; Under the map, which is the way to find a node; the search is the shortcut.
+        (network-search tr game-id session-id choices)
+        ;; The description of the choice selected, under the box that names it.
+        [:div.network-description
+         (for [{:keys [label description]} choices
+               :when description]
+           [:div.description
+            {:data-show (format "$_answer === %s" (charred/write-json-str label))
+             :style "display: none"}
+            description])]
         [:input
          {:data-attr:value "$_answer"
           :name "answer"

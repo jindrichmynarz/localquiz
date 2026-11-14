@@ -29,14 +29,18 @@
          "ZIZ"    ["Žižkov"]      ; Case and diacritics are normalized away
          "zizkov" ["Žižkov"]
          "karlin" ["Karlín"]      ; A :text option is labelled by its :text
-         ; No prefix match, so the question's own order is kept
-         "r"      ["Nové Vinohrady" "Vinohrady" "Karlín"]
+         ; No prefix match, so all in alphabetical order
+         "r"      ["Karlín" "Nové Vinohrady" "Vinohrady"]
          "bork"   []
-         ; An empty fragment is the player asking to see everything
-         ""       ["Nové Vinohrady" "Žižkov" "Vinohrady" "Karlín"]
-         "  "     ["Nové Vinohrady" "Žižkov" "Vinohrady" "Karlín"]
+         ; An empty fragment is the player asking to see everything, alphabetically
+         ""       ["Karlín" "Nové Vinohrady" "Vinohrady" "Žižkov"]
+         "  "     ["Karlín" "Nové Vinohrady" "Vinohrady" "Žižkov"]
          ; A missing fragment means the list was never opened
-         nil      [])))
+         nil      []))
+  (testing "A letter with a diacritic sorts next to the one without, not after Z"
+    (is (= ["Čáslav" "Dobříš"]
+           (map views/option-label
+                (views/search-options [{:label "Dobříš"} {:label "Čáslav"}] ""))))))
 
 (defn render-autocomplete
   "Render the autocomplete widget for a player who has typed `fragment`,
@@ -114,14 +118,37 @@
       (is (= "Genre" (:root network)))
       (is (= #{"Genre" "House" "Techno" "Acid House"} (set (map :id (:nodes network)))))
       (is (every? (comp number? :x) (:nodes network))))
-    (testing "Choices come with their descriptions"
-      (is (= [{:label "House"}
-              {:label "Techno" :description "Detroit, emerged mid 80s."}
-              {:label "Acid House"}]
+    (testing "Choices are passed in by label"
+      (is (= [{:label "House"} {:label "Techno"} {:label "Acid House"}]
              (:choices network))))
+    (testing "A description shows under the search box once its choice is selected"
+      (is (re-find #"data-show=\"\$_answer === &quot;Techno&quot;\"[^>]*>Detroit, emerged mid 80s.<" html)))
     (testing "The hints that the map pans are passed in"
       (is (string/includes? html "hint=\"Drag to move the map, pinch to zoom\""))
       (is (string/includes? html "hint-pointer=\"Drag to move the map, scroll to zoom\"")))))
+
+(deftest network-search
+  (let [choices [{:label "House" :related ["Genre"]}
+                 {:label "Techno" :related ["Genre"] :description "Detroit, emerged mid 80s."}
+                 {:label "Acid House" :related ["House" "Techno"]}]
+        render (fn [fragment]
+                 (let [session-id (crypto/random-unguessable-uid)]
+                   (game/set-search-fragment! session-id fragment)
+                   (h/html (views/answers-view fixtures/tr false {} fixtures/game-id false
+                                               {:type :network :choices choices
+                                                :session-id session-id}))))]
+    (testing "A node that is no choice can be found, as it leads to those that are"
+      (is (string/includes? (render "gen") "data-option=\"Genre\"")))
+    (testing "A choice is found without its description, which the map shows"
+      (let [html (render "techno")]
+        (is (string/includes? html "data-option=\"Techno\""))
+        (is (not (string/includes? html "<span class=\"description\">")))))
+    (testing "Picking shows the node on the map, rather than submitting it"
+      (is (string/includes? (render "house") "network-show")))
+    (testing "The search is not focused, as the map is the way to find a node"
+      (is (not (string/includes? (render "") "autofocus"))))
+    (testing "The map, not the search, gives the answer"
+      (is (= 1 (count (re-seq #"name=\"answer\"" (render ""))))))))
 
 (def ^:private revealed-choices
   [{:label "House" :related ["Genre"]}

@@ -19,7 +19,7 @@
                       :let [[x y] (positions node)]]
                   {:id node :x x :y y})
        :edges   arcs
-       :choices (map #(select-keys % [:label :description]) choices)})))
+       :choices (map #(select-keys % [:label]) choices)})))
 
 (def ^:private network-json-memo
   "Every question sharing a network shares it, so it is computed once."
@@ -151,7 +151,8 @@
 
 (defn network-map
   "Map of the network that `choices` describe, dispatching a bubbling `network-select`
-  event with the label of each choice tapped. Morphs leave it be, as it renders into
+  event with `{id, choice}` for each node focused, `choice` saying whether it is a choice
+  and so selected. Morphs leave it be, as it renders into
   itself and the state of what it reveals lives in the browser."
   [tr choices]
   [:network-map
