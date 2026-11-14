@@ -170,12 +170,6 @@ header {
   #answer-progress {
     justify-self: end;
     font-variant-numeric: tabular-nums;
-
-    /* Everyone has answered: firelit, like the winner's row. */
-    &.all {
-      color: var(--orange);
-      text-shadow: 0 0 12px rgb(from var(--orange) r g b / 45%);
-    }
   }
 
   .chip-label {
@@ -250,7 +244,7 @@ header {
     background: var(--panel);
     box-shadow: 0 10px 24px rgb(0 0 0 / 70%);
 
-    #lang-switch {
+    .toggle {
       margin: 0;
       text-align: center;
     }
@@ -454,9 +448,15 @@ table {
 
   /* Solid, as the stars behind it must not show through. The gradient lives in the drawing,
      so the colour stands in if the drawing has none. */
-  path:first-of-type {
+  &.far path {
     fill: url(#ridge-far) var(--ridge);
   }
+}
+
+/* The day's alone: hidden at night. */
+.mist,
+.bird {
+  display: none;
 }
 
 .star {
@@ -638,6 +638,440 @@ body:has(.final) {
 @keyframes land-warm {
   from {
     opacity: .3;
+  }
+}
+
+/* The day: a misty forest under an overcast sky, the mist drifting between the ridges and
+   over the ground, the trees on the near ridge swaying. After the dawn of the final screen,
+   which by day is the sun shining through the mist. On body, as the dawn sets its own. */
+.day body {
+  --offwhite: #eef1ea;
+  --moon: #f4f7f3;
+  --muted: #e9eee2;
+  --panel: #243420;
+  /* The keys and the boards: the hue of the ground, darker than it. */
+  --dark: #2e3a22;
+  --ridge: #73877d;
+  --ridge-lit: #73877d;
+  --ground: #46592f;
+  --ground-lit: #46592f;
+
+  background-color: #9dafb3;
+  background-image: radial-gradient(ellipse 60% 50% at 70% 0%, rgb(235 232 215 / 25%), transparent 70%),
+                    linear-gradient(to bottom, #8399a5, #93a7b0 35%, #a3b3b6 65%, #adbbba);
+}
+
+.day {
+  /* Dark type in the sky. Where the menu opens onto a panel, it keeps the light. */
+  header {
+    color: #17261a;
+    --muted: rgb(23 38 26 / 75%);
+  }
+
+  @media (max-width: 950px) or (orientation: portrait) {
+    #top-menu {
+      color: var(--offwhite);
+      --muted: #e9eee2;
+    }
+  }
+
+  h1 {
+    color: #17261a;
+    text-shadow: 0 1px 0 rgb(255 255 255 / 40%);
+  }
+
+  /* The mist of the sky drifting over the title. Here rather than in the night, which is
+     behind the page. On the link, which is as wide as the word, as the heading spans its
+     column. Faded out at its edges, so that it has none. */
+  h1 a {
+    position: relative;
+
+    &::after {
+      --tile: calc(2600 * var(--design-px));
+
+      content: "";
+      position: absolute;
+      inset: -.5em -1.5em;
+      pointer-events: none;
+      background: url("../img/texture/mist.webp") 0 0 / var(--tile) calc(300 * var(--design-px));
+      mask-image: radial-gradient(closest-side, #000 30%, rgb(0 0 0 / 50%) 65%, transparent);
+      opacity: .9;
+      filter: blur(4px) brightness(1.2);
+      animation: 371s linear infinite drift;
+    }
+  }
+
+  :is(h2, h3, h4, h5) {
+    text-shadow: 0 1px 6px rgb(25 35 15 / 50%);
+  }
+
+  .star,
+  .comet {
+    display: none;
+  }
+
+  /* Crossing the whole sky at an even pace, straying up and down in swoops, banking into
+     them, and a little lower at the end. On the way, a few wing beats, each
+     downstroke lifting the bird, then a glide on level wings, sinking back. `wave` and
+     `flap` share the cycle and its start, so that the height keeps to the wings. The
+     crossing moves `translate` and the wave `transform`, which add up. */
+  .bird {
+    --lift: calc(1.5 * var(--design-px) * var(--size));
+
+    display: block;
+    position: absolute;
+    left: 0;
+    top: calc(var(--horizon) * var(--y) / 100);
+    width: calc(22 * var(--design-px) * var(--size));
+    height: calc(9 * var(--design-px) * var(--size));
+    /* A few steps darker than the sky they fly in. */
+    --bird: #56666b;
+
+    /* Taking on the colour of the sky, and the fainter the further away, so that the
+       smallest are half lost in the haze. */
+    mix-blend-mode: multiply;
+    opacity: calc(var(--size) * .9 - .15);
+    filter: blur(.3px);
+    /* The body. */
+    background: radial-gradient(closest-side, var(--bird) 96%, transparent)
+                center / calc(3.4 * var(--design-px) * var(--size)) calc(2 * var(--design-px) * var(--size))
+                no-repeat;
+    animation:
+      var(--fly) linear var(--delay) infinite var(--dir) fly,
+      var(--fly) ease-in-out var(--delay) infinite var(--dir) swoop,
+      var(--cycle) var(--phase) infinite wave,
+      var(--cycle) var(--phase) infinite flap;
+
+    /* The wings, each turning at the shoulder, so that the tips go from above the body to
+       below it while the body stays upright. */
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 50%;
+      height: 34%;
+      translate: 0 -50%;
+      background: var(--bird);
+    }
+
+    &::before {
+      right: 50%;
+      transform-origin: 100% 50%;
+      rotate: var(--wing);
+      mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 3' preserveAspectRatio='none'><path d='M11 .6Q5 -.2 0 1.4Q5 1.6 11 2.6z'/></svg>") center / 100% 100% no-repeat;
+    }
+
+    &::after {
+      left: 50%;
+      transform-origin: 0 50%;
+      rotate: calc(var(--wing) * -1);
+      mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 3' preserveAspectRatio='none'><path d='M0 .6Q6 -.2 11 1.4Q6 1.6 0 2.6z'/></svg>") center / 100% 100% no-repeat;
+    }
+  }
+
+  #night {
+    background: linear-gradient(to bottom,
+                                rgb(190 200 200 / 10%),
+                                rgb(190 200 200 / 30%) calc(var(--horizon) * .35),
+                                rgb(195 204 203 / 42%) calc(var(--horizon) * .55),
+                                rgb(190 200 200 / 0%) calc(var(--horizon) * .8));
+
+    &::before {
+      background: url("../img/texture/grain.webp") 0 0 / 256px;
+      opacity: .25;
+    }
+
+    &::after {
+      background:
+        linear-gradient(to top,
+                        rgb(20 28 12 / 40%),
+                        rgb(24 34 14 / 12%) 35%,
+                        transparent 60%),
+        linear-gradient(to bottom,
+                        #46592f,
+                        #40522b calc(80 * var(--design-px)),
+                        #364727 calc(260 * var(--design-px)),
+                        #2d3b21 calc(520 * var(--design-px)),
+                        #25311b);
+    }
+  }
+
+  /* Through body, to win over the dawn's. */
+  body .grain {
+    background: none;
+
+    &::after {
+      opacity: 1;
+    }
+
+    /* The dirt, faint, coming in below the horizon. In place of the warmth of the dawn. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("../img/texture/dirt.webp") 0 0 / calc(640 * var(--design-px));
+      opacity: .3;
+      mask-image: linear-gradient(to bottom, transparent, #000 calc(160 * var(--design-px)));
+      animation: none;
+    }
+  }
+
+  .horizon.far path {
+    filter: blur(1.5px);
+  }
+
+  /* A row of trees further back, on the crest of the near ridge: closer to the colour of the
+     air than the trees in front. */
+  .horizon.near .trees {
+    fill: #53684b;
+    filter: blur(.8px);
+  }
+
+  /* Each tree its own height, width and shade, from its base, as the drawing has them all
+     cut from one pattern. */
+  .horizon.near g {
+    transform-box: view-box;
+    scale: var(--w) var(--h);
+    /* Softened a little, so that the needles read as a fuzz rather than a hard edge. */
+    filter: brightness(var(--b)) blur(.4px);
+    /* A gust passing along the ridge, so that the trees further on follow, each swaying at
+       its own pace. */
+    animation: calc(4.5s + var(--amp) * 2.5s) ease-in-out calc(var(--x) * -7ms) infinite alternate sway;
+  }
+
+  .horizon.near g path {
+    fill: url(#tree-fade) var(--ground);
+  }
+
+  .mist {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: url("../img/texture/mist.webp") 0 0 / var(--tile) var(--tile-height);
+    mask-image: linear-gradient(to bottom, transparent, #000 35%, #000 60%, transparent);
+    animation: var(--drift) linear infinite drift;
+  }
+
+  .mist-far {
+    --tile: calc(2600 * var(--design-px));
+    --tile-height: calc(300 * var(--design-px));
+    --drift: 371s;
+
+    top: calc(var(--horizon) * .27);
+    height: calc(var(--horizon) * .46);
+    opacity: .75;
+    filter: blur(6px) brightness(1.15);
+  }
+
+  .mist-mid {
+    --tile: calc(3200 * var(--design-px));
+    --tile-height: calc(340 * var(--design-px));
+    --drift: 640s;
+
+    top: calc(var(--horizon) * .375);
+    height: calc(var(--horizon) * .46);
+    opacity: .55;
+    filter: blur(8px) brightness(1.15);
+    animation-direction: reverse;
+  }
+
+  /* Over the ground, in front of the near ridge. */
+  .mist-near {
+    --tile: calc(4200 * var(--design-px));
+    --tile-height: calc(440 * var(--design-px));
+    --drift: 1400s;
+
+    z-index: 1;
+    top: calc(var(--horizon) - 40 * var(--design-px));
+    /* Fading out over most of its height, so that it thins into the ground rather than
+       ending in a line. The texture tiles both ways, so it has no edge of its own. */
+    height: calc(640 * var(--design-px));
+    mask-image: linear-gradient(to bottom,
+                                transparent,
+                                #000 18%,
+                                #000 32%,
+                                rgb(0 0 0 / 70%) 45%,
+                                rgb(0 0 0 / 40%) 58%,
+                                rgb(0 0 0 / 15%) 72%,
+                                transparent 90%);
+    opacity: .4;
+    filter: blur(14px) brightness(1.1);
+    animation-direction: reverse;
+  }
+
+  #campfire li {
+    border-color: #141f11;
+    outline-color: rgb(180 195 165 / 25%);
+  }
+
+  /* The boards of the answers: the colour of the keys rather than that of the panels, which
+     brightened as it is at night would glare. Not the right answer, which is paper. */
+  #choices .btn:not(.correct) {
+    &::before {
+      background-color: var(--dark);
+      filter: none;
+    }
+
+    &:hover::before {
+      filter: brightness(1.3);
+    }
+  }
+
+  /* Burnt earth rather than a black pit: brown, and fainter. */
+  .fire-soot {
+    opacity: .55;
+
+    stop {
+      stop-color: #3a3024;
+    }
+
+    [fill="#000000"] {
+      fill: #3a3024;
+    }
+
+    [stroke="#000000"] {
+      stroke: #3a3024;
+    }
+  }
+
+  /* No dawn: a pale sun behind the mist, and its glow in it. */
+  #dawn {
+    background: none;
+
+    &::before {
+      background: repeating-conic-gradient(rgb(255 252 240 / 6%) 0deg 3deg, transparent 3deg 11deg);
+    }
+
+    &::after {
+      background: radial-gradient(ellipse 50% 50% at 50% 50%,
+                                  rgb(255 250 232 / 60%),
+                                  rgb(255 246 222 / 28%) 25%,
+                                  rgb(255 240 215 / 8%) 48%,
+                                  transparent 70%);
+    }
+
+    i {
+      background: radial-gradient(circle, #fff, #fff8e4 60%, #ffe9b8);
+      box-shadow: 0 0 calc(50 * var(--design-px)) calc(20 * var(--design-px)) rgb(255 246 215 / 60%);
+      filter: blur(3px);
+    }
+  }
+}
+
+@keyframes sway {
+  from {
+    rotate: calc(var(--amp) * -1deg);
+  }
+  to {
+    rotate: calc(var(--amp) * 1deg);
+  }
+}
+
+@keyframes drift {
+  to {
+    background-position-x: var(--tile);
+  }
+}
+
+/* Up and down off the bird's course, and banked into it, by its own amounts at each fifth
+   of the way. On `top` rather than a transform, as the crossing and the wave hold those.
+   Eased, so that it turns at each one rather than zigzagging. */
+@keyframes swoop {
+  0%, 100% {
+    top: calc(var(--horizon) * var(--y) / 100);
+    rotate: 0deg;
+  }
+  20% {
+    top: calc(var(--horizon) * (var(--y) + var(--m1)) / 100);
+    rotate: var(--r1);
+  }
+  40% {
+    top: calc(var(--horizon) * (var(--y) + var(--m2)) / 100);
+    rotate: var(--r2);
+  }
+  60% {
+    top: calc(var(--horizon) * (var(--y) + var(--m3)) / 100);
+    rotate: var(--r3);
+  }
+  80% {
+    top: calc(var(--horizon) * (var(--y) + var(--m4)) / 100);
+    rotate: var(--r4);
+  }
+}
+
+@keyframes fly {
+  from {
+    translate: -5vw 0;
+  }
+  to {
+    translate: 105vw calc(var(--horizon) * .08);
+  }
+}
+
+/* With `flap`: each downstroke lifts the bird, each upstroke gives a little back, so that it
+   climbs in steps over the four beats, then sinks back over the glide. Eased at each turn,
+   which is close to a sine. */
+@keyframes wave {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: ease-in-out;
+  }
+  7.5% {
+    transform: translateY(calc(var(--lift) * -1.5));
+  }
+  15% {
+    transform: translateY(calc(var(--lift) * -1));
+  }
+  22.5% {
+    transform: translateY(calc(var(--lift) * -2.5));
+  }
+  30% {
+    transform: translateY(calc(var(--lift) * -2));
+  }
+  37.5% {
+    transform: translateY(calc(var(--lift) * -3.5));
+  }
+  45% {
+    transform: translateY(calc(var(--lift) * -3));
+  }
+  52.5% {
+    transform: translateY(calc(var(--lift) * -4.5));
+  }
+  60% {
+    transform: translateY(calc(var(--lift) * -4));
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* The angle of the left wing at the shoulder, which the right one mirrors. Registered, so that
+   it can be animated. */
+@property --wing {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 8deg;
+}
+
+/* Four beats, the tips raised above the body and pushed down below it, then a glide on wings
+   held a little above level, raised again at the end to start the next beat. */
+@keyframes flap {
+  0%, 15%, 30%, 45% {
+    --wing: 34deg;
+    animation-timing-function: ease-in-out;
+  }
+  7.5%, 22.5%, 37.5%, 52.5% {
+    --wing: -26deg;
+    animation-timing-function: ease-in-out;
+  }
+  60%, 94% {
+    --wing: 6deg;
+  }
+  100% {
+    --wing: 34deg;
   }
 }
 
@@ -1876,14 +2310,12 @@ copy-button {
   }
 }
 
-/* How many gave an answer, a bar and a count, to be read off the wall. */
+/* How many gave an answer, a bar to be read off the wall. */
 .answer-frequency {
   display: flex;
   align-items: center;
-  gap: .5ch;
   width: 100%;
   font-size: .8em;
-  font-variant-numeric: tabular-nums;
 
   progress {
     flex: 1;
@@ -1950,11 +2382,16 @@ copy-button {
 }
 
 #leaderboard {
+  /* The length of the top score's bar: shorter on a narrow screen, so that the table fits
+     it. */
+  --bar: min(8em, 25vw);
+
   display: flex;
   flex-direction: column;
   align-items: center;
 
   table {
+    max-width: 100%;
     border-collapse: separate;
     border-spacing: 0 .25em;
 
@@ -2049,12 +2486,22 @@ copy-button {
 
       &:nth-child(2) {
         padding-left: .5ch;
+        /* A long name wraps rather than widening the table past the screen. */
+        overflow-wrap: anywhere;
+      }
+
+      @media (max-width: 600px) {
+        padding-inline: 1ch;
       }
     }
 
     thead th, thead td {
       padding-bottom: .25ex;
       padding-inline: 2ch;
+
+      @media (max-width: 600px) {
+        padding-inline: 1ch;
+      }
 
       /* Aligned like the values in their columns. */
       &:nth-child(2) {
@@ -2075,13 +2522,7 @@ copy-button {
     }
 
     td:has(.score-bar) {
-      width: calc(var(--score) * 8em);
-    }
-
-    .gain {
-      margin-left: .5ch;
-      font-size: .7em;
-      color: var(--muted);
+      width: calc(var(--score) * var(--bar));
     }
 
     .score-bar {
@@ -2100,10 +2541,10 @@ copy-button {
 
 @keyframes grow {
   from {
-    width: calc(var(--former-score) * 8em);
+    width: calc(var(--former-score) * var(--bar));
   }
   to {
-    width: calc(var(--score) * 8em);
+    width: calc(var(--score) * var(--bar));
   }
 }
 
@@ -2215,11 +2656,16 @@ progress {
   }
 }
 
-#lang-switch {
+.toggle {
   span {
     display: inline-block;
     padding: 0 4px;
     vertical-align: top;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 
   label {
@@ -2366,6 +2812,8 @@ input::file-selector-button {
   box-sizing: border-box;
   min-height: var(--key-height);
   padding: 0 calc(20 * var(--design-px));
+  /* The customizable select is a flex box, which otherwise puts the label at its top. */
+  align-items: center;
   font-weight: 600;
   cursor: pointer;
 }
@@ -2461,7 +2909,10 @@ input::file-selector-button {
   #dawn::before,
   #dawn::after,
   #dawn i,
-  body:has(.final) .grain::before {
+  body:has(.final) .grain::before,
+  .horizon.near g,
+  .mist,
+  .day h1 a::after {
     animation: none;
   }
 
@@ -2472,6 +2923,11 @@ input::file-selector-button {
   /* Hung in the sky rather than passing. */
   .comet {
     opacity: .4;
+  }
+
+  /* No birds rather than birds stuck in the air. */
+  .day .bird {
+    display: none;
   }
 }
 

@@ -39,9 +39,24 @@
                      location.reload()"
     :type "checkbox"}])
 
+(defn night-switch
+  "Sets day or night by hand, over the clock, for the rest of the session in this tab."
+  [tr]
+  [:p#night-switch.toggle
+   [:span (svg "sun.svg")]
+   [:input.offscreen#night-toggle
+    {:data-attr:checked "!$_day"
+     :data-ignore-morph "" ; Avoid the checked attribute to be reset.
+     :data-on:change "$_day = !$_day; sessionStorage.setItem('day', $_day)"
+     :type "checkbox"}]
+   [:label.switch
+    {:for "night-toggle"
+     :title (tr [:switch-night])}]
+   [:span (svg "moon.svg")]])
+
 (defn lang-switch
   [tr]
-  [:p#lang-switch
+  [:p#lang-switch.toggle
    [:span "CS"]
    (lang-switch-input)
    [:label.switch
@@ -169,7 +184,8 @@
         [:div#top-menu
          {:data-class:open "$_menuOpen"}
          header
-         (lang-switch tr)]
+         (lang-switch tr)
+         (night-switch tr)]
         [:button.key
          {:aria-label (tr [:menu])
           :data-on:click "$_menuOpen = !$_menuOpen"
@@ -178,6 +194,44 @@
       [:main main]
       (when-not game-id (footer tr))
       (error-dialog tr)])))
+
+(def ^:private birds
+  "The birds crossing the sky of the day: two small flocks and one on its own, from a fixed
+  seed. Each course has a height in % of the sky, seconds to cross, a start, a
+  direction, and the swoops of its path: how far it strays up or down, in % of the sky, at
+  each fifth of the way. The birds of a flock share their course, each trailing the one
+  before it by a little and at its own height. Each bird has its own size, half a wing beat,
+  how far into its flapping and gliding it starts, and how it banks into the swoops."
+  (let [random (java.util.Random. 5)
+        between (fn [lo hi] (+ lo (* (.nextDouble random) (- hi lo))))
+        int-between (fn [lo hi] (+ lo (.nextInt random (int (inc (- hi lo))))))
+        ; Rounded, so that the styles stay short.
+        round (fn [x] (/ (Math/round (* 10.0 x)) 10.0))
+        course (fn []
+                 {:y (between 10 32)
+                  :duration (int-between 60 100)
+                  :delay (- (between 0 100))
+                  :reverse? (< (.nextDouble random) 0.35)
+                  :swoops (vec (repeatedly 4 #(int-between -8 10)))})
+        bird (fn [course size]
+               (-> course
+                   (update :y round)
+                   (update :delay round)
+                   (assoc :size (round size)
+                          :beat (round (between 0.7 1))
+                          :phase (round (- (between 0 10)))
+                          :banks (vec (repeatedly 4 #(int-between -8 8))))))]
+    (vec (concat (for [_ (range 2)
+                       :let [flock (course)
+                             size (between 0.6 0.95)
+                             trails (reductions + 0 (repeatedly (dec (int-between 2 4))
+                                                                #(between 0.5 1.3)))]
+                       trail trails]
+                   (bird (-> flock
+                             (update :delay - trail)
+                             (update :y + (between -3 3)))
+                         (* size (between 0.9 1.1))))
+                 [(bird (course) (between 0.65 1))]))))
 
 (def night
   "The sky and the ground behind every screen. Outside of the morphed part of the page, as
@@ -200,10 +254,29 @@
        [:i.comet
         {:style (format "left:%d%%;--y:%d;rotate:%ddeg;animation-duration:%ds;animation-delay:%ds"
                         left y angle duration delay)}])
+     ; The flapping cycle is eight half beats, 60% of it, then the glide. Numbers go in with
+     ; %s, as %f would follow the locale's decimal comma.
+     (for [{:keys [y size duration delay beat phase reverse? swoops banks]} birds]
+       [:i.bird
+        {:style (str (format "--y:%s;--size:%s;--fly:%ss;--delay:%ss;--dir:%s;--cycle:%ss;--phase:%ss"
+                             y size duration delay (if reverse? "reverse" "normal")
+                             (/ (Math/round (/ beat 0.0075)) 10.0) phase)
+                     (apply str (map-indexed (fn [i m] (format ";--m%d:%s" (inc i) m)) swoops))
+                     (apply str (map-indexed (fn [i r] (format ";--r%d:%sdeg" (inc i) r)) banks)))}])
      [:div#dawn
       [:i]]
-     (svg "horizon.svg")
-     [:div.grain]]))
+     ; Two ridges, so that the mist of the day can lie between them.
+     (svg "horizon-far.svg")
+     [:i.mist.mist-far]
+     [:i.mist.mist-mid]
+     (svg "horizon-near.svg")
+     [:div.grain]
+     [:i.mist.mist-near]]))
+
+(def ^:private day-js
+  "Whether it is day: as the night switch was set in this tab, else by the browser's local
+  time."
+  "sessionStorage.getItem('day') ? sessionStorage.getItem('day') === 'true' : (h => h >= 6 && h < 18)(new Date().getHours())")
 
 (defn shim-page
   "A basic HTML page with Datastar setup."
@@ -212,7 +285,8 @@
     :as request}]
   [h/doctype-html5
    [:html
-    {:data-attr:lang "$language"}
+    {:data-attr:lang "$language"
+     :data-class "{day: $_day, night: !$_day}"}
     [:head
      [:title "Localquiz"]
      [:meta
@@ -245,6 +319,10 @@
              :content "width=device-width, initial-scale=1.0"}]]
     [:body {:data-signals:csrf session/csrf-cookie-js
             :data-signals:language "localStorage.getItem('language') || navigator.language.slice(0, 2)"
+            ; ponytail: fixed 6–18 h window; compute sunrise and sunset from the location if
+            ; the seasons matter.
+            :data-signals:_day day-js
+            :data-on-interval__duration.60s (str "$_day = " day-js)
             :data-init (init-js game-id)
             ; Reconnect when the user comes online after
             ; being offline. Closes any existing connection
@@ -373,15 +451,14 @@
   (map-indexed (fn [index item] (assoc item :index index)) coll))
 
 (defn- frequency-bar
-  "How many of `answer-count` answers were given `frequency` times, as a bar and a count,
-  both large enough to read off a projection."
+  "How many of `answer-count` answers were given `frequency` times, as a bar large enough to
+  read off a projection."
   [answer-count
    frequency]
   [:div.answer-frequency
    [:progress
     {:max answer-count
-     :value frequency}]
-   [:span (str frequency "×")]])
+     :value frequency}]])
 
 (defn answer-frequency
   [{:keys [answer-count
