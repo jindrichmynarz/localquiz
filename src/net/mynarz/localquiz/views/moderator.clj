@@ -194,7 +194,7 @@
 (defn replay-media
   "A button to replay audio or video from the question, if present."
   [tr]
-  [:button.btn#replay-media
+  [:button.key#replay-media
    {:data-show "$_media"
     :data-on:click "$_media.currentTime = 0; $_media.play()"}
    [:i.material-icons (svg "replay.svg")]

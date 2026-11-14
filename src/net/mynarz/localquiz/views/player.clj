@@ -61,18 +61,17 @@
    (tr [:rules] [(:question-time-out config)])])
 
 (defn- fire-verdict
-  "The fire in a `state` of `views/fire-scene`, :lit or :out, over `heading`. At dawn, as is
-  the final leaderboard, which `.final` brings on."
-  [state
-   ^String heading]
+  "The fire gone out, over `heading`. At dawn, as is the final leaderboard, which `.final`
+  brings on."
+  [^String heading]
   [:section#content
    [:canvas.fire-sky
     {:aria-hidden "true"
      :data-ignore-morph ""}]
    [:div.verdict.final
     [:div#campfire
-     {:class (name state)}
-     (views/fire-scene state)]
+     {:class "out"}
+     (views/fire-scene :out)]
     [:h2 heading]]])
 
 (defmethod views/game-view [:player nil]
@@ -82,8 +81,7 @@
     request
     ;; Where everyone lands when the moderator ends the game, still at dawn, and where an old
     ;; or mistyped link leads, so it does not claim the reader was a player.
-    (fire-verdict :out
-                  (tr [:game-over]))))
+    (fire-verdict (tr [:game-over]))))
 
 (defmethod views/game-view [:player :new]
   [{{:keys [game-id]} :path-params
@@ -199,9 +197,7 @@
          [:h2 (tr [:no-answer])])]
 
       ((game/winners game-id) player-id)
-      (fire-verdict :out
-                    (tr [:you-won]))
+      (fire-verdict (tr [:you-won]))
 
       :else
-      (fire-verdict :out
-                    (tr [:not-this-time])))))
+      (fire-verdict (tr [:not-this-time])))))

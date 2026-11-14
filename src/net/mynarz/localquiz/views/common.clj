@@ -93,7 +93,7 @@
       {:autofocus true
        :data-on:click "$_confirmDialog.close()"}
       (tr [:question.yesno/no])]]]
-   [:button.btn
+   [:button.key
     {:data-on:click "$_confirmDialog.showModal()"}
     [:i.material-icons (svg "cancel.svg")]
     (tr [label])]])
@@ -601,13 +601,13 @@
      [:form#answers
       [:p
        {:data-signals "{_answer: 50}"}
-       [:button.btn
+       [:button.key
         {:data-on:click__prevent "$_answer--"}
         "-"]
        [:label.percentage
         {:data-text "$_answer + ' %'"
          :for "answer"}]
-       [:button.btn
+       [:button.key
         {:data-on:click__prevent "$_answer++"}
         "+"]]
       [:p.range-input
