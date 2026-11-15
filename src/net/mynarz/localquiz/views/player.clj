@@ -1,6 +1,5 @@
 (ns net.mynarz.localquiz.views.player
-  (:require [net.mynarz.localquiz.config :refer [config]]
-            [net.mynarz.localquiz.game :as game]
+  (:require [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.util :refer [decimal-format fraction-of long-str svg]]
             [net.mynarz.localquiz.views.common :as views]
             [dev.onionpancakes.chassis.core :as h])
@@ -56,9 +55,10 @@
        (tr [:join-game])]]]))
 
 (defn game-rules
-  [tr]
+  [tr
+   ^String game-id]
   [:div#rules
-   (tr [:rules] [(:question-time-out config)])])
+   (tr [:rules] [(game/time-out game-id)])])
 
 (defn- fire-verdict
   "The fire gone out, over `heading`, which glows for the `winner?`. At dawn, as is the
@@ -98,7 +98,7 @@
       [:section#content
         waiting-icon
         [:p.hint (tr [:wait-for-game-start])]
-        (game-rules tr)])
+        (game-rules tr game-id)])
     (views/morph-body
       request
       (player-name-input request))))

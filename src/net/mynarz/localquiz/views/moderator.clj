@@ -358,7 +358,7 @@
     :as answers}]
   (let [mark-correct? (and answer-revealed? (nil? scoring))]
     [:section#content
-     (views/timer asked-at answer-revealed?)
+     (views/timer (game/time-out game-id) asked-at answer-revealed?)
      [:div#question-container
       [:div#question
        {:data-signals:_media "el.querySelector('audio, video')"

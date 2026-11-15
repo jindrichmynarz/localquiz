@@ -48,6 +48,10 @@
     :db/doc "Number of questions in the game"
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}
+   {:db/ident :game/time-out
+    :db/doc "Seconds to answer each question, overriding the configured default"
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
    {:db/ident :game/answers
     :db/doc "Answers to the current question"
     :db/valueType :db.type/ref

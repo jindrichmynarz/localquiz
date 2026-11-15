@@ -1,6 +1,5 @@
 (ns net.mynarz.localquiz.views.common
   (:require [net.mynarz.localquiz.actions.common :refer [refresh-session!]]
-            [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.crypto :as crypto]
             [net.mynarz.localquiz.game :as game]
             [net.mynarz.localquiz.headers :as headers]
@@ -367,18 +366,18 @@
   `asked-at`, so that it stays in sync on reloads and for players who join mid-question.
   The browser computes the offset, which keeps the markup the same for the whole question,
   so that re-renders do not change the view hash and are not sent."
-  [^long asked-at
+  [duration
+   ^long asked-at
    ^Boolean answer-revealed?]
   (when-not answer-revealed?
-    (let [duration (:question-time-out config)]
-      [:div.timer
-       {:data-style:--duration (format "'%ds'" duration)}
-       [:div
-        ;; Capped at 0, so that a client clock behind the server's does not delay the start.
-        ;; Preserved, as a morph removing the style would re-run the expression on the
-        ;; running animation, counting the elapsed time twice.
-        {:data-preserve-attr "style"
-         :data-style:animation-delay (format "Math.min(0, %d - Date.now()) + 'ms'" asked-at)}]])))
+    [:div.timer
+     {:data-style:--duration (format "'%ds'" duration)}
+     [:div
+      ;; Capped at 0, so that a client clock behind the server's does not delay the start.
+      ;; Preserved, as a morph removing the style would re-run the expression on the
+      ;; running animation, counting the elapsed time twice.
+      {:data-preserve-attr "style"
+       :data-style:animation-delay (format "Math.min(0, %d - Date.now()) + 'ms'" asked-at)}]]))
 
 (defmulti game-view
   (juxt ->session-role (comp :state :game)))

@@ -15,7 +15,8 @@ Quizzes are formatted as a map with one required and two optional keys:
 ```clj
 {:questions #{,,,}     ; Required. A set of questions (at least one, all distinct).
  :creators  #{,,,}     ; Optional. Who made the quiz.
- :defs      {,,,}}     ; Optional. Reusable values referenced from questions.
+ :defs      {,,,}      ; Optional. Reusable values referenced from questions.
+ :time-out  45}       ; Optional. Seconds to answer each question. Defaults to 45.
 ```
 
 `:creators` is a collection of maps with a required `:name` and an optional `:url` (which must be an `http`/`https` URL):

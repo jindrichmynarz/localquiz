@@ -100,7 +100,8 @@
                                 shuffle
                                 (take number-of-questions)
                                 (map pr-str))
-                           defs)
+                           defs
+                           (:time-out success))
         (refresh-session! request {:redirect (str "/host/" game-id)})))))
 
 (defn next!

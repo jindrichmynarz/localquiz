@@ -91,6 +91,14 @@
 
 (use-fixtures :once fixtures/test-db)
 
+(deftest time-out
+  (let [game-id (crypto/random-unguessable-uid)
+        custom-id (crypto/random-unguessable-uid)]
+    (-create-game! game-id)
+    (game/create-game! custom-id (crypto/random-unguessable-uid) [(pr-str fixtures/question)] [] 10)
+    (is (= (:question-time-out net.mynarz.localquiz.config/config) (game/time-out game-id)))
+    (is (= 10 (game/time-out custom-id)))))
+
 (deftest get-game-state
   (is (= (game/get-game-state fixtures/game-id) :new)))
 

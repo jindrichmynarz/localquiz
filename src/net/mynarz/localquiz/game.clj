@@ -368,6 +368,12 @@
        @db-conn
        game-id))
 
+(defn time-out
+  "Seconds to answer each question in the game with `game-id`."
+  [^String game-id]
+  (or (:game/time-out (d/entity @db-conn [:game/id game-id]))
+      (:question-time-out config)))
+
 (defn schedule-timeout
   "Schedule a timeout for the game identified by `game-id`."
   [^String game-id]
@@ -375,7 +381,7 @@
          assoc
          game-id
          (future
-           (Thread/sleep ^int (* 1000 (:question-time-out config)))
+           (Thread/sleep ^int (* 1000 (time-out game-id)))
            (log/infof "Time-out in game %s!" game-id)
            (evaluate-answers! game-id))))
 
@@ -420,15 +426,17 @@
             (evaluate-answers! game-id)))))
 
 (defn create-game!
-  "Create a game `game-id` owned by moderator session `moderator-id` from `questions` and optional `defs`."
+  "Create a game `game-id` owned by moderator session `moderator-id` from `questions`,
+  optional `defs`, and optional `time-out` in seconds."
   ([^String game-id
     ^String moderator-id
     questions]
-   (create-game! game-id moderator-id questions []))
+   (create-game! game-id moderator-id questions [] nil))
   ([^String game-id
     ^String moderator-id
     questions
-    defs]
+    defs
+    time-out]
    (log/infof "Creating a new game %s." game-id)
    (d/transact db-conn [(cond-> {:game/id game-id
                                  :game/moderator moderator-id
@@ -440,7 +448,8 @@
                                  ;; transaction asserts, and later updates assert only what
                                  ;; they change.
                                  :db/ensure :game}
-                          (seq defs) (assoc :game/defs defs))])))
+                          (seq defs) (assoc :game/defs defs)
+                          time-out (assoc :game/time-out (long time-out)))])))
 
 (defn end-game-sessions!
   "End sessions associated with the game with `game-id`."

@@ -211,9 +211,11 @@
 
 (s/def ::defs (s/map-of keyword? any?))
 
+(s/def ::time-out pos-int?)
+
 (s/def ::data
   (s/keys :req-un [::questions]
-          :opt-un [::creators ::defs]))
+          :opt-un [::creators ::defs ::time-out]))
 
 (defn oversized-report
   "Report the parts of `data` too long to store in Datahike, or nil when they all fit.
