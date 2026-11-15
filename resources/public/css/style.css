@@ -3101,9 +3101,9 @@ h2.points {
 
   .points-value {
     font-size: 3em;
-    color: var(--orange);
+    color: var(--moon);
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 2px 0 #000, 0 0 24px rgb(from var(--orange) r g b / 55%);
+    text-shadow: 0 2px 0 #000;
   }
 
   .points-unit {
