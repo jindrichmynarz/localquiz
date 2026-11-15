@@ -2723,6 +2723,12 @@ progress {
   flex-flow: row wrap;
   max-width: 60em;
 
+  /* Lifted off the night, which the panel's colour nearly matches. The day's panel stands
+     out on its own. */
+  :root:not(.day) & {
+    --panel: #1a222c;
+  }
+
   input[type="radio"] + label {
     cursor: pointer;
     order: 1;
