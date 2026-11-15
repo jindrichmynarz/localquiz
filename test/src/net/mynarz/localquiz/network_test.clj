@@ -3,11 +3,15 @@
             [clojure.test :refer [deftest is testing]]))
 
 (defn- choices
-  "Choices describing the network of `arcs`, each `[parent child]`."
+  "Choices describing the network of `arcs`, each `[parent child]`, its parentless nodes
+  marked as roots."
   [arcs]
-  (vec (for [[child arcs] (group-by second arcs)]
-         {:label child
-          :related (mapv first arcs)})))
+  (let [children (set (map second arcs))]
+    (into (vec (for [root (distinct (remove children (map first arcs)))]
+                 {:label root :root? true}))
+          (for [[child arcs] (group-by second arcs)]
+            {:label child
+             :related (mapv first arcs)}))))
 
 (def ^:private fans
   "A planar network: the root's children form a path, and each has a fan of grandchildren
@@ -26,7 +30,11 @@
 (deftest validation
   (testing "A network needs one root"
     (is (network/single-root? fans))
-    (is (not (network/single-root? (choices [["a" "b"] ["c" "d"]])))))
+    (is (not (network/single-root? (choices [["a" "b"] ["c" "d"]]))))
+    (testing "marked as such, rather than inferred from having no parents"
+      (is (not (network/single-root? [{:label "a" :related ["root"]}])))
+      (is (= "root" (network/root [{:label "root" :root? true}
+                                   {:label "a" :related ["root"]}])))))
   (testing "A network may loop, but every node must be reachable from its root"
     (is (network/connected? fans))
     (is (network/connected? (choices [["root" "a"] ["a" "b"] ["b" "a"]])))

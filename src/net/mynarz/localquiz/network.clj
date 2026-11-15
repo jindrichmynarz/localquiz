@@ -61,8 +61,7 @@
                                      parent related]
                                  [parent label])))
         nodes   (vec (distinct (concat (mapcat :related choices) (map :label choices))))
-        child   (set (map second arcs))
-        roots   (filterv (complement child) nodes)
+        roots   (mapv :label (filter :root? choices))
         forward (forward-arcs arcs (first roots))]
     {:nodes   nodes
      :arcs    arcs
@@ -73,7 +72,7 @@
 (def network
   "The graph `choices` describe, as `{:nodes :arcs :roots :forward :order}`. An arc
   `[parent child]` runs to each choice from every label in its :related. Roots are the
-  nodes without parents, and need not be choices. `:forward` are the arcs that do not close
+  choices marked :root?, which are nodes but not answers. `:forward` are the arcs that do not close
   a loop, as seen from the first root, and `:order` is topological by them, or nil when a
   loop lies out of that root's reach. Memoized, as every question sharing the choices asks
   for it."
@@ -144,15 +143,12 @@
 
 (defn nearby
   "Nodes within `max-hops` of `node` in the network `choices` describe, as `{node distance}`,
-  following arcs either way. Paths do not pass through the root unless it is a choice: a
-  root that only ties the network together says nothing about how close two nodes are."
+  following arcs either way. Paths do not pass through the root: it only ties the network
+  together, and says nothing about how close two nodes are."
   [choices node max-hops]
   (let [{:keys [arcs]} (network choices)
         root           (root choices)
-        arcs           (if (some (comp #{root} :label) choices)
-                         arcs
-                         (remove (partial some #{root}) arcs))
-        adjacent       (adjacency arcs)]
+        adjacent       (adjacency (remove (partial some #{root}) arcs))]
     (loop [ring     [node]
            distance {node 0}
            hops     0]

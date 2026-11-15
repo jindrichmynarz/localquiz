@@ -19,7 +19,8 @@
                       :let [[x y] (positions node)]]
                   {:id node :x x :y y})
        :edges   arcs
-       :choices (map #(select-keys % [:label]) choices)})))
+       ;; The root is no answer.
+       :choices (map #(select-keys % [:label]) (remove :root? choices))})))
 
 (def ^:private network-json-memo
   "Every question sharing a network shares it, so it is computed once."

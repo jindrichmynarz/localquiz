@@ -70,7 +70,8 @@
   ; root -> A, B; A -> A1, A2; B -> B1
   (let [question {:type :network
                   :scoring :consensus
-                  :choices [{:label "A" :related ["root"]}
+                  :choices [{:label "root" :root? true}
+                            {:label "A" :related ["root"]}
                             {:label "B" :related ["root"]}
                             {:label "A1" :related ["A"]}
                             {:label "A2" :related ["A"]}

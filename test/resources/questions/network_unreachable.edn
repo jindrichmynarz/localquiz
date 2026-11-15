@@ -1,4 +1,5 @@
-{:defs {:genres [{:label "House" :related ["Genre"]}
+{:defs {:genres [{:label "Genre" :root? true}
+                 {:label "House" :related ["Genre"]}
                  {:label "Techno" :related ["Acid House"]}
                  {:label "Acid House" :related ["Techno"]}]}
  :questions #{{:type :network

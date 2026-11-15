@@ -101,7 +101,8 @@
       (string/replace "&amp;" "&")))
 
 (deftest network-answers
-  (let [choices [{:label "House" :related ["Genre"]}
+  (let [choices [{:label "Genre" :root? true}
+                 {:label "House" :related ["Genre"]}
                  {:label "Techno" :related ["Genre"] :description "Detroit, emerged mid 80s."}
                  {:label "Acid House" :related ["House" "Techno"]}]
         html (h/html (views/answers-view fixtures/tr false {} fixtures/game-id false
@@ -118,7 +119,7 @@
       (is (= "Genre" (:root network)))
       (is (= #{"Genre" "House" "Techno" "Acid House"} (set (map :id (:nodes network)))))
       (is (every? (comp number? :x) (:nodes network))))
-    (testing "Choices are passed in by label"
+    (testing "Choices are passed in by label, the root, which is no answer, left out"
       (is (= [{:label "House"} {:label "Techno"} {:label "Acid House"}]
              (:choices network))))
     (testing "A description shows under the search box once its choice is selected"
@@ -128,7 +129,8 @@
       (is (string/includes? html "hint-pointer=\"Drag to move the map, scroll to zoom\"")))))
 
 (deftest network-search
-  (let [choices [{:label "House" :related ["Genre"]}
+  (let [choices [{:label "Genre" :root? true}
+                 {:label "House" :related ["Genre"]}
                  {:label "Techno" :related ["Genre"] :description "Detroit, emerged mid 80s."}
                  {:label "Acid House" :related ["House" "Techno"]}]
         render (fn [fragment]
@@ -151,7 +153,8 @@
       (is (= 1 (count (re-seq #"name=\"answer\"" (render ""))))))))
 
 (def ^:private revealed-choices
-  [{:label "House" :related ["Genre"]}
+  [{:label "Genre" :root? true}
+   {:label "House" :related ["Genre"]}
    {:label "Techno" :related ["Genre"] :description "Detroit, emerged mid 80s."}
    {:label "Acid House" :related ["House"]}
    {:label "Deep House" :related ["House"]}])

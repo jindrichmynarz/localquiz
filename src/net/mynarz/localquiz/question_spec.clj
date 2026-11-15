@@ -86,14 +86,16 @@
 
 (s/def ::related (s/coll-of string? :kind vector?))
 
+(s/def ::root? boolean?)
+
 (s/def ::choice
   (s/or ;; A multiple-choice option (see the :multiple question).
         :choice (s/keys :req-un [::text]
                         :opt-un [::correct?])
         ;; A labelled option (e.g. an :autocomplete suggestion), :related to its parents
-        ;; in the network of a :network question.
+        ;; in the network of a :network question, whose root it is if :root?.
         :option (s/keys :req-un [::label]
-                        :opt-un [::description ::related])))
+                        :opt-un [::description ::related ::root?])))
 
 (s/def ::choice-list
   (s/coll-of ::choice
@@ -151,7 +153,8 @@
 
 (defmethod question :network [_]
   ;; Players pick one of the :choices from the network their :related describe, which may
-  ;; loop but must all be reachable from its single root, around which it is drawn.
+  ;; loop but must all be reachable from its single root, the choice marked :root?, around
+  ;; which it is drawn.
   ;; Scored across players, like :autocomplete.
   (s/and (s/keys :req-un [::choices])
          (comp #{:consensus :majority} :scoring)
