@@ -135,6 +135,27 @@ body {
       width: min(100%, 30em);
       margin-inline: auto;
     }
+
+    /* The leaderboard stops at the bottom of the screen, cutting off the players below. */
+    #content:has(#leaderboard) {
+      min-height: 0;
+    }
+
+    #leaderboard {
+      min-height: 0;
+      overflow: hidden;
+      /* The rows cut off fade into the ground, saying that there are more players. Only
+         while the rows overflow, which is when the scroll timeline is active, as only then
+         is there anything to scroll. */
+      animation: overflowing linear both;
+      animation-timeline: scroll(self);
+    }
+  }
+}
+
+@keyframes overflowing {
+  from, to {
+    mask-image: linear-gradient(black calc(100% - 4em), transparent);
   }
 }
 
@@ -2526,18 +2547,21 @@ copy-button {
       width: calc(var(--score) * var(--bar));
     }
 
-    .score-bar {
-      display: inline-block;
-      border-radius: 2px 5px 2px 4px / 4px 2px 5px 2px;
-      background-color: var(--orange);
-      box-shadow:
-        0 0 8px rgb(from var(--orange) r g b / 27%),
-        inset 0 -3px 4px rgb(110 30 10 / 40%);
-      height: .5em;
-      vertical-align: middle;
-      animation: grow 1s ease-out forwards;
-    }
   }
+}
+
+/* A score as a bar of the length `--bar` at the top score, growing from `--former-score`
+   to `--score`, both fractions of the top score. */
+.score-bar {
+  display: inline-block;
+  border-radius: 2px 5px 2px 4px / 4px 2px 5px 2px;
+  background-color: var(--orange);
+  box-shadow:
+    0 0 8px rgb(from var(--orange) r g b / 27%),
+    inset 0 -3px 4px rgb(110 30 10 / 40%);
+  height: .5em;
+  vertical-align: middle;
+  animation: grow 1s ease-out forwards;
 }
 
 @keyframes grow {
@@ -3108,5 +3132,32 @@ h2.points {
 
   .points-unit {
     color: var(--muted);
+  }
+
+  /* The running total, quieter than what the question earned. The bar's full length is
+     held, so that the number stays put as the bar grows. */
+  .points-total {
+    --bar: 8em;
+
+    display: grid;
+    grid-template-columns: var(--bar) auto;
+    align-items: center;
+    gap: 1ch;
+    margin-top: .75em;
+    font-size: .6em;
+    font-variant-numeric: tabular-nums;
+
+    /* The track of the top score, faint behind the bar, which shows what the bar is
+       measured against. */
+    &::before {
+      content: "";
+      height: .5em;
+      border-radius: 2px 5px 2px 4px / 4px 2px 5px 2px;
+      background: rgb(0 0 0 / 30%);
+    }
+
+    &::before, .score-bar {
+      grid-area: 1 / 1;
+    }
   }
 }

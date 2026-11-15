@@ -55,6 +55,7 @@
         :point "bod"
         :point-fraction "bodu"
         :points "bodů"
+        :points-few "body"
         :question {:progress "Otázka %1/%2"
                    :yesno {:yes "Ano"
                            :no "Ne"}}
@@ -170,6 +171,7 @@
         :point "point"
         :point-fraction "points"
         :points "points"
+        :points-few "points"
         :question {:progress "Question %1/%2"
                    :yesno {:yes "Yes"
                            :no "No"}}

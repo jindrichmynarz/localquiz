@@ -549,6 +549,23 @@
           (= scoring :majority)
           (assoc :answer/majority (pos? score)))))))
 
+(defn player-score
+  "The total score of the player with `player-id`."
+  [^String player-id]
+  (:player/score (player-entity @db-conn player-id) 0.0))
+
+(defn max-score
+  "The top total score in the game with `game-id`, or 0.0 if no one has scored."
+  [^String game-id]
+  (or (d/q '[:find (max ?score) .
+             :in $ ?game-id
+             :where [?game :game/id ?game-id]
+                    [?game :game/players ?player]
+                    [?player :player/score ?score]]
+           @db-conn
+           game-id)
+      0.0))
+
 (defn game-players
   "Get the names of players in game with `game-id`."
   [^String game-id]

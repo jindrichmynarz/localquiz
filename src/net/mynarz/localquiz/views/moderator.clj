@@ -122,7 +122,7 @@
    ^String game-id]
   (let [{:game/keys [questions questions-total]} (game/game-progress game-id)
         questions-answered (- questions-total questions)
-        leaderboard-data (game/leaderboard game-id)
+        leaderboard-data (take 10 (game/leaderboard game-id))
         max-score (->> leaderboard-data
                        (map :total-score)
                        (apply max))

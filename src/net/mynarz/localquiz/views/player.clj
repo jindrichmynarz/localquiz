@@ -1,7 +1,7 @@
 (ns net.mynarz.localquiz.views.player
   (:require [net.mynarz.localquiz.config :refer [config]]
             [net.mynarz.localquiz.game :as game]
-            [net.mynarz.localquiz.util :refer [decimal-format long-str svg]]
+            [net.mynarz.localquiz.util :refer [decimal-format fraction-of long-str svg]]
             [net.mynarz.localquiz.views.common :as views]
             [dev.onionpancakes.chassis.core :as h])
   (:import (java.util Collections LinkedHashMap Map)))
@@ -184,6 +184,15 @@
               (some? majority) (tr [(if majority :majority-gained :majority-failed)])
               (nil? answer) (tr [:no-answer]))]])))
 
+(defn- points-key
+  "The translation key of the unit for `n` points, by the Czech plural: 1 bod, 2–4 body,
+  5 bodů, and bodu for a fraction."
+  [^double n]
+  (cond (not= n (Math/floor n)) :point-fraction
+        (= n 1.0) :point
+        (<= 2.0 n 4.0) :points-few
+        :else :points))
+
 (defmethod views/game-view [:player :leaderboard]
   [{{:keys [game-id]} :path-params
     player-id :sid
@@ -198,9 +207,17 @@
        (if-let [{:answer/keys [score]} (game/player-answer game-id player-id)]
          [:h2.points
           [:span.points-value (str "+" (decimal-format score))]
-          [:span.points-unit (tr [(cond (= score 1.0) :point
-                                        (>= score 2.0) :points
-                                        :else :point-fraction)])]]
+          [:span.points-unit (tr [(points-key score)])]
+          ;; The total as the leaderboard's bar, growing by what the question earned, against
+          ;; the top score.
+          (let [total (game/player-score player-id)
+                max-score (game/max-score game-id)]
+            [:span.points-total
+             {:style (format "--former-score: %s; --score: %s;"
+                             (decimal-format (fraction-of (- total score) max-score))
+                             (decimal-format (fraction-of total max-score)))}
+             [:span.score-bar]
+             [:span (decimal-format total) " " (tr [(points-key total)])]])]
          [:h2 (tr [:no-answer])])]
 
       ((game/winners game-id) player-id)
