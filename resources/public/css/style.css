@@ -121,11 +121,6 @@ body {
       font-size: calc(var(--font-size) * .6);
     }
 
-    /* Hung from the top, so that what the reveal adds under the question cannot move it. */
-    #content:has(#question) {
-      justify-content: flex-start;
-    }
-
     /* The other boards fill the wall, but this one is read from its label to its value. */
     #choices {
       grid-auto-rows: 1fr;
@@ -291,6 +286,11 @@ main {
   flex: 1;
   align-items: flex-start;
   font-size: var(--font-size);
+
+  /* Half the browser's gap, which spreads a screen meant to be taken in at a glance. */
+  p {
+    margin-block: .5em;
+  }
 }
 
 h1, h2, h3, h4, h5 {
@@ -2149,6 +2149,13 @@ copy-button {
   text-align: center;
 }
 
+/* Hung from the top, right under the header, rather than centred in the screen, so that
+   what the reveal adds under the question cannot move it. */
+#content:has(#question, #answers) {
+  justify-content: flex-start;
+  margin-top: 0;
+}
+
 /* Boards take the whole column, rather than the width of their text, which leaves them as
    small as "Yes" and different on every question. */
 #content:has(#choices, #sortableList, sortable-list) {
@@ -2179,12 +2186,80 @@ copy-button {
       border: 2px solid var(--sky);
       border-radius: 3px 8px 2px 10px / 9px 2px 7px 3px;
       max-height: 40vh;
+      /* Scaled to fit, keeping the shape its width and height attributes give it before it
+         loads, rather than drawn at their size. */
+      width: auto;
+      height: auto;
+      /* Lifted a little off the night, like the boards under it. */
+      box-shadow: 0 4px 12px rgb(0 0 0 / 45%);
+    }
+
+    /* Tighter than a paragraph of prose, as the height goes to the answers. */
+    p {
+      margin-block: .25em;
     }
   }
 
   /* A step below the question, whichever type of answers follows it. */
   > :not(#question) {
     font-size: .85em;
+  }
+}
+
+/* On the wall, a picture takes the left of the screen at its full height, and the question
+   and its answers are read beside it, on the right. Even a picture wider than tall is
+   larger there than above them, as the question and its answers take much of the height.
+   The question is unpacked, so that its picture and its text each take their own column. */
+#morph.projected #content:has(#question > img, #question > div > img) {
+  /* The whole column, whatever the type of answers. Less its margin and padding. */
+  width: calc(100% - 3em);
+  /* Held to the screen, so that a picture can shrink to what is left of it. */
+  min-height: 0;
+}
+
+#morph.projected #question-container:has(#question > img, #question > div > img) {
+  display: grid;
+  grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+  /* The text, then the answers, between two rows that split what the picture leaves of
+     its height, which holds them level with its middle. */
+  grid-template-rows: 1fr auto auto 1fr;
+  gap: 0 1.5em;
+  align-self: stretch;
+  align-items: start;
+
+  #question,
+  #question > div {
+    display: contents;
+  }
+
+  #question img {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    justify-self: end;
+    /* Level with the middle of the question and its answers, when they are the taller. */
+    align-self: center;
+    max-width: 100%;
+    /* The screen under the header, less the key that moves on after the reveal. */
+    max-height: calc(100dvh - var(--horizon) - 4em);
+  }
+
+  /* ponytail: one paragraph of text is placed for; more paragraphs would overlap in its row.
+     Wrap the text of the question in an element of its own if that is ever needed. */
+  #question p {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  > :not(#question) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  /* Few enough choices for one column beside the picture, as tall as their text. A crowd of
+     players keeps two. */
+  #choices:not(:has(> :nth-child(5))) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
   }
 }
 
@@ -2214,7 +2289,6 @@ copy-button {
   label {
     display: inline-block;
     box-sizing: border-box;
-    padding: .5em;
 
     &:has(input:disabled) {
       cursor: inherit;
@@ -2243,7 +2317,7 @@ copy-button {
 
 #choices label {
   display: flex;
-  padding: .75em;
+  padding: .4em .6em;
   overflow-wrap: anywhere;
 }
 
@@ -2596,6 +2670,21 @@ copy-button {
     margin-block-end: .25em;
     cursor: grab;
     filter: drop-shadow(0 6px 8px rgb(0 0 0 / 70%));
+
+    > span {
+      min-width: 0;
+    }
+
+    /* Pictures to sort, kept small enough to see the whole list. */
+    img {
+      display: block;
+      max-width: 100%;
+      max-height: 5em;
+    }
+
+    p {
+      margin: 0;
+    }
 
     &:nth-child(3n + 2) {
       --cut: 8px 4px 9px 4px / 4px 9px 4px 8px;
