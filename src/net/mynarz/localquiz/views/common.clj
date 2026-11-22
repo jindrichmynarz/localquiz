@@ -761,7 +761,8 @@
             [:li [:span text]]))]
        [:sortable-list
         {:items (->> shuffled-items
-                     (map (fn [{:keys [index text]}] {:value index :label text}))
+                     ;; Rendered here, as the component cannot render Hiccup.
+                     (map (fn [{:keys [index text]}] {:value index :label (h/html text)}))
                      charred/write-json-str)
          ;; Morphing would empty what the component renders into itself.
          :data-ignore-morph ""}])
