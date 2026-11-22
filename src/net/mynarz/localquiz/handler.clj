@@ -17,6 +17,18 @@
                                (log/error exception)
                                (handler exception request))})))
 
+(defn- revalidated
+  "Have browsers check the files `handler` serves for changes on every use, a cheap 304
+  while they are unchanged, rather than guess how long they stay fresh, which ran a script
+  cached before a deploy against the markup after it."
+  [handler]
+  (let [no-cache #(some-> % (assoc-in [:headers "Cache-Control"] "no-cache"))]
+    (fn
+      ([request]
+       (no-cache (handler request)))
+      ([request respond raise]
+       (handler request (comp respond no-cache) raise)))))
+
 (defn ->handler
   []
   (ring/ring-handler
@@ -42,5 +54,5 @@
                          ;; because that overwrites the parameters.
                          middleware/wrap-multipart]}})
    (ring/routes
-    (ring/create-resource-handler {:path "/"})
+    (revalidated (ring/create-resource-handler {:path "/"}))
     (ring/create-default-handler))))
