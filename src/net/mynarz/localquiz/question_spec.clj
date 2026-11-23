@@ -185,8 +185,7 @@
 
 (s/def ::questions
   (s/coll-of ::question
-             :min-count 1
-             :distinct true))
+             :min-count 1))
 
 (s/def ::name string?)
 
