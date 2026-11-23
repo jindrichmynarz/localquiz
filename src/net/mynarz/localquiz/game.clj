@@ -508,10 +508,6 @@
    ^String player-name]
   (d/transact db-conn [[:db.fn/call join-game game-id player-id player-name]]))
 
-(comment
-  (join-game! "GYJ2DY3jOC68xcHceoetI9eC170" "12345" "🐞 🍀 🌹 🍻")
-  (join-game! "U-xqe5S67YcHSbdhMX7ZNhN7wt8" "5678" "Tom"))
-
 (defn disconnect-player
   "Transaction function that retracts the player with `player-id` and their answer, which
   would otherwise stay in their game's answers and count towards `answer-progress`."
