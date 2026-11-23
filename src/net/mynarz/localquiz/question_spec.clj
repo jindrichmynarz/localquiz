@@ -213,7 +213,9 @@
 
 (s/def ::defs (s/map-of keyword? any?))
 
-(s/def ::time-out pos-int?)
+(s/def ::time-out
+  ; Question time-out in seconds
+  pos-int?)
 
 (s/def ::data
   (s/keys :req-un [::questions]
