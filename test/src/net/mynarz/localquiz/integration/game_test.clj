@@ -134,6 +134,22 @@
     (game/next-question! fixtures/game-id))
   (is (= (dissoc (game/current-question fixtures/game-id) :asked-at) fixtures/question)))
 
+(deftest duplicate-questions
+  (let [game-id (crypto/random-unguessable-uid)
+        question (pr-str fixtures/question)]
+    (game/create-game! game-id (crypto/random-unguessable-uid) [question question])
+    (is (= (game/game-progress game-id) {:game/questions 2 :game/questions-total 2}))
+    (with-redefs [game/schedule-timeout (fn [_])]
+      (game/next-question! game-id))
+    (is (= (:game/questions (game/game-progress game-id)) 1))
+    (is (not (game/all-questions-answered? game-id)))
+    (testing "Asking the same question again restarts its timer"
+      (let [asked-at (game/question-asked-at game-id)]
+        (Thread/sleep 5)
+        (with-redefs [game/schedule-timeout (fn [_])]
+          (game/next-question! game-id))
+        (is (> (game/question-asked-at game-id) asked-at))))))
+
 (deftest search-fragments
   (let [game-id (crypto/random-unguessable-uid)
         alice (crypto/random-unguessable-uid)

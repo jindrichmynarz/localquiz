@@ -35,10 +35,16 @@
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
    {:db/ident :game/questions
-    :db/doc "Questions in a game stored as EDN strings"
+    :db/doc "Questions in a game left to ask. Entities rather than strings, so that
+            duplicate questions are kept."
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/isComponent true}
+   {:db/ident :question/edn
+    :db/doc "Question stored as an EDN string"
     :db/valueType :db.type/string
     :db/maxLength qs/max-string-length
-    :db/cardinality :db.cardinality/many}
+    :db/cardinality :db.cardinality/one}
    {:db/ident :game/current-question
     :db/doc "Current question of a game stored as an EDN string"
     :db/valueType :db.type/string

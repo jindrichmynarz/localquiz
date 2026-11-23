@@ -13,7 +13,7 @@ A quiz is an [EDN](https://github.com/edn-format/edn) file describing a set of q
 Quizzes are formatted as a map with one required and two optional keys:
 
 ```clj
-{:questions #{,,,}     ; Required. A set of questions (at least one, all distinct).
+{:questions [,,,]      ; Required. A collection of questions (at least one). Duplicates are kept.
  :creators  #{,,,}     ; Optional. Who made the quiz.
  :defs      {,,,}      ; Optional. Reusable values referenced from questions.
  :time-out  45}       ; Optional. Seconds to answer each question. Defaults to 45.
@@ -139,12 +139,12 @@ To avoid repeating a value, define it under `:defs` and reference it with `{:ref
 ```clojure
 {:defs {:genres [{:text "Acid House"} {:text "Ambient"} {:text "Big Beat"} ,,,]}
  :questions
- #{{:type :multiple
-    :scoring :consensus
-    :text [:div
-           [:audio {:src "/audio/offshore.mp3"}]
-           [:p "What genre fits this track the best?"]]
-    :choices {:ref :genres}}}}
+ [{:type :multiple
+   :scoring :consensus
+   :text [:div
+          [:audio {:src "/audio/offshore.mp3"}]
+          [:p "What genre fits this track the best?"]]
+   :choices {:ref :genres}}]}
 ```
 
 A namespaced reference such as `{:ref :genres/ambient}` does a two-level look-up (`:genres` then `:ambient`). Referencing an unknown id is an error.

@@ -390,18 +390,22 @@
   Removes the question from the game and sets it as the current question.
   Returns nil if there are no more questions."
   [^String game-id]
-  (when-let [question (d/q '[:find ?question .
-                             :in $ ?game-id
-                             :where [?game :game/id ?game-id]
-                                    [?game :game/questions ?question]]
-                           @db-conn
-                           game-id)]
+  (when-let [[q question] (d/q '[:find [?q ?question]
+                                 :in $ ?game-id
+                                 :where [?game :game/id ?game-id]
+                                        [?game :game/questions ?q]
+                                        [?q :question/edn ?question]]
+                               @db-conn
+                               game-id)]
     (->> game-id
          get-answer-ids
          (mapv (partial vector :db/retractEntity))
          (into [[:db/add [:game/id game-id] :game/state :question]
+                ;; Retracted first, as asserting a duplicate question equal to the current
+                ;; one would be a no-op, keeping the old transaction and so its asked-at.
+                [:db.fn/retractAttribute [:game/id game-id] :game/current-question]
                 [:db/add [:game/id game-id] :game/current-question question]
-                [:db/retract [:game/id game-id] :game/questions question]
+                [:db/retractEntity q]
                 [:db.fn/call clear-search-fragments game-id]])
          (d/transact db-conn))
     (schedule-timeout game-id)))
@@ -441,7 +445,8 @@
    (d/transact db-conn [(cond-> {:game/id game-id
                                  :game/moderator moderator-id
                                  :game/state :new
-                                 :game/questions questions
+                                 :game/questions (mapv (partial hash-map :question/edn)
+                                                       questions)
                                  :game/questions-total (-> questions count long)
                                  ;; Checks the :game spec. Only creation can do this:
                                  ;; :db.entity/attrs is satisfied by the attributes a single

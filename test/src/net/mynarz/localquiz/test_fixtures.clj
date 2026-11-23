@@ -24,7 +24,7 @@
   [{:game/id game-id
     :game/moderator moderator-id
     :game/state :new
-    :game/questions [(pr-str question)]
+    :game/questions [{:question/edn (pr-str question)}]
     :game/players [{:player/id (crypto/random-unguessable-uid)
                     :player/name "Jane"
                     :player/score 1.0
