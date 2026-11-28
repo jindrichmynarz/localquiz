@@ -493,14 +493,22 @@
 
 (defn join-game
   "Transaction function that adds `player-id` with `player-name` to the game with `game-id`.
-  Requires the game to be in :new state."
+  Requires the game to be in :new state, the player not to be its moderator, and not to be
+  in any game yet. Throws with the i18n key of the reason as :error."
   [db
    ^String game-id
    ^String player-id
    ^String player-name]
-  (when-not (= :new (:game/state (d/entity db [:game/id game-id])))
-    (throw (ex-info "Cannot join a game that is not in :new state."
-                    {:error :game-already-started})))
+  (let [game (d/entity db [:game/id game-id])]
+    (when-not (= :new (:game/state game))
+      (throw (ex-info "Cannot join a game that is not in :new state."
+                      {:error :errors/game-not-joinable})))
+    (when (= player-id (:game/moderator game))
+      (throw (ex-info "The moderator cannot play their own game."
+                      {:error :errors/moderator-cannot-play})))
+    (when (player-entity db player-id)
+      (throw (ex-info "The player is already in a game."
+                      {:error :errors/game-already-joined}))))
   [{:db/id [:game/id game-id]
     :game/players [{:player/id player-id
                     :player/name player-name

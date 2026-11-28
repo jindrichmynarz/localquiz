@@ -28,8 +28,11 @@
     (try
       (game/join-game! game-id player-id player-name)
       (catch Exception e
-        (when (= (:error (ex-data e)) :game-already-started)
-          (refresh-session! request {:signals {:error (tr [:errors/game-not-joinable])}}))))))
+        ;; Refusals carry their i18n key as :error, unlike Datahike's own errors.
+        (let [error (:error (ex-data e))]
+          (if (= "errors" (some-> error namespace))
+            (refresh-session! request {:signals {:error (tr [error])}})
+            (throw e)))))))
 
 (defn autocomplete-handler
   "Stores the autocomplete fragment the player has typed."

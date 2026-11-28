@@ -20,6 +20,8 @@
                                :no-name "Hráč musí mít jméno."
                                :taken "Hráč tohoto jména už je ve hře."}
                  :game-not-joinable "Hra již začala."
+                 :game-already-joined "Už hrajete jinou hru."
+                 :moderator-cannot-play "Moderátor nemůže hrát svou hru."
                  :question-source-missing "Žádné otázky nebyly zadány!"
                  :time-out "Čas vypršel!"
                  :unknown-question-source "Neznámý zdroj otázek!"}
@@ -136,6 +138,8 @@
                                :no-name "The player must have a name."
                                :taken "This name is already taken."}
                  :game-not-joinable "The game has already started."
+                 :game-already-joined "You are already playing another game."
+                 :moderator-cannot-play "The moderator cannot play their own game."
                  :question-source-missing "Question source missing!"
                  :time-out "Time's out!"
                  :unknown-question-source "Unknown question source!"}

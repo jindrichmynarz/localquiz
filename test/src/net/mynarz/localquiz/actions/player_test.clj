@@ -26,3 +26,28 @@
   (let [player-id (crypto/random-unguessable-uid)]
     (player/join-game! (assoc (player-params "Angela") :sid player-id))
     (is (not (game/player-in-game? fixtures/game-id player-id)))))
+
+(defn- join-error
+  "The error `join-game!` shows the player for `request`, or nil if they joined."
+  [request]
+  (let [errors (atom [])]
+    (with-redefs [net.mynarz.localquiz.actions.common/refresh-session!
+                  (fn [_ {{:keys [error]} :signals}] (when error (swap! errors conj error)))]
+      (player/join-game! request))
+    (first @errors)))
+
+(deftest join-game!-requires-not-moderator
+  (is (= (fixtures/tr [:errors/moderator-cannot-play])
+         (join-error (assoc (player-params "Mod") :sid fixtures/moderator-id))))
+  (is (not (game/player-in-game? fixtures/game-id fixtures/moderator-id))))
+
+(deftest join-game!-one-game-per-session
+  (let [other-game (crypto/random-unguessable-uid)
+        {:keys [sid]
+         :as request} (player-params "Sam")]
+    (game/create-game! other-game (crypto/random-unguessable-uid) [(pr-str fixtures/question)])
+    (is (nil? (join-error request)))
+    (is (= (fixtures/tr [:errors/game-already-joined])
+           (join-error (assoc-in request [:path-params :game-id] other-game))))
+    (is (game/player-in-game? fixtures/game-id sid))
+    (is (not (game/player-in-game? other-game sid)))))
