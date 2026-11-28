@@ -145,6 +145,24 @@
       (game/advance! game-id)
       (is (= (game/get-game-state game-id) :question)))))
 
+(deftest answer-question!-requires-player-in-game
+  (let [game-id (crypto/random-unguessable-uid)
+        other-game (crypto/random-unguessable-uid)
+        alice (crypto/random-unguessable-uid)
+        outsider (crypto/random-unguessable-uid)]
+    (-create-game! game-id)
+    (-create-game! other-game)
+    (game/join-game! game-id alice "Alice")
+    (game/join-game! game-id (crypto/random-unguessable-uid) "Bob")
+    (game/join-game! other-game outsider "Olga")
+    (with-redefs [game/schedule-timeout #(swap! game/timeouts assoc % (future))]
+      (game/next-question! game-id))
+    (game/answer-question! game-id outsider "0")
+    (is (zero? (:answered (game/answer-progress game-id))) "A player of another game cannot answer")
+    (game/answer-question! game-id alice "0")
+    (is (= 1 (:answered (game/answer-progress game-id))))
+    (swap! game/timeouts game/cancel-timeout! game-id)))
+
 (deftest duplicate-questions
   (let [game-id (crypto/random-unguessable-uid)
         question (pr-str fixtures/question)]
@@ -320,6 +338,15 @@
       (game/disconnect-player! p2)
       (is (game/all-players-answered? game-id)))
     (is (nil? (game/answer-progress "no-such-game")))))
+
+(deftest disconnect-player!-evaluates-when-the-rest-answered
+  (let [game-id (crypto/random-unguessable-uid)
+        silent (str game-id "-silent")]
+    (create-question-game! game-id ["0" "1"])
+    (d/transact db/db-conn [{:db/id [:game/id game-id]
+                             :game/players [{:player/id silent :player/name "Silent"}]}])
+    (game/disconnect-player! silent)
+    (is (= :show-answers (game/get-game-state game-id)))))
 
 (deftest moderator?
   (is (game/moderator? fixtures/game-id fixtures/moderator-id))

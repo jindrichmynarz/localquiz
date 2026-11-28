@@ -412,11 +412,14 @@
 
 (defn answer-question!
   "Answer the current question in game with `game-id`
-  by `answer` for the player with `player-id`."
+  by `answer` for the player with `player-id`. Ignored if they are not in the game."
   [^String game-id
    ^String player-id
    ^String answer]
-  (cond (not (@timeouts game-id))
+  (cond (not (player-in-game? game-id player-id))
+        nil
+
+        (not (@timeouts game-id))
         {:error :errors/time-out}
 
         (and (some? answer) (not (player-answered? player-id)))
@@ -531,9 +534,17 @@
         (:answer/_player (d/entity db [:player/id player-id]))))
 
 (defn disconnect-player!
+  "Remove the player with `player-id` from their game, evaluating its current question if
+  everyone left has answered it."
   [^String player-id]
   (log/infof "Disconnecting player %s." player-id)
-  (d/transact db-conn [[:db.fn/call disconnect-player player-id]]))
+  (let [game-id (some-> (player-entity @db-conn player-id) :game/_players :game/id)]
+    (d/transact db-conn [[:db.fn/call disconnect-player player-id]])
+    (when (and game-id
+               (= :question (get-game-state game-id))
+               (all-players-answered? game-id))
+      (log/infof "All players left in game %s have answered." game-id)
+      (evaluate-answers! game-id))))
 
 (defn game-progress
   [^String game-id]
