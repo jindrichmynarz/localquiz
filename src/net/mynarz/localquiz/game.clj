@@ -345,7 +345,7 @@
   (let [{:keys [scoring]
          :as question} (current-question game-id)
         reveal [:db/cas [:game/id game-id] :game/state :question :show-answers]
-        ; Consensus is measured among all players, answering or not.
+        ; Crowd scoring is measured among all players, answering or not.
         question (assoc question :player-count (player-count game-id))
         tx (let [scores (cond-> (->> game-id
                                      get-answers

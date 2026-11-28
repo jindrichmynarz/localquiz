@@ -101,6 +101,13 @@
                                                      [{:answer "A1"} {:answer "A1"}])))))))
 
 (deftest majority-scoring
+  (testing "Players who did not answer count too"
+    (is (= [0.0 0.0 0.0]
+           (map :score (scoring/score-answers {:scoring :majority :player-count 4}
+                                              [{:answer 1} {:answer 1} {:answer 2}]))))
+    (is (= [1.0 1.0 1.0 0.0]
+           (map :score (scoring/score-answers {:scoring :majority :player-count 5}
+                                              [{:answer 1} {:answer 1} {:answer 1} {:answer 2}])))))
   (are [answers scores] (= (map :score (scoring/score-answers {:scoring :majority} answers)) scores)
        [{:answer 1} {:answer 2}]
        [0.0 0.0]

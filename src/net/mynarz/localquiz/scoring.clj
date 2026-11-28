@@ -110,7 +110,7 @@
         persistent!)))
 
 (defn- player-count
-  "Players in the game of `question`, answering or not, which consensus is measured among.
+  "Players in the game of `question`, answering or not, which crowd scoring is measured among.
   Without the count, only the answering ones."
   [question answers]
   (or (:player-count question) (count answers)))
@@ -152,8 +152,9 @@
     (score-each #(assoc % :score (score (:answer %))) answers)))
 
 (defmethod score-answers [:majority]
-  [_ answers]
-  (let [majority-threshold (/ (count answers) 2)
+  [question answers]
+  ; The majority of all players, answering or not.
+  (let [majority-threshold (/ (player-count question answers) 2)
         majority-entry (->> answers
                             (keep :answer)
                             frequencies
