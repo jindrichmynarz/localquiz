@@ -482,7 +482,7 @@
   (d/transact db-conn [[:db/retractEntity [:game/id game-id]]]))
 
 (def transitions
-  {:new          next-question!
+  {:new          #(when (has-enough-players? %) (next-question! %))
    :show-answers leaderboard!
    :leaderboard  next-question!})
 

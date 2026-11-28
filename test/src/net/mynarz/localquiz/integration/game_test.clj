@@ -134,6 +134,17 @@
     (game/next-question! fixtures/game-id))
   (is (= (dissoc (game/current-question fixtures/game-id) :asked-at) fixtures/question)))
 
+(deftest advance!-requires-enough-players
+  (let [game-id (crypto/random-unguessable-uid)]
+    (-create-game! game-id)
+    (game/join-game! game-id (crypto/random-unguessable-uid) "Alice")
+    (with-redefs [game/schedule-timeout (fn [_])]
+      (game/advance! game-id)
+      (is (= (game/get-game-state game-id) :new) "One player cannot start the game")
+      (game/join-game! game-id (crypto/random-unguessable-uid) "Bob")
+      (game/advance! game-id)
+      (is (= (game/get-game-state game-id) :question)))))
+
 (deftest duplicate-questions
   (let [game-id (crypto/random-unguessable-uid)
         question (pr-str fixtures/question)]
