@@ -109,16 +109,13 @@
                 (transient {}))
         persistent!)))
 
-(defn- player-count
-  "Players in the game of `question`, answering or not, which crowd scoring is measured among.
-  Without the count, only the answering ones."
-  [question answers]
-  (or (:player-count question) (count answers)))
+; Crowd scoring is measured among the :player-count players of the question's game, answering
+; or not, which the caller adds to the question.
 
 (defmethod score-answers [:consensus]
-  [question answers]
+  [{:keys [player-count]} answers]
   (let [answer->score (consensus-scores (map :answer answers)
-                                        (player-count question answers))]
+                                        player-count)]
     (for [answer answers]
       (assoc answer :score (-> answer
                                :answer
@@ -133,10 +130,8 @@
   ; hops between them and n the number of players, answering or not. An exact match adds
   ; 1/(n - 1), so the score still peaks at 1.0, when all agree, and with only exact matches
   ; it is plain consensus.
-  [{:keys [choices]
-    :as   question}
-   answers]
-  (let [others    (dec (player-count question answers))
+  [{:keys [choices player-count]} answers]
+  (let [others    (dec player-count)
         answered  (frequencies (map :answer answers))
         score     (memoize
                     (fn [value]
@@ -152,9 +147,8 @@
     (score-each #(assoc % :score (score (:answer %))) answers)))
 
 (defmethod score-answers [:majority]
-  [question answers]
-  ; The majority of all players, answering or not.
-  (let [majority-threshold (/ (player-count question answers) 2)
+  [{:keys [player-count]} answers]
+  (let [majority-threshold (/ player-count 2)
         majority-entry (->> answers
                             (keep :answer)
                             frequencies

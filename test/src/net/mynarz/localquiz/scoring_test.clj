@@ -52,7 +52,7 @@
        [0.98 0.0]))
 
 (deftest consensus-scoring
-  (are [answers scores] (= (map :score (scoring/score-answers {:scoring :consensus} answers)) scores)
+  (are [answers scores] (= (map :score (scoring/score-answers {:scoring :consensus :player-count (count answers)} answers)) scores)
        [{:answer 1} {:answer 1} {:answer 3}]
        [0.5 0.5 0.0]
 
@@ -77,7 +77,8 @@
                             {:label "A2" :related ["A"]}
                             {:label "B1" :related ["B"]}]}
         scores (fn [& answers]
-                 (map :score (scoring/score-answers question (map #(hash-map :answer %) answers))))
+                 (map :score (scoring/score-answers (assoc question :player-count (count answers))
+                                                    (map #(hash-map :answer %) answers))))
         close? (fn [xs ys]
                  (and (= (count xs) (count ys))
                       (every? true? (map #(< (abs (- %1 %2)) 1e-9) xs ys))))]
@@ -108,7 +109,7 @@
     (is (= [1.0 1.0 1.0 0.0]
            (map :score (scoring/score-answers {:scoring :majority :player-count 5}
                                               [{:answer 1} {:answer 1} {:answer 1} {:answer 2}])))))
-  (are [answers scores] (= (map :score (scoring/score-answers {:scoring :majority} answers)) scores)
+  (are [answers scores] (= (map :score (scoring/score-answers {:scoring :majority :player-count (count answers)} answers)) scores)
        [{:answer 1} {:answer 2}]
        [0.0 0.0]
 
